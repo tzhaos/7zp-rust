@@ -53,7 +53,7 @@ To enable GitHub release checks in a build, pass `-ReleaseRepository owner/repo`
 7zplus.exe --prepare-install <installation-directory>
 ```
 
-The last three commands support installation and maintenance. Explorer action identifiers and their complete selection payload are defined in `crates/shell-api`.
+The last three commands support installation and maintenance. Explorer action identifiers and their complete selection payload are defined in `crates/cardo-7zp-shell-api`.
 
 Common shortcuts: `Ctrl+O` opens an archive, `Ctrl+L` focuses the address, `Ctrl+F` searches, `Ctrl+A` selects all entries, `Alt+Left` goes back, `Alt+Up` goes to the parent, `Alt+E` opens extraction options, `Alt+T` checks integrity, and `F1` opens the bundled help. Menus display additional shortcuts.
 
@@ -61,19 +61,19 @@ Common shortcuts: `Ctrl+O` opens an archive, `Ctrl+L` focuses the address, `Ctrl
 
 | Directory | Responsibility |
 | --- | --- |
-| `crates/archive` | Archive models, the 7-Zip process adapter, editing, comments, checksums, and progress parsing. No GPUI or registry dependencies. |
-| `crates/application` | Background requests and outcomes, filesystem loading, extraction workflows, and release checks. It does not present dialogs. |
-| `crates/platform` | Windows file opening and icons, single-instance commands, registry integration, mail, and installation maintenance. |
-| `crates/core` | Settings and Fluent localization: preferences, recent locations, language, theme, and the saved extract destination. |
-| `crates/ui/src/lib.rs` | Workspace state, subscriptions, initialization, and input/focus synchronization. |
-| `crates/ui/src/actions` | Task lifecycle and workspace coordination for archive operations and preferences. |
-| `crates/ui/src/views` | Window chrome, menu bar, file lists, and settings-page composition. |
-| `crates/ui/src/dialogs` | Dialog composition, archive creation form, and error presentation. |
-| `crates/ui/src/components` | Shared buttons, inputs, tooltips, navigation, lists, settings rows, icons, and menu styling. |
-| `crates/ui/src/theme.rs`, `crates/ui/src/theme` | Shared dimensions, semantic colors, and GPUI theme application. The theme module applies a given theme and does not open settings files. |
-| `src/main.rs` | Binary entry point. |
-| `crates/shell-api` | Shared action enums, format routing, and serialized selection requests. |
-| `crates/shell` | Explorer COM extension; independent of GPUI and the archive engine. |
+| `crates/cardo-7zp-archive` | Archive models, the 7-Zip process adapter, editing, comments, checksums, and progress parsing. No GPUI or registry dependencies. |
+| `crates/cardo-7zp-application` | Background requests and outcomes, filesystem loading, extraction workflows, and release checks. It does not present dialogs. |
+| `crates/cardo-7zp-platform` | Windows file opening and icons, single-instance commands, registry integration, mail, and installation maintenance. |
+| `crates/cardo-7zp-core` | Settings and Fluent localization: preferences, recent locations, language, theme, and the saved extract destination. |
+| `crates/cardo-7zp-ui/src/lib.rs` | Workspace state, subscriptions, initialization, and input/focus synchronization. |
+| `crates/cardo-7zp-ui/src/actions` | Task lifecycle and workspace coordination for archive operations and preferences. |
+| `crates/cardo-7zp-ui/src/views` | Window chrome, menu bar, file lists, and settings-page composition. |
+| `crates/cardo-7zp-ui/src/dialogs` | Dialog composition, archive creation form, and error presentation. |
+| `crates/cardo-7zp-ui/src/components` | Shared buttons, inputs, tooltips, navigation, lists, settings rows, icons, and menu styling. |
+| `crates/cardo-7zp-ui/src/theme.rs`, `crates/cardo-7zp-ui/src/theme` | Shared dimensions, semantic colors, and GPUI theme application. The theme module applies a given theme and does not open settings files. |
+| `crates/cardo-7zp-app` | Binary entry. The executable name remains `7zplus`. |
+| `crates/cardo-7zp-shell-api` | Shared action enums, format routing, and serialized selection requests. |
+| `crates/cardo-7zp-shell` | Explorer COM extension; independent of GPUI and the archive engine. |
 | `locales`, `assets` | Product text and embedded visual resources. |
 | `tools`, `packaging` | Reproducible engine preparation, build scripts, and the NSIS installer. |
 
@@ -81,7 +81,7 @@ UI commands dispatch background work and consume outcomes. Views compose compone
 
 ## UI Conventions
 
-Use the components in `crates/ui/src/components` for shared controls, and edit `crates/ui/src/theme/metrics.rs` for their common dimensions. Colors come from the semantic palette in `crates/ui/src/theme.rs`.
+Use the components in `crates/cardo-7zp-ui/src/components` for shared controls, and edit `crates/cardo-7zp-ui/src/theme/metrics.rs` for their common dimensions. Colors come from the semantic palette in `crates/cardo-7zp-ui/src/theme.rs`.
 
 Commands and single-line inputs use a 32px height; command labels use GPUI Kit's 12px `XSmall` size. Icon buttons are 30px square. Controls have a 4px radius, the main panel 12px, and arrowless tooltips 10px. Toolbar buttons keep 48px SVG artwork in fixed 80px-high slots with 66-72px widths. Page-tool contraction animates width and spacing while preserving the active page and respecting reduced motion.
 

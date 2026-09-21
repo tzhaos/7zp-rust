@@ -57,6 +57,18 @@ Var CleanupOnly
 Function ${Prefix}RetireShell
     ; Remove modules from earlier flat installations as well as retired versions.
     FindFirst $ShellFind $ShellFile "$INSTDIR\sevenzip_shell*.dll"
+    IfErrors retire_new_name
+    retire_old_next:
+    StrCmp $ShellFile "" retire_old_close
+    StrCpy $ShellPath "$INSTDIR\$ShellFile"
+    StrCpy $ShellName $ShellFile
+    Call ${Prefix}RetireShellFile
+    FindNext $ShellFind $ShellFile
+    Goto retire_old_next
+    retire_old_close:
+    FindClose $ShellFind
+    retire_new_name:
+    FindFirst $ShellFind $ShellFile "$INSTDIR\cardo_7zp_shell*.dll"
     IfErrors retire_versions
     retire_next:
     StrCmp $ShellFile "" retire_close
@@ -128,6 +140,8 @@ Function un.CleanupRetired
     SetOutPath "$TEMP"
     ClearErrors
     Delete "$INSTDIR\sevenzip_shell*.dll"
+    Delete "$INSTDIR\cardo_7zp_shell*.dll"
+    ClearErrors
     Delete "$INSTDIR\7-zip-plus.dll"
     ${If} ${Errors}
         WriteRegStr HKCU "Software\Microsoft\Windows\CurrentVersion\RunOnce" "7zplus.Cleanup.$RetiredId" '$\"$INSTDIR\cleanup.exe$\" /S /CLEANUP'

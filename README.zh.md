@@ -53,7 +53,7 @@ bin/
 7zplus.exe --prepare-install <安装目录>
 ```
 
-后三项命令用于安装与维护。资源管理器动作标识及完整选择列表的数据结构定义在 `crates/shell-api` 中。
+后三项命令用于安装与维护。资源管理器动作标识及完整选择列表的数据结构定义在 `crates/cardo-7zp-shell-api` 中。
 
 常用快捷键：`Ctrl+O` 打开压缩包，`Ctrl+L` 聚焦地址栏，`Ctrl+F` 搜索，`Ctrl+A` 全选条目，`Alt+Left` 返回，`Alt+Up` 进入上级，`Alt+E` 打开解压选项，`Alt+T` 检查完整性，`F1` 打开内置帮助。其他快捷键显示在对应菜单中。
 
@@ -61,19 +61,19 @@ bin/
 
 | 目录 | 职责 |
 | --- | --- |
-| `crates/archive` | 压缩包模型、7-Zip 进程适配、编辑、注释、校验和与进度解析，不依赖 GPUI 或注册表。 |
-| `crates/application` | 后台请求与结果、文件系统读取、解压工作流和发布检查，不呈现对话框。 |
-| `crates/platform` | Windows 文件打开与图标、单实例命令、注册表集成、邮件和安装维护。 |
-| `crates/core` | 设置与 Fluent 本地化：首选项、最近位置、语言、主题和保存的解压目标。 |
-| `crates/ui/src/lib.rs` | 工作区状态、订阅、初始化，以及输入和焦点同步。 |
-| `crates/ui/src/actions` | 任务生命周期、压缩操作与设置变更的工作区协调。 |
-| `crates/ui/src/views` | 窗口框架、菜单栏、文件列表和设置页面组合。 |
-| `crates/ui/src/dialogs` | 对话框组合、压缩包创建表单和错误呈现。 |
-| `crates/ui/src/components` | 公共按钮、输入框、提示、导航、列表、设置行、图标和菜单样式。 |
-| `crates/ui/src/theme.rs`、`crates/ui/src/theme` | 公共尺寸、语义色板和 GPUI 主题应用。主题模块只应用给定主题，不打开设置文件。 |
-| `src/main.rs` | 可执行文件入口。 |
-| `crates/shell-api` | 共享动作枚举、格式路由和序列化选择请求。 |
-| `crates/shell` | 资源管理器 COM 扩展，不依赖 GPUI 和压缩引擎。 |
+| `crates/cardo-7zp-archive` | 压缩包模型、7-Zip 进程适配、编辑、注释、校验和与进度解析，不依赖 GPUI 或注册表。 |
+| `crates/cardo-7zp-application` | 后台请求与结果、文件系统读取、解压工作流和发布检查，不呈现对话框。 |
+| `crates/cardo-7zp-platform` | Windows 文件打开与图标、单实例命令、注册表集成、邮件和安装维护。 |
+| `crates/cardo-7zp-core` | 设置与 Fluent 本地化：首选项、最近位置、语言、主题和保存的解压目标。 |
+| `crates/cardo-7zp-ui/src/lib.rs` | 工作区状态、订阅、初始化，以及输入和焦点同步。 |
+| `crates/cardo-7zp-ui/src/actions` | 任务生命周期、压缩操作与设置变更的工作区协调。 |
+| `crates/cardo-7zp-ui/src/views` | 窗口框架、菜单栏、文件列表和设置页面组合。 |
+| `crates/cardo-7zp-ui/src/dialogs` | 对话框组合、压缩包创建表单和错误呈现。 |
+| `crates/cardo-7zp-ui/src/components` | 公共按钮、输入框、提示、导航、列表、设置行、图标和菜单样式。 |
+| `crates/cardo-7zp-ui/src/theme.rs`、`crates/cardo-7zp-ui/src/theme` | 公共尺寸、语义色板和 GPUI 主题应用。主题模块只应用给定主题，不打开设置文件。 |
+| `crates/cardo-7zp-app` | 可执行文件入口，生成的程序名仍是 `7zplus`。 |
+| `crates/cardo-7zp-shell-api` | 共享动作枚举、格式路由和序列化选择请求。 |
+| `crates/cardo-7zp-shell` | 资源管理器 COM 扩展，不依赖 GPUI 和压缩引擎。 |
 | `locales`、`assets` | 产品文案和嵌入式视觉资源。 |
 | `tools`、`packaging` | 固定版本引擎准备、构建脚本和 NSIS 安装包。 |
 
@@ -81,7 +81,7 @@ UI 命令派发后台任务并处理结果；视图组合公共组件，不在�
 
 ## 界面规范
 
-共享控件使用 `crates/ui/src/components` 中的组件，公共尺寸在 `crates/ui/src/theme/metrics.rs` 修改，颜色由 `crates/ui/src/theme.rs` 的语义色板提供。
+共享控件使用 `crates/cardo-7zp-ui/src/components` 中的组件，公共尺寸在 `crates/cardo-7zp-ui/src/theme/metrics.rs` 修改，颜色由 `crates/cardo-7zp-ui/src/theme.rs` 的语义色板提供。
 
 命令按钮和单行输入框高度为 32px，命令文字使用 GPUI Kit 的 12px `XSmall` 尺寸。图标按钮为 30px 正方形。控件圆角为 4px，主面板为 12px，无箭头提示为 10px。工具栏保留 48px SVG 图标，按钮高度固定为 80px，宽度为 66-72px。页面工具通过宽度和间距动画收缩，保留当前页面，并遵循减少动态效果设置。
 

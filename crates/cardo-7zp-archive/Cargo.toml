@@ -1,0 +1,14 @@
+[package]
+name = "cardo-7zp-archive"
+version.workspace = true
+edition.workspace = true
+publish.workspace = true
+description = "7-Zip archive models and engine adapter"
+
+[dependencies]
+cardo-7zp-core.workspace = true
+cardo-7zp-shell-api.workspace = true
+anyhow.workspace = true
+tempfile.workspace = true
+zip.workspace = true
+windows-sys = { workspace = true, features = ["Win32_Foundation", "Win32_Storage_FileSystem"] }

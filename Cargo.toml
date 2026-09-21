@@ -1,31 +1,14 @@
-[package]
-name = "sevenzip-plus"
-version.workspace = true
-edition.workspace = true
-publish.workspace = true
-description = "A native Windows archive manager built with GPUI Kit"
-
-[[bin]]
-name = "7zplus"
-path = "src/main.rs"
-
-[dependencies]
-sevenzip-core.workspace = true
-sevenzip-platform.workspace = true
-sevenzip-ui.workspace = true
-anyhow.workspace = true
-gpui-kit.workspace = true
-rfd.workspace = true
-
-[profile.release]
-lto = "thin"
-strip = "debuginfo"
-
-[build-dependencies]
-embed-resource = "=3.0.11"
-
 [workspace]
-members = ["crates/core", "crates/archive", "crates/application", "crates/platform", "crates/ui", "crates/shell-api", "crates/shell"]
+members = [
+    "crates/cardo-7zp-app",
+    "crates/cardo-7zp-core",
+    "crates/cardo-7zp-archive",
+    "crates/cardo-7zp-application",
+    "crates/cardo-7zp-platform",
+    "crates/cardo-7zp-ui",
+    "crates/cardo-7zp-shell-api",
+    "crates/cardo-7zp-shell",
+]
 resolver = "3"
 
 [workspace.package]
@@ -34,12 +17,12 @@ edition = "2024"
 publish = false
 
 [workspace.dependencies]
-sevenzip-core = { path = "crates/core" }
-sevenzip-archive = { path = "crates/archive" }
-sevenzip-application = { path = "crates/application" }
-sevenzip-platform = { path = "crates/platform" }
-sevenzip-ui = { path = "crates/ui" }
-sevenzip-shell-api = { path = "crates/shell-api" }
+cardo-7zp-core = { path = "crates/cardo-7zp-core" }
+cardo-7zp-archive = { path = "crates/cardo-7zp-archive" }
+cardo-7zp-application = { path = "crates/cardo-7zp-application" }
+cardo-7zp-platform = { path = "crates/cardo-7zp-platform" }
+cardo-7zp-ui = { path = "crates/cardo-7zp-ui" }
+cardo-7zp-shell-api = { path = "crates/cardo-7zp-shell-api" }
 anyhow = "1.0"
 gpui-kit = "=0.6.1"
 image = { version = "0.25", default-features = false }
@@ -57,3 +40,7 @@ reqwest = { version = "0.12", default-features = false, features = ["blocking", 
 semver = "1"
 windows-sys = "0.59"
 zip = { version = "2.4.2", default-features = false }
+
+[profile.release]
+lto = "thin"
+strip = "debuginfo"

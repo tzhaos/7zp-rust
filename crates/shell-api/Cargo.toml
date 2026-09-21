@@ -1,8 +1,0 @@
-[package]
-name = "sevenzip-shell-api"
-version.workspace = true
-edition.workspace = true
-publish.workspace = true
-
-[dependencies]
-serde.workspace = true
