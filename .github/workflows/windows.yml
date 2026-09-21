@@ -1,0 +1,46 @@
+name: Windows package
+
+on:
+  workflow_dispatch:
+    inputs:
+      release_tag:
+        description: 'Optional tag for a draft release (for example v0.1.0)'
+        required: false
+        type: string
+
+permissions:
+  contents: write
+
+jobs:
+  package:
+    runs-on: windows-2025
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install pinned Rust toolchain
+        shell: pwsh
+        run: rustup show
+      - name: Build application and bundle engine
+        shell: pwsh
+        env:
+          RELEASE_TAG: ${{ inputs.release_tag }}
+        run: |
+          $metadata = cargo metadata --no-deps --format-version 1 | ConvertFrom-Json
+          $version = ($metadata.packages | Where-Object name -eq 'sevenzip-plus').version
+          if ($env:RELEASE_TAG -and $env:RELEASE_TAG -ne "v$version") { throw 'Release tag must match Cargo.toml version' }
+          ./tools/build.ps1 -ReleaseRepository $env:GITHUB_REPOSITORY
+      - uses: actions/upload-artifact@v4
+        with:
+          name: 7zplus-windows-x64
+          path: |
+            bin/7zplus-amd64-installer.exe
+            bin/SHA256SUMS.txt
+      - name: Create draft release
+        if: inputs.release_tag != ''
+        shell: pwsh
+        env:
+          GH_TOKEN: ${{ github.token }}
+          RELEASE_TAG: ${{ inputs.release_tag }}
+        run: >-
+          gh release create "$env:RELEASE_TAG" bin/7zplus-amd64-installer.exe bin/SHA256SUMS.txt
+          --target "$env:GITHUB_SHA" --draft
+          --title "7zplus $env:RELEASE_TAG" --generate-notes
