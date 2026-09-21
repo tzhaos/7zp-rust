@@ -165,15 +165,9 @@ impl Workspace {
         let parent = parent.clone();
         self.destination = destination;
         let saved_parent = parent.clone();
-        let save = cx.background_executor().spawn(async move {
-            let root = sevenzip_core::settings::directory()?;
-            std::fs::create_dir_all(&root)?;
-            std::fs::write(
-                root.join("destination"),
-                saved_parent.to_string_lossy().as_bytes(),
-            )?;
-            anyhow::Ok(())
-        });
+        let save = cx
+            .background_executor()
+            .spawn(async move { sevenzip_core::settings::save_destination(&saved_parent) });
         cx.spawn(async move |view, cx| {
             if let Err(error) = save.await {
                 let _ = view.update(cx, |this, cx| {

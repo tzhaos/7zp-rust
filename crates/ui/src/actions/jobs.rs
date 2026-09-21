@@ -72,6 +72,16 @@ impl Workspace {
                     }
                     Ok(Outcome::Password(request)) => this.dialogs.request_password(request),
                     Ok(Outcome::Dispatch(request)) => dispatch = Some(request),
+                    Ok(Outcome::ConfirmRun {
+                        directory,
+                        target,
+                        entry,
+                    }) => {
+                        this.pending_run = Some((directory, target));
+                        this.dialogs
+                            .show(tr("browser-open"), Modal::ConfirmRun { entry });
+                    }
+                    Ok(Outcome::Launched) => {}
                     Ok(Outcome::Cancelled) => {
                         this.tasks.set_close_after(false);
                         this.browser.cancel_navigation();

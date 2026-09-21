@@ -140,23 +140,15 @@ pub fn palette(cx: &App) -> Palette {
     current(cx).palette()
 }
 
-fn settings_path() -> Result<std::path::PathBuf> {
-    Ok(sevenzip_core::settings::directory()?.join("theme.json"))
-}
-
 pub fn load() -> Result<ThemeId> {
-    match std::fs::read(settings_path()?) {
-        Ok(bytes) => Ok(serde_json::from_slice(&bytes).context(tr("theme-settings-invalid"))?),
-        Err(error) if error.kind() == std::io::ErrorKind::NotFound => Ok(ThemeId::default()),
-        Err(error) => Err(error).context(tr("theme-settings-invalid")),
+    match sevenzip_core::settings::read_theme()? {
+        Some(bytes) => Ok(serde_json::from_slice(&bytes).context(tr("theme-settings-invalid"))?),
+        None => Ok(ThemeId::default()),
     }
 }
 
 pub fn save(id: ThemeId) -> Result<()> {
-    let path = settings_path()?;
-    std::fs::create_dir_all(path.parent().unwrap())?;
-    std::fs::write(path, serde_json::to_vec(&id)?)?;
-    Ok(())
+    sevenzip_core::settings::write_theme(&serde_json::to_vec(&id)?)
 }
 
 pub fn apply(id: ThemeId, window: Option<&mut Window>, cx: &mut App) {

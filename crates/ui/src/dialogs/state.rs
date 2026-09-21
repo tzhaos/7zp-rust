@@ -24,6 +24,9 @@ pub(crate) enum Modal {
         input: Entity<InputState>,
     },
     Update(sevenzip_application::update::Status),
+    ConfirmRun {
+        entry: String,
+    },
 }
 
 pub(crate) struct DialogState {

@@ -103,6 +103,7 @@ pub struct Workspace {
     clear_search: bool,
     system_task: Option<Task<()>>,
     shell_read_task: Option<Task<()>>,
+    pending_run: Option<(tempfile::TempDir, PathBuf)>,
     theme_save: Option<Task<()>>,
     update_task: Option<Task<()>>,
     language_task: Option<Task<()>>,
@@ -141,9 +142,7 @@ impl Workspace {
         if let Some(path) = dirs::desktop_dir() {
             destinations.push((DestinationKind::Desktop, path));
         }
-        let saved = sevenzip_core::settings::directory()
-            .ok()
-            .and_then(|root| std::fs::read_to_string(root.join("destination")).ok());
+        let saved = sevenzip_core::settings::load_destination();
         let destination = destinations
             .iter()
             .position(|(_, path)| saved.as_deref() == Some(path.to_string_lossy().as_ref()))
@@ -189,6 +188,7 @@ impl Workspace {
             clear_search: false,
             system_task: None,
             shell_read_task: None,
+            pending_run: None,
             theme_save: None,
             update_task: None,
             language_task: None,
@@ -216,6 +216,9 @@ impl Workspace {
             self.tasks.set_close_after(false);
             self.after_open = None;
             self.browser.cancel_navigation();
+        }
+        if matches!(self.dialogs.current(), Some(Modal::ConfirmRun { .. })) {
+            self.pending_run = None;
         }
         self.update_task = None;
         self.dialogs.take();

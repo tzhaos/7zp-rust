@@ -12,7 +12,6 @@ sevenzip-platform.workspace = true
 sevenzip-shell-api.workspace = true
 anyhow.workspace = true
 tempfile.workspace = true
-rfd.workspace = true
 serde.workspace = true
 reqwest.workspace = true
 semver.workspace = true

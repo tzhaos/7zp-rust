@@ -1,4 +1,5 @@
 mod comment;
+mod confirm;
 mod create;
 mod error;
 mod extract;
@@ -65,6 +66,7 @@ impl Workspace {
             Modal::Report(text) => self.report_view(text, window),
             Modal::Info(fields) => self.info_view(fields, window, cx),
             Modal::Password { input, .. } => self.password_view(input, cx),
+            Modal::ConfirmRun { entry } => self.confirm_run_view(entry, cx),
             Modal::Extract {
                 folder,
                 selected,

@@ -59,6 +59,33 @@ pub fn save_preferences(preferences: &Preferences) -> Result<()> {
     Ok(())
 }
 
+pub fn read_theme() -> Result<Option<Vec<u8>>> {
+    match std::fs::read(directory()?.join("theme.json")) {
+        Ok(bytes) => Ok(Some(bytes)),
+        Err(error) if error.kind() == std::io::ErrorKind::NotFound => Ok(None),
+        Err(error) => Err(error).context(crate::i18n::tr("theme-settings-invalid")),
+    }
+}
+
+pub fn write_theme(bytes: &[u8]) -> Result<()> {
+    let path = directory()?.join("theme.json");
+    std::fs::create_dir_all(path.parent().unwrap())?;
+    std::fs::write(path, bytes)?;
+    Ok(())
+}
+
+pub fn load_destination() -> Option<String> {
+    let path = directory().ok()?.join("destination");
+    std::fs::read_to_string(path).ok()
+}
+
+pub fn save_destination(path: &std::path::Path) -> Result<()> {
+    let root = directory()?;
+    std::fs::create_dir_all(&root)?;
+    std::fs::write(root.join("destination"), path.to_string_lossy().as_bytes())?;
+    Ok(())
+}
+
 pub fn prepare_temp_directory(path: &str) -> Result<()> {
     if path.is_empty() {
         return Ok(());

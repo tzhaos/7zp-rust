@@ -53,6 +53,7 @@ pub enum Request {
         paths: Vec<PathBuf>,
         kind: ChecksumKind,
     },
+    Launch(PathBuf),
 }
 
 #[derive(Clone, Copy)]
@@ -77,6 +78,12 @@ pub enum Outcome {
     Moved(Catalog, String, PathBuf, Option<String>),
     Password(Request),
     Dispatch(Request),
+    ConfirmRun {
+        directory: tempfile::TempDir,
+        target: PathBuf,
+        entry: String,
+    },
+    Launched,
     Cancelled,
 }
 
@@ -84,7 +91,9 @@ impl Request {
     pub fn label(&self) -> &'static str {
         tr(match self {
             Self::Comment(..) | Self::Edit(..) => "archive-editing",
-            Self::OpenEntry { .. } | Self::Open(_) | Self::OpenAs(..) => "opening",
+            Self::OpenEntry { .. } | Self::Open(_) | Self::OpenAs(..) | Self::Launch(_) => {
+                "opening"
+            }
             Self::QuickCompress { .. } | Self::Create { .. } => "creating",
             Self::Extract { .. } | Self::Transfer { .. } => "extracting",
             Self::Check(_) => "checking",
@@ -118,11 +127,13 @@ impl Request {
         cancel: &Cancellation,
         progress: Option<Progress>,
     ) -> Result<Outcome> {
-        let result = if let Self::ReadComment(catalog) = &self {
-            Engine::comment(catalog).map(Outcome::Comment)
-        } else {
-            let engine = Engine::bundled()?;
-            self.perform(&engine, &password, cancel, progress)
+        let result = match &self {
+            Self::ReadComment(catalog) => Engine::comment(catalog).map(Outcome::Comment),
+            Self::Launch(path) => launch_file(path),
+            _ => {
+                let engine = Engine::bundled()?;
+                self.perform(&engine, &password, cancel, progress)
+            }
         };
         match result {
             Err(error)
@@ -141,6 +152,7 @@ impl Request {
                 | Self::ReadComment(_)
                 | Self::ResolveAddress(_)
                 | Self::Checksum { .. }
+                | Self::Launch(_)
         )
     }
 
@@ -210,6 +222,7 @@ impl Request {
                     )
                 }))
             }
+            Self::Launch(path) => launch_file(path),
             Self::Extract {
                 catalog,
                 selected,
@@ -424,22 +437,29 @@ fn open_entry(
     if output.warning {
         bail!(tr("integrity-warning"));
     }
-    if ["exe", "com", "msi", "bat", "cmd", "ps1", "vbs", "js", "scr"]
-        .iter()
-        .any(|s| s.eq_ignore_ascii_case(extension))
-    {
-        let answer = rfd::MessageDialog::new()
-            .set_title(tr("browser-open"))
-            .set_description(tf("file-run-confirm", &[("path", path.into())]))
-            .set_buttons(rfd::MessageButtons::YesNo)
-            .show();
-        if answer != rfd::MessageDialogResult::Yes {
-            return Ok(Outcome::Cancelled);
-        }
+    let target = directory.path().join(path);
+    if confirms_execution(extension) {
+        return Ok(Outcome::ConfirmRun {
+            directory,
+            target,
+            entry: path.to_owned(),
+        });
     }
     if cancel.load(Ordering::Relaxed) {
         return Ok(Outcome::Cancelled);
     }
-    platform::open_file(&directory.path().join(path))?;
+    platform::open_file(&target)?;
     Ok(Outcome::External(directory))
+}
+
+fn confirms_execution(extension: &str) -> bool {
+    const EXECUTABLES: &[&str] = &["exe", "com", "msi", "bat", "cmd", "ps1", "vbs", "js", "scr"];
+    EXECUTABLES
+        .iter()
+        .any(|known| known.eq_ignore_ascii_case(extension))
+}
+
+fn launch_file(path: &Path) -> Result<Outcome> {
+    platform::open_file(path)?;
+    Ok(Outcome::Launched)
 }
