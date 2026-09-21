@@ -1,5 +1,15 @@
 use anyhow::{Result, bail};
 use std::{os::windows::ffi::OsStrExt, path::Path};
+
+pub fn open_directory(path: &Path) -> Result<bool> {
+    if !path.is_dir() {
+        return Ok(false);
+    }
+    std::process::Command::new("explorer.exe")
+        .arg(path)
+        .spawn()?;
+    Ok(true)
+}
 use windows_sys::Win32::UI::{Shell::ShellExecuteW, WindowsAndMessaging::SW_SHOWNORMAL};
 
 pub fn open_file(path: &Path) -> Result<()> {

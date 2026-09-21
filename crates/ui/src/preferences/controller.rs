@@ -19,13 +19,7 @@ impl PreferencesForm {
             })
             .unwrap_or(false);
         let job = cx.background_executor().spawn(async move {
-            if !value.temp_directory.is_empty() {
-                let path = PathBuf::from(&value.temp_directory);
-                if !path.is_absolute() {
-                    bail!(tr("settings-temp-absolute"));
-                }
-                std::fs::create_dir_all(&path)?;
-            }
+            sevenzip_core::settings::prepare_temp_directory(&value.temp_directory)?;
             if registration_changed {
                 sevenzip_platform::configure(&std::env::current_exe()?, &value)?;
             }

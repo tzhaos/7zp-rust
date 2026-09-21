@@ -354,7 +354,7 @@ impl Workspace {
             if destination == c.path {
                 return Ok(Outcome::Cancelled);
             }
-            std::fs::copy(&c.path, &destination)?;
+            sevenzip_application::filesystem::copy_file(&c.path, &destination)?;
             Ok(Outcome::Message(tf(
                 "archive-saved",
                 &[("path", destination.display().to_string().into())],

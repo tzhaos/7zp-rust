@@ -280,20 +280,16 @@ impl Render for Workspace {
                                                     .icon(icon("FolderOpen", 15.))
                                                     .on_click(cx.listener(
                                                         move |this, _, _, cx| {
-                                                            if path.is_dir() {
-                                                                if let Err(error) =
-                                                                    std::process::Command::new(
-                                                                        "explorer.exe",
-                                                                    )
-                                                                    .arg(&path)
-                                                                    .spawn()
-                                                                {
+                                                            match sevenzip_platform::open_directory(
+                                                                &path,
+                                                            ) {
+                                                                Ok(true) => {}
+                                                                Ok(false) => cx.reveal_path(&path),
+                                                                Err(error) => {
                                                                     this.message =
                                                                         Some(error.to_string());
                                                                     cx.notify();
                                                                 }
-                                                            } else {
-                                                                cx.reveal_path(&path);
                                                             }
                                                         },
                                                     )),

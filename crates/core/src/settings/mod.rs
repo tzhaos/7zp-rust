@@ -1,4 +1,4 @@
-use anyhow::{Context, Result};
+use anyhow::{Context, Result, bail};
 pub mod recent;
 use serde::{Deserialize, Serialize};
 use std::path::PathBuf;
@@ -56,6 +56,18 @@ pub fn save_preferences(preferences: &Preferences) -> Result<()> {
         directory.join("preferences.json"),
         serde_json::to_vec(preferences)?,
     )?;
+    Ok(())
+}
+
+pub fn prepare_temp_directory(path: &str) -> Result<()> {
+    if path.is_empty() {
+        return Ok(());
+    }
+    let path = PathBuf::from(path);
+    if !path.is_absolute() {
+        bail!(crate::i18n::tr("settings-temp-absolute"));
+    }
+    std::fs::create_dir_all(path)?;
     Ok(())
 }
 

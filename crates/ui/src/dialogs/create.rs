@@ -13,14 +13,15 @@ use gpui_kit::{
     prelude::FluentBuilder,
     *,
 };
+use sevenzip_application::filesystem::{self, SourceInfo};
 use sevenzip_archive::{CreateOptions, Format, Level, Method, Threads, Volume};
 use sevenzip_core::i18n::{tf, tr};
-use std::{collections::HashMap, fs::Metadata, path::PathBuf};
+use std::{collections::HashMap, path::PathBuf};
 
 pub struct CreateForm {
     owner: WeakEntity<Workspace>,
     files: Vec<PathBuf>,
-    metadata: HashMap<PathBuf, Result<Metadata, String>>,
+    metadata: HashMap<PathBuf, Result<SourceInfo, String>>,
     name: Entity<InputState>,
     automatic_name: String,
     password: Entity<InputState>,
@@ -113,15 +114,7 @@ impl CreateForm {
                 added
                     .into_iter()
                     .map(|path| {
-                        let metadata = std::fs::metadata(&path).map_err(|error| {
-                            tf(
-                                "source-read-error",
-                                &[
-                                    ("path", path.to_string_lossy().as_ref().into()),
-                                    ("error", error.to_string().into()),
-                                ],
-                            )
-                        });
+                        let metadata = filesystem::inspect_source(&path);
                         (path, metadata)
                     })
                     .collect::<Vec<_>>()
@@ -246,8 +239,8 @@ impl Render for CreateForm {
                     .get(path)
                     .and_then(|value| value.as_ref().ok())
             })
-            .filter(|meta| meta.is_file())
-            .map(|meta| meta.len())
+            .filter(|meta| meta.file)
+            .map(|meta| meta.size)
             .sum();
         let encrypted = self.encrypted && self.format.supports_password();
         let total_label = if self
@@ -277,7 +270,7 @@ impl Render for CreateForm {
                     || self
                         .metadata
                         .get(&self.files[0])
-                        .is_some_and(|value| value.as_ref().is_ok_and(|meta| meta.is_dir()))));
+                        .is_some_and(|value| value.as_ref().is_ok_and(|meta| meta.directory))));
         let extension = self.format.extension();
         v_flex()
             .max_h(window.viewport_size().height - px(140.))
@@ -332,16 +325,14 @@ impl Render for CreateForm {
                                     .child(file_icon(
                                         path,
                                         self.metadata.get(path).is_some_and(|value| {
-                                            value.as_ref().is_ok_and(|meta| meta.is_dir())
+                                            value.as_ref().is_ok_and(|meta| meta.directory)
                                         }),
                                         true,
                                     ))
                                     .child(div().flex_1().truncate().child(name.clone()))
                                     .child(div().text_size(px(11.)).text_color(rgb(p.muted)).child(
                                         match self.metadata.get(path) {
-                                            Some(Ok(meta)) if meta.is_file() => {
-                                                size_text(meta.len())
-                                            }
+                                            Some(Ok(meta)) if meta.file => size_text(meta.size),
                                             None => tr("source-reading").to_owned(),
                                             _ => String::new(),
                                         },

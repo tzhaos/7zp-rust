@@ -134,27 +134,9 @@ impl Workspace {
                 cx.notify();
                 return;
             };
-            let read = cx.background_executor().spawn(async move {
-                if path.parent() != Some(std::env::temp_dir().as_path())
-                    || !path.file_name().is_some_and(|name| {
-                        name.to_string_lossy()
-                            .starts_with(sevenzip_shell_api::REQUEST_PREFIX)
-                    })
-                {
-                    bail!(tr("shell-request-invalid"));
-                }
-                let file = tempfile::TempPath::try_from_path(path)?;
-                let request: sevenzip_shell_api::Request =
-                    serde_json::from_slice(&std::fs::read(&file)?)?;
-                let mut args = vec![request.action.argument().into()];
-                args.extend(
-                    request
-                        .paths
-                        .into_iter()
-                        .map(|path| path.to_string_lossy().into_owned()),
-                );
-                anyhow::Ok(args)
-            });
+            let read = cx
+                .background_executor()
+                .spawn(async move { sevenzip_platform::read_shell_request(&path) });
             self.shell_read_task = Some(cx.spawn(async move |view, cx| {
                 let result = read.await;
                 let _ = view.update(cx, |this, cx| {

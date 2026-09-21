@@ -1,6 +1,39 @@
 use anyhow::Result;
 use sevenzip_archive::Entry;
-use std::{os::windows::fs::MetadataExt, path::PathBuf};
+use sevenzip_core::i18n::tf;
+use std::{
+    os::windows::fs::MetadataExt,
+    path::{Path, PathBuf},
+};
+
+#[derive(Clone, Copy)]
+pub struct SourceInfo {
+    pub directory: bool,
+    pub file: bool,
+    pub size: u64,
+}
+
+pub fn inspect_source(path: &Path) -> Result<SourceInfo, String> {
+    match std::fs::metadata(path) {
+        Ok(metadata) => Ok(SourceInfo {
+            directory: metadata.is_dir(),
+            file: metadata.is_file(),
+            size: metadata.len(),
+        }),
+        Err(error) => Err(tf(
+            "source-read-error",
+            &[
+                ("path", path.to_string_lossy().as_ref().into()),
+                ("error", error.to_string().into()),
+            ],
+        )),
+    }
+}
+
+pub fn copy_file(source: &Path, destination: &Path) -> Result<()> {
+    std::fs::copy(source, destination)?;
+    Ok(())
+}
 use windows_sys::Win32::{
     Foundation::{FILETIME, SYSTEMTIME},
     Storage::FileSystem::FileTimeToLocalFileTime,
