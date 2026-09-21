@@ -209,6 +209,7 @@ type-json = JSON file
 type-csv = CSV table
 type-zip = ZIP archive
 type-7z = 7z archive
+type-markdown = Markdown
 type-file = File
 status-items = { $count ->
     [one] { $count } item
@@ -220,6 +221,7 @@ status-results = { $count ->
     }
 archive-default-name = Archive
 recent-title = History
+recent-empty = No recent archives
 files-view = Current
 toolbar-collapse = Collapse other views
 toolbar-expand = Expand all views

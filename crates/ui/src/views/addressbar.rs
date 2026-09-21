@@ -1,0 +1,176 @@
+use crate::*;
+use gpui_kit::{
+    component::{Disableable, menu::DropdownMenu},
+    prelude::FluentBuilder,
+};
+use sevenzip_core::i18n::tr;
+
+impl Workspace {
+    pub(crate) fn pathbar(&self, window: &Window, cx: &Context<Self>) -> impl IntoElement + use<> {
+        let p = crate::theme::palette(cx);
+        let owner = cx.entity().downgrade();
+        let folders = self.recent_folders.clone();
+        let archives = self.recent_archives.clone();
+        let current_path = self.address_text();
+        navigation_row(cx)
+            .child(
+                icon_button("back", "ArrowLeft", tr("back"), cx)
+                    .w(px(30.))
+                    .h(px(30.))
+                    .disabled(self.tasks.is_busy() || self.browser.view().history.is_empty())
+                    .on_click(cx.listener(|this, _, window, cx| {
+                        this.back(window, cx);
+                    })),
+            )
+            .child(
+                icon_button("up", "ArrowUp", tr("parent-folder"), cx)
+                    .w(px(30.))
+                    .h(px(30.))
+                    .disabled(self.tasks.is_busy() || self.parent_location().is_none())
+                    .on_click(cx.listener(|this, _, window, cx| {
+                        this.up(window, cx);
+                    })),
+            )
+            .child(
+                div().flex_1().min_w_0().h(px(30.)).child(
+                    Styled::h(text_input(&self.address), px(30.))
+                        .bg(rgb(p.title))
+                        .border_color(rgb(p.border))
+                        .focus_bordered(false)
+                        .when(
+                            self.address.read(cx).focus_handle(cx).is_focused(window),
+                            |input| input.border_color(rgb(p.muted)),
+                        )
+                        .rounded(px(6.))
+                        .text_size(px(12.))
+                        .aria_label(tr("browser-address"))
+                        .disabled(self.tasks.is_busy())
+                        .suffix(
+                            icon_button(
+                                "recent-locations",
+                                "ChevronDown",
+                                tr("browser-location-menu"),
+                                cx,
+                            )
+                            .w(px(24.))
+                            .h(px(24.))
+                            .disabled(self.tasks.is_busy())
+                            .dropdown_menu_with_anchor(
+                                Anchor::TopRight,
+                                move |menu, _, _| {
+                                    let mut menu = menu_style(menu)
+                                        .min_w(px(460.))
+                                        .max_w(px(460.))
+                                        .max_h(px(420.))
+                                        .scrollable(true);
+                                    let browse = owner.clone();
+                                    let copy_path = current_path.clone();
+                                    menu = menu
+                                        .item(PopupMenuItem::new(tr("browser-browse")).on_click(
+                                            move |_, _, cx| {
+                                                let _ =
+                                                    browse.update(cx, |this, cx| this.browse(cx));
+                                            },
+                                        ))
+                                        .item(
+                                            PopupMenuItem::new(tr("browser-copy-path"))
+                                                .disabled(copy_path.is_empty())
+                                                .on_click(move |_, _, cx| {
+                                                    cx.write_to_clipboard(
+                                                        ClipboardItem::new_string(
+                                                            copy_path.clone(),
+                                                        ),
+                                                    )
+                                                }),
+                                        );
+                                    if !folders.is_empty() || !archives.is_empty() {
+                                        menu = menu.separator();
+                                    }
+                                    for (title, locations) in [
+                                        (
+                                            tr("browser-recent-folders"),
+                                            folders
+                                                .iter()
+                                                .cloned()
+                                                .map(browser::Location::Directory)
+                                                .collect::<Vec<_>>(),
+                                        ),
+                                        (
+                                            tr("recent-title"),
+                                            archives
+                                                .iter()
+                                                .cloned()
+                                                .map(|p| {
+                                                    browser::Location::Archive(p, String::new())
+                                                })
+                                                .collect(),
+                                        ),
+                                    ] {
+                                        if locations.is_empty() {
+                                            continue;
+                                        }
+                                        menu = menu.label(title);
+                                        for location in locations {
+                                            let path = match &location {
+                                                browser::Location::Directory(path)
+                                                | browser::Location::Archive(path, _) => path,
+                                                browser::Location::Home => continue,
+                                            };
+                                            let owner = owner.clone();
+                                            menu = menu.item(
+                                                path_menu_item(path.display().to_string(), 440.)
+                                                    .on_click(move |_, window, cx| {
+                                                        let _ = owner.update(cx, |this, cx| {
+                                                            this.visit(location.clone(), window, cx)
+                                                        });
+                                                    }),
+                                            );
+                                        }
+                                    }
+                                    menu
+                                },
+                            ),
+                        ),
+                ),
+            )
+            .child(
+                div()
+                    .w(px(200.))
+                    .max_w(relative(0.25))
+                    .h(px(30.))
+                    .flex_shrink_0()
+                    .on_mouse_down(
+                        MouseButton::Left,
+                        cx.listener(|this, _, window, cx| {
+                            this.search.update(cx, |input, cx| input.focus(window, cx));
+                        }),
+                    )
+                    .child(
+                        Styled::h(text_input(&self.search), px(30.))
+                            .text_size(px(12.))
+                            .bg(rgb(p.title))
+                            .border_color(rgb(p.border))
+                            .focus_bordered(false)
+                            .when(
+                                self.search.read(cx).focus_handle(cx).is_focused(window),
+                                |input| input.border_color(rgb(p.muted)),
+                            )
+                            .rounded(px(6.))
+                            .aria_label(tr("search-placeholder"))
+                            .prefix(icon("Search", 16.).text_color(rgb(p.muted)))
+                            .when(!self.search.read(cx).value().is_empty(), |input| {
+                                input.suffix(
+                                    icon_button("clear-search", "Dismiss", tr("search-clear"), cx)
+                                        .w(px(24.))
+                                        .h(px(24.))
+                                        .on_click(cx.listener(|this, _, window, cx| {
+                                            this.search.update(cx, |input, cx| {
+                                                input.set_value("", window, cx)
+                                            })
+                                        })),
+                                )
+                            }),
+                    ),
+            )
+    }
+}

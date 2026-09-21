@@ -6247,28 +6247,71 @@ dependencies = [
 ]
 
 [[package]]
-name = "sevenzip-plus"
+name = "sevenzip-application"
+version = "0.1.0"
+dependencies = [
+ "anyhow",
+ "reqwest",
+ "rfd",
+ "semver",
+ "serde",
+ "sevenzip-archive",
+ "sevenzip-core",
+ "sevenzip-platform",
+ "sevenzip-shell-api",
+ "tempfile",
+ "windows-sys 0.59.0",
+]
+
+[[package]]
+name = "sevenzip-archive"
+version = "0.1.0"
+dependencies = [
+ "anyhow",
+ "sevenzip-core",
+ "sevenzip-shell-api",
+ "tempfile",
+ "windows-sys 0.59.0",
+ "zip",
+]
+
+[[package]]
+name = "sevenzip-core"
 version = "0.1.0"
 dependencies = [
  "anyhow",
  "dirs 6.0.0",
- "embed-resource",
  "fluent-bundle",
  "fluent-syntax",
- "gpui-kit",
- "image",
- "reqwest",
- "rfd",
- "rust-embed",
- "semver",
  "serde",
  "serde_json",
- "sevenzip-shell-api",
- "tempfile",
  "unic-langid",
  "windows-sys 0.59.0",
+]
+
+[[package]]
+name = "sevenzip-platform"
+version = "0.1.0"
+dependencies = [
+ "anyhow",
+ "serde_json",
+ "sevenzip-core",
+ "sevenzip-shell-api",
+ "windows-sys 0.59.0",
  "winreg",
- "zip",
+]
+
+[[package]]
+name = "sevenzip-plus"
+version = "0.1.0"
+dependencies = [
+ "anyhow",
+ "embed-resource",
+ "gpui-kit",
+ "rfd",
+ "sevenzip-core",
+ "sevenzip-platform",
+ "sevenzip-ui",
 ]
 
 [[package]]
@@ -6288,6 +6331,26 @@ name = "sevenzip-shell-api"
 version = "0.1.0"
 dependencies = [
  "serde",
+]
+
+[[package]]
+name = "sevenzip-ui"
+version = "0.1.0"
+dependencies = [
+ "anyhow",
+ "dirs 6.0.0",
+ "gpui-kit",
+ "image",
+ "rfd",
+ "rust-embed",
+ "serde",
+ "serde_json",
+ "sevenzip-application",
+ "sevenzip-archive",
+ "sevenzip-core",
+ "sevenzip-platform",
+ "sevenzip-shell-api",
+ "tempfile",
 ]
 
 [[package]]

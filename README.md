@@ -80,9 +80,13 @@ UI commands dispatch background work and consume outcomes. Views compose compone
 
 ## UI Conventions
 
-Use the components in `src/ui/components` for shared controls, and edit `src/ui/theme/metrics.rs` for their common dimensions. Colors come from the semantic palette in `src/ui/theme.rs`.
+Use the components in `crates/ui/src/components` for shared controls, and edit `crates/ui/src/theme/metrics.rs` for their common dimensions. Colors come from the semantic palette in `crates/ui/src/theme.rs`.
 
 Commands and single-line inputs use a 32px height; command labels use GPUI Kit's 12px `XSmall` size. Icon buttons are 30px square. Controls have a 4px radius, the main panel 12px, and arrowless tooltips 10px. Toolbar buttons keep 48px SVG artwork in fixed 80px-high slots with 66-72px widths. Page-tool contraction animates width and spacing while preserving the active page and respecting reduced motion.
+
+The start page places the logo and name on the left, separated from the open/create commands and scrollable history by a vertical rule. History rows show the filename above its directory. A subtle grip at the center of the title bar marks a native window-drag area. Start-page and grip dimensions are grouped under `home` and `titlebar` in the shared metrics. These layout changes have source and formatting checks only; native rendering, dragging, display scaling, and small-window behavior still require a requested build and runtime verification.
+
+Title-bar dropdown menus align to their own trigger's left edge, using the component's measured bounds and window-edge clamping. This positioning change has not been verified in the native UI.
 
 Keep the background, inset content panel, and colored toolbar artwork as the visual identity. Reuse the pinned GPUI Kit APIs and shared components when adding views. Keep asset provenance in [THIRD_PARTY.md](THIRD_PARTY.md). Normal builds use committed assets and do not require Node.js or Python; brand regeneration uses `tools/render-brand.cjs` with Sharp and `tools/generate-icon.py` with Pillow.
 

@@ -80,9 +80,13 @@ UI 命令派发后台任务并处理结果；视图组合公共组件，不在�
 
 ## 界面规范
 
-共享控件使用 `src/ui/components` 中的组件，公共尺寸在 `src/ui/theme/metrics.rs` 修改，颜色由 `src/ui/theme.rs` 的语义色板提供。
+共享控件使用 `crates/ui/src/components` 中的组件，公共尺寸在 `crates/ui/src/theme/metrics.rs` 修改，颜色由 `crates/ui/src/theme.rs` 的语义色板提供。
 
 命令按钮和单行输入框高度为 32px，命令文字使用 GPUI Kit 的 12px `XSmall` 尺寸。图标按钮为 30px 正方形。控件圆角为 4px，主面板为 12px，无箭头提示为 10px。工具栏保留 48px SVG 图标，按钮高度固定为 80px，宽度为 66-72px。页面工具通过宽度和间距动画收缩，保留当前页面，并遵循减少动态效果设置。
+
+起始页左侧放置 Logo 和名称，竖线右侧提供打开、新建入口和可滚动的历史记录。历史项上方显示文件名，下方显示目录。标题栏中央的淡色点阵标记原生窗口拖动区域。起始页和拖动标记的尺寸分别集中在公共尺寸模块的 `home`、`titlebar` 中。这些布局修改仅做源码和格式检查；原生渲染、拖动、显示缩放和小窗口表现仍需在明确要求构建后运行验证。
+
+顶部下拉菜单与各自按钮的左侧对齐，由组件读取按钮实际边界并处理窗口边界避让。此定位修改尚未在原生界面中验证。
 
 背景、内嵌内容面板和彩色工具栏图标共同构成界面特征。新增视图复用固定版本的 GPUI Kit API 和公共组件，资源来源记录在 [THIRD_PARTY.md](THIRD_PARTY.md)。正常构建直接使用已提交资源，不依赖 Node.js 或 Python；重生成品牌资源时，`tools/render-brand.cjs` 使用 Sharp，`tools/generate-icon.py` 使用 Pillow。
 

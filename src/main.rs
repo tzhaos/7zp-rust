@@ -1,11 +1,8 @@
 #![cfg_attr(target_os = "windows", windows_subsystem = "windows")]
 
-mod application;
-mod archive;
-mod i18n;
-mod platform;
-mod settings;
-mod ui;
+use sevenzip_core::i18n;
+use sevenzip_platform as platform;
+use sevenzip_ui as ui;
 
 use gpui_kit::{component::Root, *};
 

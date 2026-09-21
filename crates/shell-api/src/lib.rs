@@ -277,6 +277,17 @@ impl Action {
     }
 }
 
+pub fn opens_directly(path: &Path) -> bool {
+    const EXTENSIONS: &[&str] = &[
+        "7z", "zip", "rar", "tar", "gz", "bz2", "xz", "wim", "iso", "cab", "001",
+    ];
+    path.extension().is_some_and(|extension| {
+        EXTENSIONS
+            .iter()
+            .any(|known| extension.eq_ignore_ascii_case(known))
+    })
+}
+
 // Match 26.03 Explorer's exclusion policy, including unrecognised archive extensions.
 pub fn may_extract(path: &Path) -> bool {
     const EXCLUDED: &str = "3gp aac ans ape asc asm asp aspx avi awk bas bat bmp c cs cls clw cmd cpp csproj css ctl cxx def dep dlg dsp dsw eps f f77 f90 f95 fla flac frm gif h hpp hta htm html hxx ico idl inc ini inl java jpeg jpg js la lnk log mak manifest wmv mov mp3 mp4 mpe mpeg mpg m4a ofr ogg pac pas pdf php php3 php4 php5 phptml pl pm png ps py pyo ra rb rc reg rka rm rtf sed sh shn shtml sln sql srt swa tcl tex tiff tta txt vb vcproj vbs mkv wav webm wma wv xml xsd xsl xslt";

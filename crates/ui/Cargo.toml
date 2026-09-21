@@ -1,0 +1,22 @@
+[package]
+name = "sevenzip-ui"
+version.workspace = true
+edition.workspace = true
+publish.workspace = true
+description = "GPUI workspace and shared visual components for 7zplus"
+
+[dependencies]
+sevenzip-core.workspace = true
+sevenzip-archive.workspace = true
+sevenzip-application.workspace = true
+sevenzip-platform.workspace = true
+sevenzip-shell-api.workspace = true
+anyhow.workspace = true
+gpui-kit.workspace = true
+image.workspace = true
+rfd.workspace = true
+tempfile.workspace = true
+rust-embed.workspace = true
+dirs.workspace = true
+serde.workspace = true
+serde_json.workspace = true
