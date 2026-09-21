@@ -34,6 +34,51 @@ pub fn copy_file(source: &Path, destination: &Path) -> Result<()> {
     std::fs::copy(source, destination)?;
     Ok(())
 }
+
+#[derive(Clone)]
+pub struct NameConflict {
+    pub entry: String,
+    pub destination: PathBuf,
+    pub incoming_size: u64,
+    pub incoming_modified: String,
+    pub existing_size: u64,
+    pub existing_modified: String,
+}
+
+pub fn name_conflicts(
+    catalog: &cardo_7zp_archive::Catalog,
+    selected: &[String],
+    destination: &Path,
+) -> Vec<NameConflict> {
+    catalog
+        .entries
+        .iter()
+        .filter(|entry| !entry.directory && entry_selected(&entry.path, selected))
+        .filter_map(|entry| {
+            let path = destination.join(&entry.path);
+            let metadata = std::fs::metadata(&path).ok()?;
+            if metadata.is_dir() {
+                return None;
+            }
+            Some(NameConflict {
+                entry: entry.path.clone(),
+                destination: path,
+                incoming_size: entry.size.unwrap_or(0),
+                incoming_modified: entry.modified.clone(),
+                existing_size: metadata.len(),
+                existing_modified: local_timestamp(metadata.last_write_time())
+                    .unwrap_or_default(),
+            })
+        })
+        .collect()
+}
+
+fn entry_selected(path: &str, selected: &[String]) -> bool {
+    selected.is_empty()
+        || selected
+            .iter()
+            .any(|item| path == item || path.starts_with(&format!("{item}/")))
+}
 use windows_sys::Win32::{
     Foundation::{FILETIME, SYSTEMTIME},
     Storage::FileSystem::FileTimeToLocalFileTime,

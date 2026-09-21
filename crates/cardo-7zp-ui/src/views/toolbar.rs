@@ -145,7 +145,8 @@ impl Workspace {
                         let openness = gpui_kit::base::spring(
                             (id, "toolbar-width"),
                             if visible { 1.0_f32 } else { 0.0_f32 },
-                            gpui_kit::base::Spring::new(std::time::Duration::from_millis(300)),
+                            gpui_kit::base::Spring::new(std::time::Duration::from_millis(560))
+                                .with_damping(1.15),
                             window,
                             cx,
                         );
@@ -160,6 +161,7 @@ impl Workspace {
                             .disabled(blocked || !visible)
                             .relative()
                             .flex_none()
+                            .opacity(openness)
                             .w(px(item_width))
                             .selected(self.page == page)
                             .when(self.page == page, |el| {

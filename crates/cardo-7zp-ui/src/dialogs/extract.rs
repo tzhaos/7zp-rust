@@ -4,6 +4,61 @@ use gpui_kit::component::{
 };
 
 impl Workspace {
+    fn destination_button(
+        &self,
+        kind: Option<DestinationKind>,
+        selected: usize,
+        cx: &Context<Self>,
+    ) -> impl IntoElement + use<> {
+        let index = kind.and_then(|kind| {
+            self.destinations
+                .iter()
+                .position(|(candidate, _)| *candidate == kind)
+        });
+        let custom = self
+            .destinations
+            .iter()
+            .position(|(candidate, _)| *candidate == DestinationKind::Custom);
+        let (id, label, icon_name, chosen, enabled) = match kind {
+            None => (
+                "browse-extract",
+                tr("browse-directory"),
+                "FolderOpen",
+                custom == Some(selected),
+                true,
+            ),
+            Some(kind) => (
+                match kind {
+                    DestinationKind::Archive => "destination-archive",
+                    DestinationKind::Downloads => "destination-downloads",
+                    DestinationKind::Desktop => "destination-desktop",
+                    DestinationKind::Custom => "destination-custom",
+                },
+                kind.label(),
+                kind.icon(),
+                index == Some(selected),
+                index.is_some(),
+            ),
+        };
+        command(id, label)
+            .icon(icon(icon_name, 18.))
+            .flex_1()
+            .h(px(48.))
+            .selected(chosen)
+            .disabled(!enabled)
+            .on_click(cx.listener(move |this, _, window, cx| {
+                if kind.is_none() {
+                    this.choose_extract_directory(window, cx);
+                    return;
+                }
+                let Some(index) = index else { return };
+                if let Some(Modal::Extract { destination, .. }) = this.dialogs.current_mut() {
+                    *destination = index;
+                    cx.notify();
+                }
+            }))
+    }
+
     pub(super) fn extract_view(
         &self,
         folder: &Entity<InputState>,
@@ -85,38 +140,38 @@ impl Workspace {
                                     ),
                             ),
                         )
-                        .child(
-                            v_flex().gap_2().child(tr("save-location")).child(
-                                h_flex().flex_wrap().gap(px(12.)).children(
-                                    self.destinations.iter().enumerate().map(
-                                        |(index, (kind, _))| {
-                                            command(("destination", index), kind.label())
-                                                .icon(icon(kind.icon(), 22.))
-                                                .w(px(192.))
-                                                .h(px(48.))
-                                                .selected(index == *destination)
-                                                .on_click(cx.listener(move |this, _, _, cx| {
-                                                    if let Some(Modal::Extract {
-                                                        destination,
-                                                        ..
-                                                    }) = this.dialogs.current_mut()
-                                                    {
-                                                        *destination = index;
-                                                        cx.notify();
-                                                    }
-                                                }))
-                                        },
-                                    ),
+                        .child(v_flex().gap_2().child(tr("save-location")).child(
+                            v_flex()
+                                .gap(px(8.))
+                                .child(
+                                    h_flex()
+                                        .gap(px(8.))
+                                        .child(self.destination_button(
+                                            None,
+                                            *destination,
+                                            cx,
+                                        ))
+                                        .child(self.destination_button(
+                                            Some(DestinationKind::Archive),
+                                            *destination,
+                                            cx,
+                                        )),
+                                )
+                                .child(
+                                    h_flex()
+                                        .gap(px(8.))
+                                        .child(self.destination_button(
+                                            Some(DestinationKind::Downloads),
+                                            *destination,
+                                            cx,
+                                        ))
+                                        .child(self.destination_button(
+                                            Some(DestinationKind::Desktop),
+                                            *destination,
+                                            cx,
+                                        )),
                                 ),
-                            ),
-                        )
-                        .child(
-                            command("browse-extract", tr("browse-directory"))
-                                .icon(icon("FolderOpen", 18.))
-                                .on_click(cx.listener(|this, _, window, cx| {
-                                    this.choose_extract_directory(window, cx)
-                                })),
-                        )
+                        ))
                         .child(
                             v_flex()
                                 .gap_2()

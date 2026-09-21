@@ -125,24 +125,84 @@ impl Workspace {
             return;
         };
         let folder = cardo_7zp_shell_api::extract_folder(&catalog.path);
-        self.tasks
-            .set_close_after(self.preferences.close_after_quick);
-        self.execute(
-            Request::Extract {
-                catalog,
-                selected: if selected {
-                    self.browser.view().selected.iter().cloned().collect()
-                } else {
-                    Vec::new()
-                },
-                parent,
-                folder,
-                overwrite: Overwrite::RenameIncoming,
-                open_after: self.preferences.open_after,
-            },
-            self.browser.view().password.clone(),
+        let chosen = if selected {
+            self.browser.view().selected.iter().cloned().collect()
+        } else {
+            Vec::new()
+        };
+        self.begin_extract(
+            catalog,
+            chosen,
+            parent,
+            folder,
+            self.preferences.open_after,
+            self.preferences.close_after_quick,
             cx,
         );
+    }
+
+    pub(crate) fn begin_extract(
+        &mut self,
+        catalog: Catalog,
+        selected: Vec<String>,
+        parent: PathBuf,
+        folder: String,
+        open_after: bool,
+        close_after: bool,
+        cx: &mut Context<Self>,
+    ) {
+        self.tasks.set_close_after(close_after);
+        let destination = if folder.is_empty() {
+            parent.clone()
+        } else {
+            parent.join(&folder)
+        };
+        let scan_catalog = catalog.clone();
+        let scan_selected = selected.clone();
+        let password = self.browser.view().password.clone();
+        let scan = cx.background_executor().spawn(async move {
+            cardo_7zp_application::filesystem::name_conflicts(
+                &scan_catalog,
+                &scan_selected,
+                &destination,
+            )
+        });
+        cx.spawn(async move |view, cx| {
+            let conflicts = scan.await;
+            let _ = view.update(cx, |this, cx| {
+                if conflicts.is_empty() {
+                    this.execute(
+                        Request::Extract {
+                            catalog,
+                            selected,
+                            parent,
+                            folder,
+                            overwrite: Overwrite::Skip,
+                            open_after,
+                        },
+                        password,
+                        cx,
+                    );
+                } else {
+                    this.dialogs.show(
+                        tr("extract-conflict-title"),
+                        Modal::Conflict {
+                            catalog,
+                            selected,
+                            parent,
+                            folder,
+                            open_after,
+                            password,
+                            conflicts,
+                            index: 0,
+                            decisions: Vec::new(),
+                        },
+                    );
+                    cx.notify();
+                }
+            });
+        })
+        .detach();
     }
 
     pub(crate) fn extract(

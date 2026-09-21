@@ -19,6 +19,7 @@ impl Workspace {
             let result = job.await;
             let _ = view.update(cx, |this, cx| {
                 let mut dispatch = None;
+                let mut follow = None;
                 let extraction = this.tasks.finish();
                 if matches!(this.dialogs.current(), Some(Modal::Progress)) {
                     this.dialogs.take();
@@ -42,23 +43,27 @@ impl Workspace {
                         this.completion = Some((tr("create-complete").into(), path));
                     }
                     Ok(Outcome::Extracted(path, warning, open_error)) => {
-                        if this.tasks.close_after()
-                            && !warning
-                            && open_error.is_none()
-                            && this.launches.is_empty()
-                        {
-                            cx.quit();
+                        if let Some(next) = this.extract_follow.pop_front() {
+                            follow = Some(next);
+                        } else {
+                            if this.tasks.close_after()
+                                && !warning
+                                && open_error.is_none()
+                                && this.launches.is_empty()
+                            {
+                                cx.quit();
+                            }
+                            this.tasks.set_close_after(false);
+                            this.completion = Some((
+                                if warning {
+                                    tr("extract-warning").into()
+                                } else {
+                                    tr("extract-finished").into()
+                                },
+                                path,
+                            ));
+                            this.message = open_error;
                         }
-                        this.tasks.set_close_after(false);
-                        this.completion = Some((
-                            if warning {
-                                tr("extract-warning").into()
-                            } else {
-                                tr("extract-finished").into()
-                            },
-                            path,
-                        ));
-                        this.message = open_error;
                     }
                     Ok(Outcome::Message(message)) => this.message = Some(message),
                     Ok(Outcome::Report(title, text)) => {
@@ -83,10 +88,12 @@ impl Workspace {
                     }
                     Ok(Outcome::Launched) => {}
                     Ok(Outcome::Cancelled) => {
+                        this.extract_follow.clear();
                         this.tasks.set_close_after(false);
                         this.browser.cancel_navigation();
                     }
                     Err(error) => {
+                        this.extract_follow.clear();
                         this.tasks.set_close_after(false);
                         this.browser.cancel_navigation();
                         this.after_open = None;
@@ -115,6 +122,9 @@ impl Workspace {
                 this.tasks.release();
                 if let Some(request) = dispatch {
                     this.execute(request, String::new(), cx);
+                }
+                if let Some((request, password)) = follow {
+                    this.execute(request, password, cx);
                 }
                 cx.notify();
             });

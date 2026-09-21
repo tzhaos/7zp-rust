@@ -27,6 +27,17 @@ pub(crate) enum Modal {
     ConfirmRun {
         entry: String,
     },
+    Conflict {
+        catalog: Catalog,
+        selected: Vec<String>,
+        parent: PathBuf,
+        folder: String,
+        open_after: bool,
+        password: String,
+        conflicts: Vec<cardo_7zp_application::filesystem::NameConflict>,
+        index: usize,
+        decisions: Vec<(String, Overwrite)>,
+    },
 }
 
 pub(crate) struct DialogState {

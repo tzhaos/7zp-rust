@@ -1,5 +1,6 @@
 mod comment;
 mod confirm;
+mod conflict;
 mod create;
 mod error;
 mod extract;
@@ -67,6 +68,7 @@ impl Workspace {
             Modal::Info(fields) => self.info_view(fields, window, cx),
             Modal::Password { input, .. } => self.password_view(input, cx),
             Modal::ConfirmRun { entry } => self.confirm_run_view(entry, cx),
+            Modal::Conflict { .. } => self.conflict_view(cx),
             Modal::Extract {
                 folder,
                 selected,
@@ -106,6 +108,7 @@ impl Workspace {
                         .track_focus(self.dialogs.focus())
                         .w(px(match modal {
                             Modal::Report(_) => 680.,
+                            Modal::Conflict { .. } => 640.,
                             Modal::Progress => 540.,
                             Modal::Error(_) => 520.,
                             _ => 464.,

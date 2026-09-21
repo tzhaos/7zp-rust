@@ -94,16 +94,13 @@ impl Workspace {
                 }
                 ShellAction::ExtractHere => {
                     let parent = catalog.path.parent().unwrap().to_path_buf();
-                    self.execute(
-                        Request::Extract {
-                            catalog,
-                            selected: Vec::new(),
-                            parent,
-                            folder: String::new(),
-                            overwrite: Overwrite::RenameIncoming,
-                            open_after: self.preferences.open_after,
-                        },
-                        self.browser.view().password.clone(),
+                    self.begin_extract(
+                        catalog,
+                        Vec::new(),
+                        parent,
+                        String::new(),
+                        self.preferences.open_after,
+                        false,
                         cx,
                     );
                 }
