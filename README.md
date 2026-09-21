@@ -61,16 +61,17 @@ Common shortcuts: `Ctrl+O` opens an archive, `Ctrl+L` focuses the address, `Ctrl
 
 | Directory | Responsibility |
 | --- | --- |
-| `src/archive` | Archive models, the 7-Zip process adapter, editing, comments, checksums, and progress parsing. No GPUI or registry dependencies. |
-| `src/application` | Background requests and outcomes, filesystem loading, extraction workflows, and release checks. |
-| `src/platform` | Windows file opening and icons, single-instance IPC, registry integration, mail, and installation maintenance. |
-| `src/settings`, `src/i18n.rs` | Persisted preferences, recent locations, and Fluent localization. |
-| `src/ui/mod.rs` | Workspace state, subscriptions, initialization, and input/focus synchronization. |
-| `src/ui/actions` | Task lifecycle and workspace coordination for archive operations and preferences. |
-| `src/ui/views` | Window chrome, menu bar, file lists, and settings-page composition. |
-| `src/ui/dialogs` | Dialog composition, archive creation form, and error presentation. |
-| `src/ui/components` | Shared buttons, inputs, tooltips, navigation, lists, settings rows, icons, and menu styling. |
-| `src/ui/theme`, `src/ui/theme.rs` | Shared dimensions, semantic colors, and GPUI theme integration. |
+| `crates/archive` | Archive models, the 7-Zip process adapter, editing, comments, checksums, and progress parsing. No GPUI or registry dependencies. |
+| `crates/application` | Background requests and outcomes, filesystem loading, extraction workflows, and release checks. It does not present dialogs. |
+| `crates/platform` | Windows file opening and icons, single-instance commands, registry integration, mail, and installation maintenance. |
+| `crates/core` | Settings and Fluent localization: preferences, recent locations, language, theme, and the saved extract destination. |
+| `crates/ui/src/lib.rs` | Workspace state, subscriptions, initialization, and input/focus synchronization. |
+| `crates/ui/src/actions` | Task lifecycle and workspace coordination for archive operations and preferences. |
+| `crates/ui/src/views` | Window chrome, menu bar, file lists, and settings-page composition. |
+| `crates/ui/src/dialogs` | Dialog composition, archive creation form, and error presentation. |
+| `crates/ui/src/components` | Shared buttons, inputs, tooltips, navigation, lists, settings rows, icons, and menu styling. |
+| `crates/ui/src/theme.rs`, `crates/ui/src/theme` | Shared dimensions, semantic colors, and GPUI theme application. The theme module applies a given theme and does not open settings files. |
+| `src/main.rs` | Binary entry point. |
 | `crates/shell-api` | Shared action enums, format routing, and serialized selection requests. |
 | `crates/shell` | Explorer COM extension; independent of GPUI and the archive engine. |
 | `locales`, `assets` | Product text and embedded visual resources. |
@@ -102,7 +103,7 @@ The product target is the user-facing functionality of 7-Zip 26.03 File Manager.
 | Help | Bundled 7-Zip help, application information, and optional release checks. |
 | Windows integration | Explorer commands, per-user registration, installer maintenance, and single-instance forwarding are implemented; runtime coverage still needs verification across Windows versions. |
 
-This source reorganization has formatting and static source checks only. It has not been compiled or verified in the native UI. In particular, toolbar contraction, focus behavior, display scaling, and translated layouts require runtime verification. Builds are performed only when explicitly requested; generated files in `bin/` are not source validation evidence.
+This layering type-checks with `cargo check --workspace`. It has not been launched in the native UI. Toolbar contraction, focus behavior, display scaling, and translated layouts still require runtime verification. Builds are performed only when explicitly requested; generated files in `bin/` are not source validation evidence.
 
 ## Third-Party Software
 
