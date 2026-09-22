@@ -16,7 +16,7 @@ Upstream: https://github.com/microsoft/fluentui-system-icons
 
 ## Project Artwork
 
-The brand artwork in `assets/brand/logo.svg` and the ten SVGs in `assets/toolbar` are original project drawings, not Microsoft or Motrix assets. The blue cursor depicts the current files page and is not a Cursor product logo. Appearance uses a palette, advanced settings a green bipyramid, and associations interlocking chain links. Toolbar SVGs render directly at 48 logical pixels; the history artwork also appears in empty states.
+The brand artwork in `assets/brand/logo.svg` and the ten SVGs in `assets/toolbar` are original project drawings, not Microsoft or Motrix assets. The blue cursor depicts the current files page and is not a Cursor product logo. Appearance uses a palette, advanced settings a green bipyramid, and associations interlocking chain links. Toolbar SVGs are rasterized at the window scale, two samples per device pixel, then box-filtered back to the device-pixel grid and shown at 48 logical pixels. The history artwork also appears in empty states.
 
 The brand SVG is the source for `logo.png` and the multi-resolution `app.ico`. The home view uses the PNG; Windows executable resources and the installer use the ICO. The titlebar uses text. Brand regeneration tools are listed in the README.
 

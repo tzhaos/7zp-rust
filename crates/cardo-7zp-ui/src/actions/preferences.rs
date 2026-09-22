@@ -50,16 +50,17 @@ impl Workspace {
 
     pub(crate) fn check_update(&mut self, cx: &mut Context<Self>) {
         self.close_modal(cx);
-        self.dialogs.show(
+        self.show_dialog(
             tr("update-title"),
-            Modal::Update(cardo_7zp_application::update::Status::Checking),
+            Modal::Update(cardo_7zp_requests::update::Status::Checking),
+            cx,
         );
         let check = cx
             .background_executor()
-            .spawn(async { cardo_7zp_application::update::check() });
+            .spawn(async { cardo_7zp_requests::update::check() });
         self.update_task = Some(cx.spawn(async move |view, cx| {
             let status = check.await.unwrap_or_else(|error| {
-                cardo_7zp_application::update::Status::Failed(format!("{error:#}"))
+                cardo_7zp_requests::update::Status::Failed(format!("{error:#}"))
             });
             let _ = view.update(cx, |this, cx| {
                 if matches!(this.dialogs.current(), Some(Modal::Update(_))) {
@@ -77,7 +78,7 @@ impl Workspace {
         window: &mut Window,
         cx: &mut Context<Self>,
     ) {
-        crate::theme::apply(id, Some(window), cx);
+        crate::theme::apply(id, &self.appearance, Some(window), cx);
         let previous = self.theme_save.take();
         self.theme_save = Some(cx.spawn(async move |view, cx| {
             // Preserve the user's selection order when switching themes quickly.
@@ -145,7 +146,8 @@ impl Workspace {
         } else {
             let owner = cx.entity().downgrade();
             let value = self.preferences.clone();
-            let form = cx.new(|cx| PreferencesForm::new(owner, value, tab, window, cx));
+            let appearance = self.appearance.clone();
+            let form = cx.new(|cx| PreferencesForm::new(owner, value, appearance, tab, window, cx));
             self.settings_subscription = Some(cx.observe(&form, |_, _, cx| cx.notify()));
             self.settings_form = Some(form);
         }
@@ -188,10 +190,10 @@ impl Workspace {
     fn check_updates_quietly(&mut self, cx: &mut Context<Self>) {
         let job = cx
             .background_executor()
-            .spawn(async { cardo_7zp_application::update::check() });
+            .spawn(async { cardo_7zp_requests::update::check() });
         self.update_task = Some(cx.spawn(async move |view, cx| {
             let result = job.await;
-            if let Ok(cardo_7zp_application::update::Status::Available { version, .. }) = result {
+            if let Ok(cardo_7zp_requests::update::Status::Available { version, .. }) = result {
                 let _ = view.update(cx, |this, cx| {
                     this.message = Some(tf("update-available", &[("version", version.into())]));
                     cx.notify();

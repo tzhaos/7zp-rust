@@ -75,7 +75,13 @@ impl Workspace {
                 !self.tasks.is_busy() && !browser.selected.is_empty(),
                 |el| {
                     el.child(
-                        icon_button("clear-selection", "Dismiss", tr("selection-clear"), cx)
+                        icon_button(
+                            "clear-selection",
+                            "Dismiss",
+                            tr("selection-clear"),
+                            self.allow_hint(true),
+                            cx,
+                        )
                             .custom(subtle_variant(cx))
                             .border_0()
                             .w(px(24.))

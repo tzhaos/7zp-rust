@@ -16,17 +16,18 @@ impl Workspace {
     pub(crate) fn create_dialog(
         &mut self,
         files: Vec<PathBuf>,
-        window: &mut Window,
+        _window: &mut Window,
         cx: &mut Context<Self>,
     ) {
+        self.dialogs.pending_name = None;
+        self.dialogs.pending_email = false;
         if self.tasks.is_busy() {
             return;
         }
-        let owner = cx.entity().downgrade();
-        self.dialogs.show(
-            tr("create-title"),
-            Modal::Create(cx.new(|cx| CreateForm::new(owner, files, window, cx))),
-        );
+        self.close_modal(cx);
+        self.dialogs.pending_create = Some(files);
+        self.dialogs.set_title(tr("create-title"));
+        self.schedule_prompt(cx);
         cx.notify();
     }
 
@@ -63,22 +64,21 @@ impl Workspace {
         let Some(c) = &self.browser.view().catalog else {
             return;
         };
-        let name = cardo_7zp_shell_api::extract_folder(&c.path);
+        let name = cardo_7zp_commands::extract_folder(&c.path);
         let folder = cx.new(|cx| InputState::new(window, cx));
         folder.update(cx, |input, cx| input.set_value(name, window, cx));
         self.dialogs
             .observe_input(cx.observe(&folder, |_, _, cx| cx.notify()));
-        self.dialogs.show(
+        self.show_dialog(
             tr("extract-options"),
             Modal::Extract {
                 folder,
                 selected: !self.browser.view().selected.is_empty(),
                 destination: self.destination,
-                overwrite: Overwrite::RenameIncoming,
                 open_after: self.preferences.open_after,
             },
+            cx,
         );
-        cx.notify();
     }
 
     pub(crate) fn choose_extract_directory(&mut self, window: &mut Window, cx: &mut Context<Self>) {
@@ -124,7 +124,7 @@ impl Workspace {
         let Some(parent) = catalog.path.parent().map(Path::to_path_buf) else {
             return;
         };
-        let folder = cardo_7zp_shell_api::extract_folder(&catalog.path);
+        let folder = cardo_7zp_commands::extract_folder(&catalog.path);
         let chosen = if selected {
             self.browser.view().selected.iter().cloned().collect()
         } else {
@@ -137,6 +137,7 @@ impl Workspace {
             folder,
             self.preferences.open_after,
             self.preferences.close_after_quick,
+            self.preferences.close_archive_after_quick,
             cx,
         );
     }
@@ -149,9 +150,11 @@ impl Workspace {
         folder: String,
         open_after: bool,
         close_after: bool,
+        close_archive: bool,
         cx: &mut Context<Self>,
     ) {
         self.tasks.set_close_after(close_after);
+        self.tasks.set_close_archive(close_archive);
         let destination = if folder.is_empty() {
             parent.clone()
         } else {
@@ -161,7 +164,7 @@ impl Workspace {
         let scan_selected = selected.clone();
         let password = self.browser.view().password.clone();
         let scan = cx.background_executor().spawn(async move {
-            cardo_7zp_application::filesystem::name_conflicts(
+            cardo_7zp_requests::filesystem::name_conflicts(
                 &scan_catalog,
                 &scan_selected,
                 &destination,
@@ -184,7 +187,7 @@ impl Workspace {
                         cx,
                     );
                 } else {
-                    this.dialogs.show(
+                    this.show_dialog(
                         tr("extract-conflict-title"),
                         Modal::Conflict {
                             catalog,
@@ -196,9 +199,10 @@ impl Workspace {
                             conflicts,
                             index: 0,
                             decisions: Vec::new(),
+                            repeat: false,
                         },
+                        cx,
                     );
-                    cx.notify();
                 }
             });
         })
@@ -210,7 +214,6 @@ impl Workspace {
         selected: bool,
         folder: String,
         destination: usize,
-        overwrite: Overwrite,
         open_after: bool,
         cx: &mut Context<Self>,
     ) {
@@ -240,22 +243,12 @@ impl Workspace {
             }
         })
         .detach();
-        self.execute(
-            Request::Extract {
-                catalog,
-                selected: if selected {
-                    self.browser.view().selected.iter().cloned().collect()
-                } else {
-                    Vec::new()
-                },
-                parent,
-                folder,
-                overwrite,
-                open_after,
-            },
-            self.browser.view().password.clone(),
-            cx,
-        );
+        let selected = if selected {
+            self.browser.view().selected.iter().cloned().collect()
+        } else {
+            Vec::new()
+        };
+        self.begin_extract(catalog, selected, parent, folder, open_after, false, false, cx);
     }
 
     pub(crate) fn properties(&mut self, selected: bool, cx: &mut Context<Self>) {
@@ -390,8 +383,7 @@ impl Workspace {
         } else {
             tr("archive-info")
         };
-        self.dialogs.show(title, Modal::Info(fields));
-        cx.notify();
+        self.show_dialog(title, Modal::Info(fields), cx);
     }
 
     pub(crate) fn save_copy(&mut self, cx: &mut Context<Self>) {
@@ -408,7 +400,7 @@ impl Workspace {
             if destination == c.path {
                 return Ok(Outcome::Cancelled);
             }
-            cardo_7zp_application::filesystem::copy_file(&c.path, &destination)?;
+            cardo_7zp_requests::filesystem::copy_file(&c.path, &destination)?;
             Ok(Outcome::Message(tf(
                 "archive-saved",
                 &[("path", destination.display().to_string().into())],
@@ -433,7 +425,7 @@ impl Workspace {
             return;
         }
         self.show_page(Page::Files, window, cx);
-        let archive = paths.len() == 1 && cardo_7zp_shell_api::opens_directly(&paths[0]);
+        let archive = paths.len() == 1 && cardo_7zp_commands::opens_directly(&paths[0]);
         if archive {
             self.execute(Request::Open(paths[0].clone()), String::new(), cx);
         } else {

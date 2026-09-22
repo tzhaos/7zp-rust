@@ -3,7 +3,7 @@ use super::{
 };
 use anyhow::{Context, Result, bail};
 use cardo_7zp_core::i18n::{tf, tr};
-use cardo_7zp_shell_api::OpenType;
+use cardo_7zp_commands::OpenType;
 use std::{
     collections::BTreeMap,
     ffi::OsString,

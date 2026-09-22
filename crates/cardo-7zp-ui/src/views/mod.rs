@@ -18,6 +18,7 @@ impl Render for Workspace {
     fn render(&mut self, window: &mut Window, cx: &mut Context<Self>) -> impl IntoElement {
         self.sync_view(window, cx);
         let p = crate::theme::palette(cx);
+        let appearance = crate::theme::appearance(cx);
         let modal = self.modal(window, cx);
         let settings_page = self.settings_page(cx);
         let searching = !self.search.read(cx).value().is_empty();
@@ -33,9 +34,27 @@ impl Render for Workspace {
             .size_full()
             .bg(rgb(p.panel))
             .text_color(rgb(p.text))
-            .font_family("Microsoft YaHei UI")
-            .text_size(px(13.))
+            .font(crate::theme::interface_font(cx))
+            .text_size(px(appearance.font_size))
             .on_key_down(cx.listener(Self::keyboard))
+            .on_mouse_down(
+                MouseButton::Left,
+                cx.listener(|this, event: &MouseDownEvent, _, cx| {
+                    this.hint_anchor = Some(event.position);
+                    cx.notify();
+                }),
+            )
+            .on_mouse_move(cx.listener(|this, event: &MouseMoveEvent, _, cx| {
+                let Some(anchor) = this.hint_anchor else {
+                    return;
+                };
+                let moved = (event.position.x - anchor.x).abs() > px(8.)
+                    || (event.position.y - anchor.y).abs() > px(8.);
+                if moved {
+                    this.hint_anchor = None;
+                    cx.notify();
+                }
+            }))
             .on_drag_move(
                 cx.listener(|this, _: &DragMoveEvent<ExternalPaths>, _, cx| {
                     if !this.dialogs.is_open()
@@ -113,6 +132,7 @@ impl Render for Workspace {
                                                     .track_scroll(&self.scroll)
                                                     .size_full(),
                                                 )
+                                                .child(Scrollbar::vertical(&self.scroll).id("files-scrollbar"))
                                             })
                                             .when(home && has_recent_matches, |el| {
                                                 el.child(self.recent_archives_view(cx))
@@ -136,6 +156,8 @@ impl Render for Workspace {
                                                                 } else {
                                                                     ToolIcon::History
                                                                 },
+                                                                window,
+                                                                cx,
                                                             ))
                                                             .child(div().text_size(px(14.)).child(
                                                                 if searching {
@@ -221,12 +243,13 @@ impl Render for Workspace {
                                                     },
                                                 ),
                                             )
+                                            .overflow_hidden()
                                             .with_animation(
                                                 ("files-page-transition", self.page_revision),
                                                 Animation::new(std::time::Duration::from_millis(
-                                                    180,
+                                                    160,
                                                 ))
-                                                .with_easing(ease_out_quint()),
+                                                .with_easing(toolbar::motion_ease),
                                                 move |el, delta| {
                                                     el.left(px((1.0 - delta)
                                                         * page_direction
@@ -299,6 +322,7 @@ impl Render for Workspace {
                                                     "dismiss-completion",
                                                     "Dismiss",
                                                     tr("completion-close"),
+                                                    false,
                                                     cx,
                                                 )
                                                 .on_click(cx.listener(|this, _, _, cx| {
@@ -337,12 +361,18 @@ impl Render for Workspace {
                                 .flex_1()
                                 .min_w_0()
                                 .max_h(px(96.))
-                                .overflow_scroll()
+                                .overflow_y_scrollbar()
                                 .text_size(px(12.))
                                 .child(div().whitespace_normal().child(message)),
                         )
                         .child(
-                            icon_button("dismiss-message", "Dismiss", tr("message-close"), cx)
+                            icon_button(
+                                "dismiss-message",
+                                "Dismiss",
+                                tr("message-close"),
+                                false,
+                                cx,
+                            )
                                 .on_click(cx.listener(|this, _, _, cx| {
                                     this.message = None;
                                     cx.notify();

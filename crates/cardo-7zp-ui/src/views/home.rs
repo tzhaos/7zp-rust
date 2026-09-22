@@ -82,7 +82,7 @@ impl Workspace {
                                     .child(
                                         div()
                                             .flex_shrink_0()
-                                            .text_size(px(metrics::HISTORY_TEXT_SIZE))
+                                            .text_size(crate::theme::ui_font_size(cx))
                                             .font_weight(FontWeight::MEDIUM)
                                             .text_color(rgb(p.muted))
                                             .child(tr("recent-title")),
@@ -98,7 +98,7 @@ impl Workspace {
                                     .when(!has_history, |el| {
                                         el.child(
                                             div()
-                                                .text_size(px(metrics::HISTORY_TEXT_SIZE))
+                                                .text_size(crate::theme::ui_font_size(cx))
                                                 .text_color(rgb(p.muted))
                                                 .child(tr("recent-empty")),
                                         )

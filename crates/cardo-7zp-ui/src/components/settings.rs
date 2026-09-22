@@ -2,7 +2,7 @@ use gpui_kit::component::{h_flex, v_flex};
 use gpui_kit::prelude::FluentBuilder;
 use gpui_kit::*;
 
-pub fn settings_row(label: &str, control: impl IntoElement) -> Div {
+pub fn settings_row(label: &str, control: impl IntoElement, cx: &App) -> Div {
     h_flex()
         .w_full()
         .min_h(px(52.))
@@ -12,7 +12,7 @@ pub fn settings_row(label: &str, control: impl IntoElement) -> Div {
             div()
                 .flex_1()
                 .min_w_0()
-                .text_size(px(13.))
+                .text_size(crate::theme::ui_font_size(cx))
                 .line_height(relative(1.5))
                 .whitespace_normal()
                 .font_weight(FontWeight::NORMAL)
@@ -33,13 +33,13 @@ pub fn settings_group(rows: impl IntoIterator<Item = AnyElement>, cx: &App) -> D
         }))
 }
 
-pub fn settings_section(title: &str, group: Div) -> Div {
+pub fn settings_section(title: &str, group: Div, cx: &App) -> Div {
     v_flex()
         .flex_shrink_0()
         .gap(px(8.))
         .child(
             div()
-                .text_size(px(14.))
+                .text_size(crate::theme::ui_font_size(cx))
                 .font_weight(FontWeight::SEMIBOLD)
                 .child(title.to_owned()),
         )

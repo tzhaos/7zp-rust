@@ -109,7 +109,7 @@ fn load(language: &str) -> Result<Localizer> {
         other => bail!("Unsupported language: {other}"),
     };
     let resource = FluentResource::try_new(source.to_owned())
-        .map_err(|(_, errors)| anyhow::anyhow!("Invalid Fluent resource: {errors:?}"))?;
+        .map_err(|(_, errors)| anyhow::anyhow!("Invalid locale file: {errors:?}"))?;
     let mut labels = HashMap::new();
     for entry in resource.entries() {
         if let Entry::Message(message) = entry
@@ -133,7 +133,7 @@ fn load(language: &str) -> Result<Localizer> {
     bundle.set_use_isolating(false);
     bundle
         .add_resource(resource)
-        .map_err(|errors| anyhow::anyhow!("Duplicate Fluent keys: {errors:?}"))?;
+        .map_err(|errors| anyhow::anyhow!("Duplicate locale keys: {errors:?}"))?;
     Ok(Localizer { bundle, labels })
 }
 

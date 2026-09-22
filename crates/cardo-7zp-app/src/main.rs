@@ -85,7 +85,12 @@ fn main() {
         .run(move |cx| {
             gpui_kit::init(cx);
             match ui::theme::load() {
-                Ok(id) => ui::theme::apply(id, None, cx),
+                Ok(id) => ui::theme::apply(
+                    id,
+                    &cardo_7zp_core::settings::load_appearance(),
+                    None,
+                    cx,
+                ),
                 Err(error) => {
                     report(error);
                     cx.quit();
@@ -103,6 +108,7 @@ fn main() {
                 let options = WindowOptions {
                     window_bounds: Some(bounds),
                     window_min_size: Some(size(px(720.), px(460.))),
+                    inactive_frame_interval: None,
                     titlebar: Some(TitlebarOptions {
                         title: Some("7zplus".into()),
                         appears_transparent: true,

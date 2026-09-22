@@ -7,10 +7,10 @@ description = "GPUI workspace and shared visual components for 7zplus"
 
 [dependencies]
 cardo-7zp-core.workspace = true
-cardo-7zp-archive.workspace = true
-cardo-7zp-application.workspace = true
+cardo-7zp-engine.workspace = true
+cardo-7zp-requests.workspace = true
 cardo-7zp-platform.workspace = true
-cardo-7zp-shell-api.workspace = true
+cardo-7zp-commands.workspace = true
 anyhow.workspace = true
 gpui-kit.workspace = true
 image.workspace = true

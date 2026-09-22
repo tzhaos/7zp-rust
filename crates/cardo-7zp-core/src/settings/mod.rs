@@ -12,9 +12,11 @@ pub struct Preferences {
     pub remember_recent: bool,
     pub open_after: bool,
     pub close_after_quick: bool,
+    pub close_archive_after_quick: bool,
     pub low_priority: bool,
     pub check_updates: bool,
     pub shell_menu: bool,
+    pub hide_tool_labels: bool,
     pub associations: Vec<String>,
     pub temp_directory: String,
     pub extract_all: String,
@@ -26,9 +28,11 @@ impl Default for Preferences {
             remember_recent: true,
             open_after: true,
             close_after_quick: false,
+            close_archive_after_quick: false,
             low_priority: true,
             check_updates: false,
             shell_menu: true,
+            hide_tool_labels: false,
             associations: [
                 ".7z", ".zip", ".rar", ".tar", ".gz", ".bz2", ".xz", ".wim", ".iso", ".cab", ".001",
             ]
@@ -95,6 +99,86 @@ pub fn prepare_temp_directory(path: &str) -> Result<()> {
         bail!(crate::i18n::tr("settings-temp-absolute"));
     }
     std::fs::create_dir_all(path)?;
+    Ok(())
+}
+
+#[derive(Clone, Serialize, Deserialize)]
+#[serde(default)]
+pub struct Appearance {
+    pub font_family: String,
+    pub font_size: f32,
+}
+
+impl Default for Appearance {
+    fn default() -> Self {
+        Self {
+            font_family: "Microsoft YaHei UI".into(),
+            font_size: 12.,
+        }
+    }
+}
+
+impl Appearance {
+    pub const SIZES: [f32; 6] = [12., 13., 14., 16., 18., 20.];
+}
+
+/// Splits a font stack on English commas. Empty pieces are dropped.
+pub fn font_names(value: &str) -> Vec<String> {
+    value
+        .split(',')
+        .map(str::trim)
+        .filter(|name| !name.is_empty())
+        .map(str::to_owned)
+        .collect()
+}
+
+pub fn join_fonts(names: &[String]) -> String {
+    names.join(", ")
+}
+
+/// Trims each name, drops empties, and keeps the first spelling of a repeated name.
+pub fn normalize_font_stack(value: &str) -> String {
+    let mut names = Vec::new();
+    for name in font_names(value) {
+        if names
+            .iter()
+            .any(|existing: &String| existing.eq_ignore_ascii_case(&name))
+        {
+            continue;
+        }
+        names.push(name);
+    }
+    join_fonts(&names)
+}
+
+/// Adds `font` to the stack, or removes it when it is already present.
+pub fn toggle_font(value: &str, font: &str) -> String {
+    let mut names = font_names(value);
+    if let Some(index) = names
+        .iter()
+        .position(|name| name.eq_ignore_ascii_case(font))
+    {
+        names.remove(index);
+    } else {
+        names.push(font.to_owned());
+    }
+    join_fonts(&names)
+}
+
+pub fn load_appearance() -> Appearance {
+    let Ok(root) = directory() else {
+        return Appearance::default();
+    };
+    match std::fs::read(root.join("appearance.json")) {
+        Ok(bytes) => serde_json::from_slice(&bytes).unwrap_or_default(),
+        Err(_) => Appearance::default(),
+    }
+}
+
+pub fn save_appearance(appearance: &Appearance) -> Result<()> {
+    let root = directory()?;
+    std::fs::create_dir_all(&root)?;
+    std::fs::write(root.join("appearance.json"), serde_json::to_vec(appearance)?)?;
     Ok(())
 }
 

@@ -12,13 +12,14 @@ use cardo_7zp_core::i18n::tr;
 #[serde(rename_all = "kebab-case")]
 pub enum ThemeId {
     #[default]
-    FluentLight,
+    #[serde(alias = "fluent-light")]
+    Light,
     GithubLight,
     OneDark,
     Dracula,
 }
 
-pub const THEMES: [ThemeId; 2] = [ThemeId::FluentLight, ThemeId::OneDark];
+pub const THEMES: [ThemeId; 2] = [ThemeId::Light, ThemeId::OneDark];
 
 #[derive(Clone, Copy)]
 pub struct Palette {
@@ -39,13 +40,17 @@ pub struct Palette {
     pub scrim: u32,
 }
 
-struct ThemeState(ThemeId);
+struct ThemeState {
+    id: ThemeId,
+    appearance: cardo_7zp_core::settings::Appearance,
+    font_fallbacks: Vec<String>,
+}
 impl Global for ThemeState {}
 
 impl ThemeId {
     pub fn label(self) -> &'static str {
         tr(match self {
-            Self::FluentLight => "theme-fluent-light",
+            Self::Light => "theme-light",
             Self::GithubLight => "theme-github-light",
             Self::OneDark => "theme-one-dark",
             Self::Dracula => "theme-dracula",
@@ -54,14 +59,14 @@ impl ThemeId {
 
     fn mode(self) -> ThemeMode {
         match self {
-            Self::FluentLight | Self::GithubLight => ThemeMode::Light,
+            Self::Light | Self::GithubLight => ThemeMode::Light,
             Self::OneDark | Self::Dracula => ThemeMode::Dark,
         }
     }
 
     fn palette(self) -> Palette {
         match self {
-            Self::FluentLight => Palette {
+            Self::Light => Palette {
                 surface: 0xffffff,
                 panel: 0xf0f1f3,
                 title: 0xf5f6f8,
@@ -134,10 +139,62 @@ impl ThemeId {
 }
 
 pub fn current(cx: &App) -> ThemeId {
-    cx.global::<ThemeState>().0
+    cx.global::<ThemeState>().id
 }
+
+pub fn appearance(cx: &App) -> cardo_7zp_core::settings::Appearance {
+    cx.global::<ThemeState>().appearance.clone()
+}
+
+pub fn ui_font_size(cx: &App) -> Pixels {
+    px(appearance(cx).font_size)
+}
+
 pub fn palette(cx: &App) -> Palette {
-    current(cx).palette()
+    cx.global::<ThemeState>().id.palette()
+}
+
+/// The face actually used for interface text.
+///
+/// The first installed name in the comma-separated stack is the family. The
+/// remaining installed names are glyph fallbacks. A name the system does not
+/// list is not passed to GPUI, because a missing family panics on layout.
+pub fn interface_font(cx: &App) -> Font {
+    let fallbacks = cx.global::<ThemeState>().font_fallbacks.clone();
+    let mut face = font(Theme::global(cx).font_family.clone());
+    if !fallbacks.is_empty() {
+        face.fallbacks = Some(FontFallbacks::from_fonts(fallbacks));
+    }
+    face
+}
+
+fn font_choice(requested: &str, installed: &[String]) -> (SharedString, Vec<String>) {
+    let mut chosen = Vec::new();
+    for name in cardo_7zp_core::settings::font_names(requested) {
+        let Some(canonical) = installed
+            .iter()
+            .find(|item| item.eq_ignore_ascii_case(&name))
+        else {
+            continue;
+        };
+        if chosen
+            .iter()
+            .any(|item: &String| item.eq_ignore_ascii_case(canonical))
+        {
+            continue;
+        }
+        chosen.push(canonical.clone());
+    }
+    if chosen.is_empty() {
+        let family = installed
+            .iter()
+            .find(|item| item.eq_ignore_ascii_case("Microsoft YaHei UI"))
+            .cloned()
+            .unwrap_or_else(|| ".SystemUIFont".to_string());
+        return (family.into(), Vec::new());
+    }
+    let primary = chosen.remove(0);
+    (primary.into(), chosen)
 }
 
 pub fn load() -> Result<ThemeId> {
@@ -151,13 +208,25 @@ pub fn save(id: ThemeId) -> Result<()> {
     cardo_7zp_core::settings::write_theme(&serde_json::to_vec(&id)?)
 }
 
-pub fn apply(id: ThemeId, window: Option<&mut Window>, cx: &mut App) {
+pub fn apply(
+    id: ThemeId,
+    appearance: &cardo_7zp_core::settings::Appearance,
+    window: Option<&mut Window>,
+    cx: &mut App,
+) {
+    let installed = cx.text_system().all_font_names();
+    let (primary, font_fallbacks) = font_choice(&appearance.font_family, &installed);
+    cx.set_global(ThemeState {
+        id,
+        appearance: appearance.clone(),
+        font_fallbacks,
+    });
     Theme::change(id.mode(), window, cx);
-    let p = id.palette();
+    let p = palette(cx);
     let theme = Theme::global_mut(cx);
-    theme.font_family = "Microsoft YaHei UI".into();
-    // GPUI Kit's text_sm uses 0.875rem; a 16px base yields a 14px menu label.
-    theme.font_size = px(16.);
+    theme.font_family = primary;
+    // A 12px list keeps the previous 16px rem base, so menu labels stay 14px.
+    theme.font_size = px(appearance.font_size * (16. / 12.));
     theme.radius = px(metrics::CONTROL_RADIUS);
     theme.radius_lg = px(8.);
     let c = &mut theme.colors;
@@ -195,9 +264,12 @@ pub fn apply(id: ThemeId, window: Option<&mut Window>, cx: &mut App) {
     c.list_active = c.button_active;
     c.list_active_border = c.primary;
     c.selection = rgb(p.selected).into();
+    c.scrollbar = rgba(0x00000000).into();
+    c.scrollbar_thumb = rgba((p.muted << 8) | 0xb0).into();
+    c.scrollbar_thumb_hover = rgba((p.text << 8) | 0xe6).into();
+    theme.scrollbar_mode = gpui_kit::component::scroll::ScrollbarMode::Always;
     // Component backgrounds read resolved tokens separately from the color palette.
     theme.tokens = theme.colors.into();
     Theme::sync_base(cx);
-    cx.set_global(ThemeState(id));
     cx.refresh_windows();
 }

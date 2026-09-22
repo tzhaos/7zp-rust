@@ -25,9 +25,10 @@ use gpui_kit::{
     },
     *,
 };
-use cardo_7zp_application::{Outcome, Request, browser::Browser};
-use cardo_7zp_archive::{Cancellation, Catalog, CreateOptions, Edit, Entry, Overwrite};
+use cardo_7zp_requests::{Outcome, Request, browser::Browser};
+use cardo_7zp_engine::{Cancellation, Catalog, CreateOptions, Edit, Entry, Overwrite};
 use cardo_7zp_core::i18n::{tf, tr};
+pub(crate) use gpui_kit::component::scroll::{ScrollableElement, Scrollbar};
 use std::{
     collections::BTreeSet,
     path::{Path, PathBuf},
@@ -78,6 +79,7 @@ impl DestinationKind {
 
 pub struct Workspace {
     preferences: cardo_7zp_core::settings::Preferences,
+    appearance: cardo_7zp_core::settings::Appearance,
     preferences_task: Option<Task<()>>,
     tasks: task::TaskState,
     browser: Browser,
@@ -105,15 +107,17 @@ pub struct Workspace {
     shell_read_task: Option<Task<()>>,
     pending_run: Option<(tempfile::TempDir, PathBuf)>,
     extract_follow: std::collections::VecDeque<(Request, String)>,
+    pending_close_archive: bool,
     theme_save: Option<Task<()>>,
     update_task: Option<Task<()>>,
     language_task: Option<Task<()>>,
     launches: std::collections::VecDeque<Vec<String>>,
-    after_open: Option<cardo_7zp_platform::ShellAction>,
+    after_open: Option<cardo_7zp_platform::ExplorerAction>,
     context_menu: Option<Entity<PopupMenu>>,
     context_menu_position: Point<Pixels>,
     menu_dismiss: Option<Subscription>,
     dragging: bool,
+    hint_anchor: Option<Point<Pixels>>,
     message_since: Option<(String, std::time::Instant)>,
     _search_subscription: Subscription,
     _address_subscription: Subscription,
@@ -152,10 +156,13 @@ impl Workspace {
         focus.focus(window, cx);
         let weak = cx.entity().downgrade();
         window.on_window_should_close(cx, move |_, cx| {
-            weak.read_with(cx, |this, cx| {
-                !this.tasks.is_busy() && !this.settings_busy(cx)
-            })
-            .unwrap_or(true)
+            let allow = weak
+                .read_with(cx, |this, cx| !this.tasks.is_busy() && !this.settings_busy(cx))
+                .unwrap_or(true);
+            if allow {
+                let _ = weak.update(cx, |this, cx| this.dialogs.close_prompt(cx));
+            }
+            allow
         });
         let activation_subscription = cx.observe_window_activation(window, |this, window, cx| {
             if window.is_window_active() {
@@ -164,6 +171,7 @@ impl Workspace {
         });
         let mut workspace = Self {
             preferences: cardo_7zp_core::settings::Preferences::default(),
+            appearance: cardo_7zp_core::settings::load_appearance(),
             preferences_task: None,
             tasks: task::TaskState::default(),
             browser: Browser::default(),
@@ -191,6 +199,7 @@ impl Workspace {
             shell_read_task: None,
             pending_run: None,
             extract_follow: std::collections::VecDeque::new(),
+            pending_close_archive: false,
             theme_save: None,
             update_task: None,
             language_task: None,
@@ -200,6 +209,7 @@ impl Workspace {
             context_menu_position: point(px(32.), px(196.)),
             menu_dismiss: None,
             dragging: false,
+            hint_anchor: None,
             message_since: None,
             _search_subscription: subscription,
             _address_subscription: address_subscription,
@@ -208,6 +218,14 @@ impl Workspace {
         workspace.reload_history(cx);
         workspace.load_preferences(cx);
         workspace
+    }
+
+    pub(crate) fn allow_hint(&self, enabled: bool) -> bool {
+        enabled
+            && self.hint_anchor.is_none()
+            && !self.dialogs.is_open()
+            && self.context_menu.is_none()
+            && !self.dragging
     }
 
     pub(crate) fn close_modal(&mut self, cx: &mut Context<Self>) {
@@ -222,14 +240,32 @@ impl Workspace {
         if matches!(self.dialogs.current(), Some(Modal::ConfirmRun { .. })) {
             self.pending_run = None;
         }
+        if matches!(self.dialogs.current(), Some(Modal::Conflict { .. })) {
+            self.tasks.set_close_after(false);
+            self.tasks.set_close_archive(false);
+            self.extract_follow.clear();
+        }
         self.update_task = None;
         self.dialogs.take();
+        self.dialogs.close_prompt(cx);
         cx.notify();
     }
 }
 
 impl Workspace {
     fn sync_view(&mut self, window: &mut Window, cx: &mut Context<Self>) {
+        if self.pending_close_archive {
+            self.pending_close_archive = false;
+            if let Some(parent) = self
+                .browser
+                .view()
+                .catalog
+                .as_ref()
+                .and_then(|catalog| catalog.path.parent().map(Path::to_owned))
+            {
+                self.visit(browser::Location::Directory(parent), window, cx);
+            }
+        }
         if self.address_dirty {
             self.address_dirty = false;
             let address = self.address_text();
@@ -243,5 +279,11 @@ impl Workspace {
             self.refresh(cx);
         }
         self.dialogs.sync(window, cx);
+        if (self.dialogs.is_open() || self.dialogs.pending_create.is_some())
+            && !self.dialogs.has_prompt()
+            && !self.dialogs.open_failed()
+        {
+            self.schedule_prompt(cx);
+        }
     }
 }

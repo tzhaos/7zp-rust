@@ -3,19 +3,33 @@ use super::*;
 #[derive(Clone, Copy)]
 pub(super) enum Command {
     Open,
+    OpenItem,
+    OpenInside,
+    OpenOutside,
     Create,
     Save,
     Close,
     ArchiveInfo,
     ClearRecent,
-    Files,
     Exit,
     Extract,
     QuickExtract,
     Add,
+    Rename,
+    CopyTo,
+    MoveTo,
+    Delete,
     Properties,
     Comment,
     Check,
+    SelectAll,
+    DeselectAll,
+    InvertSelection,
+    SelectByType,
+    DeselectByType,
+    Sort(usize),
+    Up,
+    Refresh,
     Settings(preferences::Tab),
     Updates,
     Help,
@@ -32,11 +46,23 @@ impl Workspace {
         if self.tasks.is_busy() || self.settings_busy(cx) {
             return;
         }
-        if matches!(command, Command::Open | Command::Create) {
+        if matches!(
+            command,
+            Command::Open
+                | Command::OpenItem
+                | Command::OpenInside
+                | Command::OpenOutside
+                | Command::Create
+                | Command::Up
+                | Command::Refresh
+        ) {
             self.show_page(Page::Files, window, cx);
         }
         match command {
             Command::Open => self.open(cx),
+            Command::OpenItem => self.open_current(window, cx),
+            Command::OpenInside => self.open_inside(window, cx),
+            Command::OpenOutside => self.open_outside(window, cx),
             Command::Create => self.create_dialog(Vec::new(), window, cx),
             Command::Save => self.save_copy(cx),
             Command::Close => {
@@ -53,10 +79,13 @@ impl Workspace {
             }
             Command::ArchiveInfo => self.properties(false, cx),
             Command::ClearRecent => self.update_recent(recent::Change::Clear, cx),
-            Command::Files => self.show_page(Page::Files, window, cx),
             Command::Exit => window.remove_window(),
             Command::Extract => self.extract_dialog(window, cx),
             Command::QuickExtract => self.quick_extract(false, cx),
+            Command::Rename => self.rename_entry(window, cx),
+            Command::CopyTo => self.copy_entries(false, cx),
+            Command::MoveTo => self.copy_entries(true, cx),
+            Command::Delete => self.delete_entries(cx),
             Command::Add => {
                 if self
                     .browser
@@ -80,6 +109,38 @@ impl Workspace {
                     self.execute(Request::ReadComment(catalog), String::new(), cx);
                 }
             }
+            Command::SelectAll => {
+                self.browser.select_all();
+                cx.notify();
+            }
+            Command::DeselectAll => {
+                self.browser.deselect_all();
+                cx.notify();
+            }
+            Command::InvertSelection => {
+                self.browser.invert_selection();
+                cx.notify();
+            }
+            Command::SelectByType => {
+                self.browser.select_by_type(false);
+                cx.notify();
+            }
+            Command::DeselectByType => {
+                self.browser.select_by_type(true);
+                cx.notify();
+            }
+            Command::Sort(column) => {
+                if self.browser.view().sort == column {
+                    let descending = !self.browser.view().descending;
+                    self.browser.set_descending(descending);
+                } else {
+                    self.browser.set_sort(column);
+                    self.browser.set_descending(false);
+                }
+                self.refresh(cx);
+            }
+            Command::Up => self.up(window, cx),
+            Command::Refresh => self.reload_location(cx),
             Command::Check => {
                 if let Some(catalog) = self.browser.view().catalog.clone() {
                     self.execute(
@@ -91,28 +152,20 @@ impl Workspace {
             }
             Command::Settings(tab) => self.preferences_category(tab, window, cx),
             Command::Updates => self.check_update(cx),
-            Command::Help => self.start(tr("menu-help"), cx, |_| {
-                let path = std::env::current_exe()?
-                    .parent()
-                    .unwrap()
-                    .join("runtime/7zip/7-zip.chm");
-                cardo_7zp_platform::open_file(&path)?;
-                Ok(Outcome::Cancelled)
-            }),
+            Command::Help => self.show_dialog(tr("menu-help"), Modal::Help, cx),
             Command::About => {
-                self.dialogs.show(
+                self.show_dialog(
                     tr("menu-about"),
                     Modal::Info(vec![
                         (tr("name").into(), "7zplus".into()),
                         (
                             tr("about-version").into(),
-                            cardo_7zp_application::update::VERSION.into(),
+                            cardo_7zp_requests::update::VERSION.into(),
                         ),
                         (tr("about-engine").into(), "7-Zip 26.03".into()),
-                        (tr("about-ui").into(), "GPUI Kit / Microsoft Fluent".into()),
                     ]),
+                    cx,
                 );
-                cx.notify();
             }
         }
     }
@@ -210,17 +263,6 @@ impl Workspace {
             cx.stop_propagation();
             return;
         }
-        if key == "f5"
-            && let Some(directory) = &self.browser.view().directory
-        {
-            self.visit(
-                browser::Location::Directory(directory.path.clone()),
-                window,
-                cx,
-            );
-            cx.stop_propagation();
-            return;
-        }
         if key == "contextmenu" || (modifiers.shift && key == "f10") {
             self.open_context_menu(
                 menus::context::Target::Keyboard,
@@ -231,9 +273,63 @@ impl Workspace {
             cx.stop_propagation();
             return;
         }
-        if modifiers.control && key == "a" {
+        if modifiers.control && !modifiers.alt && !modifiers.shift && key == "a" {
             self.browser.select_all();
             cx.notify();
+            cx.stop_propagation();
+            return;
+        }
+        if modifiers.control && !modifiers.alt && !modifiers.shift && key == "r" {
+            self.command(commands::Command::Refresh, window, cx);
+            cx.stop_propagation();
+            return;
+        }
+        if modifiers.control && !modifiers.alt && !modifiers.shift && key == "z" {
+            self.command(commands::Command::Comment, window, cx);
+            cx.stop_propagation();
+            return;
+        }
+        if modifiers.control && !modifiers.alt && !modifiers.shift {
+            let column = match key {
+                "f3" => Some(0),
+                "f5" => Some(2),
+                "f6" => Some(1),
+                _ => None,
+            };
+            if let Some(column) = column {
+                self.command(commands::Command::Sort(column), window, cx);
+                cx.stop_propagation();
+                return;
+            }
+        }
+        if modifiers.alt && !modifiers.control && key == "enter" {
+            self.command(commands::Command::Properties, window, cx);
+            cx.stop_propagation();
+            return;
+        }
+        if modifiers.shift && !modifiers.control && !modifiers.alt && key == "enter" {
+            self.command(commands::Command::OpenOutside, window, cx);
+            cx.stop_propagation();
+            return;
+        }
+        if modifiers.control && !modifiers.shift && !modifiers.alt && key == "pagedown" {
+            self.command(commands::Command::OpenInside, window, cx);
+            cx.stop_propagation();
+            return;
+        }
+        if !modifiers.control && !modifiers.alt && !modifiers.shift {
+            let command = match key {
+                "f2" => Some(commands::Command::Rename),
+                "f5" => Some(commands::Command::CopyTo),
+                "f6" => Some(commands::Command::MoveTo),
+                "delete" => Some(commands::Command::Delete),
+                _ => None,
+            };
+            if let Some(command) = command {
+                self.command(command, window, cx);
+                cx.stop_propagation();
+                return;
+            }
         }
         if ["up", "down", "home", "end"].contains(&key) && !self.browser.view().rows.is_empty() {
             let browser = self.browser.view();
@@ -252,13 +348,12 @@ impl Workspace {
             self.scroll.scroll_to_item(next, ScrollStrategy::Center);
             cx.stop_propagation();
         }
-        if key == "enter"
-            && let Some(e) = self.browser.view().rows.iter().find(|e| {
-                self.browser.view().selected.len() == 1
-                    && self.browser.view().selected.contains(&e.path)
-            })
-        {
-            self.open_entry(e.path.clone(), window, cx);
+        if key == "enter" {
+            let path = self.current_item().map(|entry| entry.path.clone());
+            if let Some(path) = path {
+                self.open_entry(path, window, cx);
+                cx.stop_propagation();
+            }
         }
         if key == "space"
             && let Some(path) = self.browser.view().cursor.clone()

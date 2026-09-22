@@ -18,9 +18,11 @@ try {
     if ($LASTEXITCODE -ne 0) { throw "Cargo build failed: $LASTEXITCODE" }
     & (Join-Path $PSScriptRoot 'prepare-engine.ps1')
     Copy-Item -LiteralPath 'target/x86_64-pc-windows-msvc/release/7zplus.exe' -Destination 'bin/7zplus.exe' -Force
-    Copy-Item -LiteralPath 'target/x86_64-pc-windows-msvc/release/cardo_7zp_shell.dll' -Destination 'bin/7-zip-plus.dll' -Force
-    if (Test-Path -LiteralPath 'bin/cardo_7zp_shell.dll') {
-        Remove-Item -LiteralPath 'bin/cardo_7zp_shell.dll'
+    Copy-Item -LiteralPath 'target/x86_64-pc-windows-msvc/release/cardo_7zp_explorer.dll' -Destination 'bin/7-zip-plus.dll' -Force
+    foreach ($leftover in @('bin/cardo_7zp_explorer.dll', 'bin/cardo_7zp_shell.dll')) {
+        if (Test-Path -LiteralPath $leftover) {
+            Remove-Item -LiteralPath $leftover
+        }
     }
     $shellHash = (Get-FileHash -LiteralPath 'bin/7-zip-plus.dll' -Algorithm SHA256).Hash.ToLowerInvariant()
     $compiler = & (Join-Path $PSScriptRoot 'prepare-nsis.ps1')

@@ -69,7 +69,7 @@ impl Workspace {
         let paths: Vec<_> = self.browser.view().selected.iter().cloned().collect();
         let password = self.browser.view().password.clone();
         let source = catalog.path.clone();
-        let progress = cardo_7zp_archive::Progress::new();
+        let progress = cardo_7zp_engine::Progress::new();
         let reporting = progress.clone();
         self.start(tr("extracting"), cx, move |cancel| {
             let Some(destination) = rfd::FileDialog::new()

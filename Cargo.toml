@@ -2,12 +2,12 @@
 members = [
     "crates/cardo-7zp-app",
     "crates/cardo-7zp-core",
-    "crates/cardo-7zp-archive",
-    "crates/cardo-7zp-application",
+    "crates/cardo-7zp-engine",
+    "crates/cardo-7zp-requests",
     "crates/cardo-7zp-platform",
     "crates/cardo-7zp-ui",
-    "crates/cardo-7zp-shell-api",
-    "crates/cardo-7zp-shell",
+    "crates/cardo-7zp-commands",
+    "crates/cardo-7zp-explorer",
 ]
 resolver = "3"
 
@@ -18,11 +18,11 @@ publish = false
 
 [workspace.dependencies]
 cardo-7zp-core = { path = "crates/cardo-7zp-core" }
-cardo-7zp-archive = { path = "crates/cardo-7zp-archive" }
-cardo-7zp-application = { path = "crates/cardo-7zp-application" }
+cardo-7zp-engine = { path = "crates/cardo-7zp-engine" }
+cardo-7zp-requests = { path = "crates/cardo-7zp-requests" }
 cardo-7zp-platform = { path = "crates/cardo-7zp-platform" }
 cardo-7zp-ui = { path = "crates/cardo-7zp-ui" }
-cardo-7zp-shell-api = { path = "crates/cardo-7zp-shell-api" }
+cardo-7zp-commands = { path = "crates/cardo-7zp-commands" }
 anyhow = "1.0"
 gpui-kit = "=0.6.1"
 image = { version = "0.25", default-features = false }

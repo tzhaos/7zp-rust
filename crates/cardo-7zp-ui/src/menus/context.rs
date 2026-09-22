@@ -1,5 +1,5 @@
 use crate::*;
-use cardo_7zp_shell_api::Action as ArchiveAction;
+use cardo_7zp_commands::Action as ExplorerAction;
 
 pub(crate) enum Target {
     Item(String),
@@ -155,7 +155,7 @@ pub(crate) fn build(
                         browser.rows.iter().any(|entry| {
                             &entry.path == path
                                 && !entry.directory
-                                && cardo_7zp_shell_api::may_extract(Path::new(path))
+                                && cardo_7zp_commands::may_extract(Path::new(path))
                         })
                     }),
             )
@@ -195,12 +195,12 @@ pub(crate) fn build(
         }
         if !busy && !paths.is_empty() {
             let sources = paths.iter().map(PathBuf::from).collect::<Vec<_>>();
-            let name = cardo_7zp_shell_api::archive_name(&sources, folder.is_some(), false);
+            let name = cardo_7zp_commands::archive_name(&sources, folder.is_some(), false);
             menu = menu.separator();
             for format in [
                 None,
-                Some(cardo_7zp_shell_api::ArchiveFormat::Zip),
-                Some(cardo_7zp_shell_api::ArchiveFormat::SevenZip),
+                Some(cardo_7zp_commands::ArchiveFormat::Zip),
+                Some(cardo_7zp_commands::ArchiveFormat::SevenZip),
             ] {
                 let label = match format {
                     None => tr("shell-add-archive").to_owned(),
@@ -230,11 +230,7 @@ pub(crate) fn build(
                         match format {
                             None => {
                                 this.create_dialog(sources.clone(), window, cx);
-                                if let Some(Modal::Create(form)) = this.dialogs.current() {
-                                    form.update(cx, |form, cx| {
-                                        form.suggest_name(name.clone(), window, cx)
-                                    });
-                                }
+                                this.dialogs.pending_name = Some(name.clone());
                             }
                             Some(format) => this.execute(
                                 Request::QuickCompress {
@@ -307,7 +303,7 @@ pub(crate) fn build(
         menu = menu
             .separator()
             .submenu(tr("sort-by"), window, cx, move |mut menu, _, _| {
-                menu = menu_style(menu);
+                menu = submenu_style(menu);
                 for (value, label) in [(0, tr("name")), (1, tr("size")), (2, tr("modified"))] {
                     menu = menu.item(
                         scope
@@ -353,7 +349,7 @@ fn archive_file_item(
     owner: &WeakEntity<Workspace>,
     directory: &Path,
     paths: &[String],
-    action: ArchiveAction,
+    action: ExplorerAction,
     label: impl Into<SharedString>,
 ) -> PopupMenuItem {
     let owner = owner.clone();
@@ -393,7 +389,7 @@ fn archive_file_menu(
             owner,
             directory,
             paths,
-            ArchiveAction::Open,
+            ExplorerAction::Open,
             tr("archive-open"),
         ));
         let owner = owner.clone();
@@ -401,9 +397,9 @@ fn archive_file_menu(
         let paths = paths.to_vec();
         menu = menu
             .submenu(tr("archive-open-type"), window, cx, move |menu, _, _| {
-                let mut menu = menu_style(menu);
-                for action in cardo_7zp_shell_api::ACTIONS.iter().copied() {
-                    if let ArchiveAction::OpenAs(kind) = action {
+                let mut menu = submenu_style(menu);
+                for action in cardo_7zp_commands::ACTIONS.iter().copied() {
+                    if let ExplorerAction::OpenAs(kind) = action {
                         menu = menu.item(archive_file_item(
                             &owner,
                             &directory,
@@ -422,17 +418,17 @@ fn archive_file_menu(
             "shell-extract-named",
             &[(
                 "name",
-                cardo_7zp_shell_api::extract_folder(Path::new(&paths[0])).into(),
+                cardo_7zp_commands::extract_folder(Path::new(&paths[0])).into(),
             )],
         )
     } else {
         tr("extract-each-folder").to_owned()
     };
     for (action, label) in [
-        (ArchiveAction::Extract, tr("shell-extract-files").to_owned()),
-        (ArchiveAction::ExtractHere, tr("extract-here").to_owned()),
-        (ArchiveAction::ExtractFolder, folder_label),
-        (ArchiveAction::Check, tr("shell-test-archive").to_owned()),
+        (ExplorerAction::Extract, tr("shell-extract-files").to_owned()),
+        (ExplorerAction::ExtractHere, tr("extract-here").to_owned()),
+        (ExplorerAction::ExtractFolder, folder_label),
+        (ExplorerAction::Check, tr("shell-test-archive").to_owned()),
     ] {
         menu = menu.item(archive_file_item(owner, directory, paths, action, label));
     }

@@ -1,5 +1,5 @@
 use super::*;
-use cardo_7zp_platform::ShellAction;
+use cardo_7zp_platform::ExplorerAction;
 
 impl Workspace {
     pub fn attach_system(
@@ -88,11 +88,11 @@ impl Workspace {
                 return;
             };
             match action {
-                ShellAction::Extract => self.extract_dialog(window, cx),
-                ShellAction::OneClickExtract | ShellAction::ExtractFolder => {
+                ExplorerAction::Extract => self.extract_dialog(window, cx),
+                ExplorerAction::OneClickExtract | ExplorerAction::ExtractFolder => {
                     self.quick_extract(false, cx)
                 }
-                ShellAction::ExtractHere => {
+                ExplorerAction::ExtractHere => {
                     let parent = catalog.path.parent().unwrap().to_path_buf();
                     self.begin_extract(
                         catalog,
@@ -101,10 +101,11 @@ impl Workspace {
                         String::new(),
                         self.preferences.open_after,
                         false,
+                        self.preferences.close_archive_after_quick,
                         cx,
                     );
                 }
-                ShellAction::Check => self.execute(
+                ExplorerAction::Check => self.execute(
                     Request::Check(catalog),
                     self.browser.view().password.clone(),
                     cx,
@@ -161,16 +162,14 @@ impl Workspace {
             return;
         }
         match action {
-            ShellAction::Compress | ShellAction::CompressEmail => {
+            ExplorerAction::Compress | ExplorerAction::CompressEmail => {
                 self.create_dialog(paths.iter().map(PathBuf::from).collect(), window, cx);
-                if action == ShellAction::CompressEmail {
-                    if let Some(Modal::Create(form)) = self.dialogs.current() {
-                        form.update(cx, |form, _| form.email = true);
-                    }
+                if action == ExplorerAction::CompressEmail {
+                    self.dialogs.pending_email = true;
                     self.dialogs.set_title(tr("shell-compress-email"));
                 }
             }
-            ShellAction::QuickCompress(format, email) => {
+            ExplorerAction::QuickCompress(format, email) => {
                 self.execute(
                     Request::QuickCompress {
                         paths: paths.iter().map(PathBuf::from).collect(),
@@ -181,26 +180,26 @@ impl Workspace {
                     cx,
                 );
             }
-            ShellAction::Checksum(method) => self.execute(
+            ExplorerAction::Checksum(method) => self.execute(
                 Request::Checksum {
                     paths: paths.iter().map(PathBuf::from).collect(),
-                    kind: cardo_7zp_application::ChecksumKind::Hash(method),
+                    kind: cardo_7zp_requests::ChecksumKind::Hash(method),
                 },
                 String::new(),
                 cx,
             ),
-            ShellAction::GenerateChecksum => self.execute(
+            ExplorerAction::GenerateChecksum => self.execute(
                 Request::Checksum {
                     paths: paths.iter().map(PathBuf::from).collect(),
-                    kind: cardo_7zp_application::ChecksumKind::Generate,
+                    kind: cardo_7zp_requests::ChecksumKind::Generate,
                 },
                 String::new(),
                 cx,
             ),
-            ShellAction::VerifyChecksum => self.execute(
+            ExplorerAction::VerifyChecksum => self.execute(
                 Request::Checksum {
                     paths: paths.iter().map(PathBuf::from).collect(),
-                    kind: cardo_7zp_application::ChecksumKind::Verify,
+                    kind: cardo_7zp_requests::ChecksumKind::Verify,
                 },
                 String::new(),
                 cx,
@@ -212,7 +211,7 @@ impl Workspace {
                         .push_front(vec![action.argument().into(), path.clone()]);
                 }
                 let request = match action {
-                    ShellAction::OpenAs(kind) => Request::OpenAs(PathBuf::from(&paths[0]), kind),
+                    ExplorerAction::OpenAs(kind) => Request::OpenAs(PathBuf::from(&paths[0]), kind),
                     _ => Request::Open(PathBuf::from(&paths[0])),
                 };
                 self.after_open = Some(action);

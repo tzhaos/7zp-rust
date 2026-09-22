@@ -12,11 +12,11 @@ pub fn list_row(
         .id(id)
         .relative()
         .flex()
-        .h(px(38.))
+        .h(px(crate::theme::ui_font_size(cx).as_f32() + 26.))
         .flex_shrink_0()
         .w_full()
         .items_center()
-        .text_size(px(12.))
+        .text_size(crate::theme::ui_font_size(cx))
         .rounded(px(4.))
         .when(selected, |el| el.bg(rgb(p.selected)))
         .when(!disabled, |el| {
@@ -49,8 +49,8 @@ pub fn list_entry(
         .gap(px(9.))
         .pr(px(12.))
         .items_center()
-        .text_size(px(12.))
-        .line_height(px(16.))
+        .text_size(crate::theme::ui_font_size(cx))
+        .line_height(px(crate::theme::ui_font_size(cx).as_f32() + 4.))
         .text_left()
         .child(file_icon)
         .child(
@@ -62,7 +62,7 @@ pub fn list_entry(
                     el.child(
                         div()
                             .truncate()
-                            .text_size(px(11.))
+                            .text_size(px((crate::theme::ui_font_size(cx).as_f32() - 1.).max(11.)))
                             .text_color(rgb(p.muted))
                             .child(detail),
                     )

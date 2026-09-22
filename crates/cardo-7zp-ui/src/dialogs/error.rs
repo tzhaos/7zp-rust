@@ -25,7 +25,7 @@ impl Workspace {
         });
         let mut summary = tr("operation-failed-summary");
         let mut path = None;
-        if let Some(source) = error.downcast_ref::<cardo_7zp_archive::SourceError>() {
+        if let Some(source) = error.downcast_ref::<cardo_7zp_engine::SourceError>() {
             path = Some(source.path.clone());
             match source.source.kind() {
                 std::io::ErrorKind::NotFound => {
@@ -51,7 +51,8 @@ impl Workspace {
         } else {
             self.reload_history(cx);
         }
-        self.dialogs.show(
+        self.message = None;
+        self.show_dialog(
             title,
             Modal::Error(ErrorDialog {
                 summary: summary.into(),
@@ -59,9 +60,8 @@ impl Workspace {
                 details: format!("{error:#}"),
                 expanded: false,
             }),
+            cx,
         );
-        self.message = None;
-        cx.notify();
     }
 
     pub(crate) fn error_view(
@@ -73,10 +73,16 @@ impl Workspace {
         let p = crate::theme::palette(cx);
         let details = error.details.clone();
         v_flex()
+            .flex_1()
             .min_h_0()
-            .p(px(20.))
-            .gap(px(18.))
             .child(
+                v_flex()
+                    .flex_1()
+                    .min_h_0()
+                    .px(px(24.))
+                    .py(px(20.))
+                    .gap(px(16.))
+                    .child(
                 h_flex()
                     .items_start()
                     .gap(px(12.))
@@ -132,7 +138,7 @@ impl Workspace {
                         .w_full()
                         .min_h_0()
                         .max_h(window.viewport_size().height - px(360.))
-                        .overflow_scroll()
+                        .overflow_scrollbar()
                         .p(px(12.))
                         .bg(rgb(p.panel))
                         .border_1()
@@ -144,10 +150,9 @@ impl Workspace {
                         .child(div().whitespace_nowrap().child(error.details.clone())),
                 )
             })
+            )
             .child(
-                h_flex()
-                    .justify_end()
-                    .gap(px(8.))
+                self.action_row(cx)
                     .child(
                         command("error-copy-details", tr("error-copy-details"))
                             .icon(icon("Copy", 14.))

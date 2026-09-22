@@ -19,20 +19,20 @@ pub struct System {
     pub receiver: Receiver<Command>,
 }
 
-pub use cardo_7zp_shell_api::Action as ShellAction;
+pub use cardo_7zp_commands::Action as ExplorerAction;
 
 pub fn read_shell_request(path: &std::path::Path) -> anyhow::Result<Vec<String>> {
     if path.parent() != Some(std::env::temp_dir().as_path())
         || !path.file_name().is_some_and(|name| {
             name.to_string_lossy()
-                .starts_with(cardo_7zp_shell_api::REQUEST_PREFIX)
+                .starts_with(cardo_7zp_commands::REQUEST_PREFIX)
         })
     {
         anyhow::bail!(cardo_7zp_core::i18n::tr("shell-request-invalid"));
     }
     let bytes = std::fs::read(path);
     let _ = std::fs::remove_file(path);
-    let request: cardo_7zp_shell_api::Request = serde_json::from_slice(&bytes?)?;
+    let request: cardo_7zp_commands::Request = serde_json::from_slice(&bytes?)?;
     let mut args = vec![request.action.argument().into()];
     args.extend(
         request
@@ -43,8 +43,8 @@ pub fn read_shell_request(path: &std::path::Path) -> anyhow::Result<Vec<String>>
     Ok(args)
 }
 
-pub fn parse_action(value: &str) -> anyhow::Result<ShellAction> {
-    cardo_7zp_shell_api::ACTIONS
+pub fn parse_action(value: &str) -> anyhow::Result<ExplorerAction> {
+    cardo_7zp_commands::ACTIONS
         .iter()
         .copied()
         .find(|action| action.argument() == value)

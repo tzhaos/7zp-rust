@@ -12,7 +12,7 @@ impl Render for PreferencesForm {
                     .id(("settings-content", self.tab.order() as usize))
                     .flex_1()
                     .min_h_0()
-                    .overflow_y_scroll()
+                    .overflow_y_scrollbar()
                     .px(px(24.))
                     .py(px(20.))
                     .gap(px(24.))
@@ -21,6 +21,7 @@ impl Render for PreferencesForm {
                         let languages = cx.entity().downgrade();
                         let selected_theme = self.theme;
                         let selected_language = self.language;
+                        let size_label = format!("{}", self.font_size as u32);
                         el.child(settings_group(
                             [
                                 settings_row(
@@ -49,6 +50,7 @@ impl Render for PreferencesForm {
                                             }
                                             menu
                                         }),
+                                    cx,
                                 )
                                 .into_any_element(),
                                 settings_row(
@@ -77,6 +79,137 @@ impl Render for PreferencesForm {
                                             }
                                             menu
                                         }),
+                                    cx,
+                                )
+                                .into_any_element(),
+                                settings_row(
+                                    tr("appearance-font"),
+                                    h_flex()
+                                        .w(px(340.))
+                                        .gap(px(6.))
+                                        .items_center()
+                                        .child(
+                                            div().flex_1().min_w_0().child(
+                                                text_input(&self.font_family).disabled(busy),
+                                            ),
+                                        )
+                                        .child({
+                                            let owner = cx.entity().downgrade();
+                                            icon_button(
+                                                "settings-font-list",
+                                                "ChevronDown",
+                                                tr("appearance-font-list"),
+                                                !busy,
+                                                cx,
+                                            )
+                                            .disabled(busy)
+                                            .dropdown_menu(move |menu, _, cx| {
+                                                let (fonts, selected) = owner
+                                                    .read_with(cx, |this, cx| {
+                                                        (
+                                                            this.installed_fonts.clone(),
+                                                            this.font_family.read(cx).value().to_string(),
+                                                        )
+                                                    })
+                                                    .unwrap_or_default();
+                                                let mut menu = menu_style(menu)
+                                                    .max_h(px(320.))
+                                                    .scrollable(true);
+                                                for font in fonts {
+                                                    let owner = owner.clone();
+                                                    let chosen = cardo_7zp_core::settings::font_names(
+                                                        &selected,
+                                                    )
+                                                    .iter()
+                                                    .any(|name| name.eq_ignore_ascii_case(&font));
+                                                    let label = font.clone();
+                                                    menu = menu.item(
+                                                        PopupMenuItem::element(move |_, _| {
+                                                            h_flex().w_full().min_w_0().h(px(26.)).child(
+                                                                div()
+                                                                    .flex_1()
+                                                                    .min_w_0()
+                                                                    .truncate()
+                                                                    .child(label.clone()),
+                                                            )
+                                                        })
+                                                        .checked(chosen)
+                                                        .on_click({
+                                                            let font = font.clone();
+                                                            move |_, window, cx| {
+                                                                let _ = owner.update(cx, |this, cx| {
+                                                                    let next =
+                                                                        cardo_7zp_core::settings::toggle_font(
+                                                                            &this
+                                                                                .font_family
+                                                                                .read(cx)
+                                                                                .value(),
+                                                                            &font,
+                                                                        );
+                                                                    this.font_family.update(
+                                                                        cx,
+                                                                        |input, cx| {
+                                                                            input.set_value(
+                                                                                next, window, cx,
+                                                                            );
+                                                                        },
+                                                                    );
+                                                                    this.save(window, cx);
+                                                                });
+                                                            }
+                                                        }),
+                                                    );
+                                                }
+                                                menu
+                                            })
+                                        }),
+                                    cx,
+                                )
+                                .into_any_element(),
+                                settings_row(
+                                    tr("appearance-font-size"),
+                                    command("settings-font-size", &size_label)
+                                    .w(px(190.))
+                                    .dropdown_caret(true)
+                                    .disabled(busy)
+                                    .dropdown_menu({
+                                        let owner = cx.entity().downgrade();
+                                        let selected = self.font_size;
+                                        move |menu, _, _| {
+                                            let mut menu = menu_style(menu);
+                                            for size in cardo_7zp_core::settings::Appearance::SIZES {
+                                                let owner = owner.clone();
+                                                menu = menu.item(
+                                                    PopupMenuItem::new(format!("{}", size as u32))
+                                                        .checked(size == selected)
+                                                        .on_click(move |_, window, cx| {
+                                                            let _ = owner.update(cx, |this, cx| {
+                                                                this.font_size = size;
+                                                                this.save(window, cx);
+                                                            });
+                                                        }),
+                                                );
+                                            }
+                                            menu
+                                        }
+                                    }),
+                                    cx,
+                                )
+                                .into_any_element(),
+                                settings_row(
+                                    tr("appearance-font-hint"),
+                                    command("appearance-reset", tr("appearance-reset"))
+                                        .disabled(busy)
+                                        .on_click(cx.listener(|this, _, window, cx| {
+                                            let default =
+                                                cardo_7zp_core::settings::Appearance::default();
+                                            this.font_family.update(cx, |input, cx| {
+                                                input.set_value(default.font_family, window, cx)
+                                            });
+                                            this.font_size = default.font_size;
+                                            this.save(window, cx);
+                                        })),
+                                    cx,
                                 )
                                 .into_any_element(),
                             ],
@@ -109,9 +242,17 @@ impl Render for PreferencesForm {
                                         cx,
                                     )
                                     .into_any_element(),
+                                    self.toggle_row(
+                                        "settings-hide-tool-labels",
+                                        Toggle::ToolLabels,
+                                        self.value.hide_tool_labels,
+                                        cx,
+                                    )
+                                    .into_any_element(),
                                 ],
                                 cx,
                             ),
+                            cx,
                         ))
                     })
                     .when(self.tab == Tab::Advanced, |el| {
@@ -140,9 +281,17 @@ impl Render for PreferencesForm {
                                         cx,
                                     )
                                     .into_any_element(),
+                                    self.toggle_row(
+                                        "settings-close-archive",
+                                        Toggle::CloseArchive,
+                                        self.value.close_archive_after_quick,
+                                        cx,
+                                    )
+                                    .into_any_element(),
                                 ],
                                 cx,
                             ),
+                            cx,
                         ))
                     })
                     .when(self.tab == Tab::Associations, |el| {
@@ -153,7 +302,7 @@ impl Render for PreferencesForm {
                                 .flex_shrink_0()
                                 .py(px(8.))
                                 .child(div().flex().flex_wrap().gap_y(px(10.)).children(
-                                    cardo_7zp_shell_api::EXTENSIONS.iter().map(|extension| {
+                                    cardo_7zp_commands::EXTENSIONS.iter().map(|extension| {
                                         let extension = *extension;
                                         div().w(relative(0.25)).child(
                                             Checkbox::new(SharedString::from(format!(
@@ -194,7 +343,7 @@ impl Render for PreferencesForm {
                                         .disabled(busy)
                                         .on_click(cx.listener(|this, _, _, cx| {
                                             this.value.associations =
-                                                cardo_7zp_shell_api::EXTENSIONS
+                                                cardo_7zp_commands::EXTENSIONS
                                                     .iter()
                                                     .map(|e| (*e).to_owned())
                                                     .collect();
@@ -206,7 +355,7 @@ impl Render for PreferencesForm {
                                         .disabled(busy)
                                         .on_click(cx.listener(|this, _, _, cx| {
                                             this.value.associations =
-                                                cardo_7zp_shell_api::EXTENSIONS
+                                                cardo_7zp_commands::EXTENSIONS
                                                     .iter()
                                                     .filter(|e| {
                                                         !this
@@ -250,6 +399,13 @@ impl Render for PreferencesForm {
                                                     "settings-temp-browse",
                                                     "FolderOpen",
                                                     tr("browser-browse"),
+                                                    !busy
+                                                        && self
+                                                            .owner
+                                                            .read_with(cx, |workspace, _| {
+                                                                workspace.allow_hint(true)
+                                                            })
+                                                            .unwrap_or(false),
                                                     cx,
                                                 )
                                                 .disabled(busy)
@@ -257,6 +413,7 @@ impl Render for PreferencesForm {
                                                     this.browse(window, cx)
                                                 })),
                                             ),
+                                        cx,
                                     )
                                     .into_any_element(),
                                     settings_row(
@@ -264,11 +421,13 @@ impl Render for PreferencesForm {
                                         div()
                                             .w(px(300.))
                                             .child(text_input(&self.patterns).disabled(busy)),
+                                        cx,
                                     )
                                     .into_any_element(),
                                 ],
                                 cx,
                             ),
+                            cx,
                         ))
                     }),
             )

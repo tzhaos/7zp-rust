@@ -61,7 +61,7 @@ pub fn path_strip(id: impl Into<ElementId>, path: String, cx: &App) -> Div {
                 .child(div().flex_1().min_w_0().truncate().child(path.clone())),
         )
         .child(
-            icon_button(id, "Copy", tr("browser-copy-path"), cx)
+            icon_button(id, "Copy", tr("browser-copy-path"), true, cx)
                 .w(px(28.))
                 .h(px(28.))
                 .on_click(move |_, _, cx| {

@@ -1,7 +1,5 @@
 use crate::*;
-use gpui_kit::component::{
-    Disableable, Selectable, checkbox::Checkbox, h_flex, menu::DropdownMenu, v_flex,
-};
+use gpui_kit::component::{Disableable, Selectable, checkbox::Checkbox, h_flex, v_flex};
 
 impl Workspace {
     fn destination_button(
@@ -64,9 +62,8 @@ impl Workspace {
         folder: &Entity<InputState>,
         selected: &bool,
         destination: &usize,
-        overwrite: &Overwrite,
         open_after: &bool,
-        window: &mut Window,
+        _window: &mut Window,
         cx: &mut Context<Self>,
     ) -> AnyElement {
         {
@@ -92,11 +89,12 @@ impl Workspace {
                 .child(
                     v_flex()
                         .id("extract-options-body")
-                        .max_h(window.viewport_size().height - px(230.))
-                        .overflow_y_scroll()
+                        .flex_1()
+                        .min_h_0()
+                        .overflow_y_scrollbar()
                         .px(px(24.))
-                        .py(px(22.))
-                        .gap(px(20.))
+                        .py(px(20.))
+                        .gap(px(16.))
                         .child(h_flex().gap_2().child(icon("FolderZip", 17.)).child(name))
                         .child(
                             v_flex().gap_2().child(tr("extract-scope")).child(
@@ -189,39 +187,6 @@ impl Workspace {
                             ),
                         )
                         .child(
-                            v_flex().gap_2().child(tr("overwrite-label")).child(
-                                command("overwrite-mode", tr(overwrite.label_key()))
-                                    .dropdown_caret(true)
-                                    .dropdown_menu({
-                                        let owner = cx.entity().downgrade();
-                                        let current = *overwrite;
-                                        move |mut menu, _, _| {
-                                            menu = menu_style(menu);
-                                            for mode in Overwrite::ALL {
-                                                let owner = owner.clone();
-                                                menu = menu.item(
-                                                    PopupMenuItem::new(tr(mode.label_key()))
-                                                        .checked(current == mode)
-                                                        .on_click(move |_, _, cx| {
-                                                            let _ = owner.update(cx, |this, cx| {
-                                                                if let Some(Modal::Extract {
-                                                                    overwrite,
-                                                                    ..
-                                                                }) = this.dialogs.current_mut()
-                                                                {
-                                                                    *overwrite = mode;
-                                                                    cx.notify();
-                                                                }
-                                                            });
-                                                        }),
-                                                );
-                                            }
-                                            menu
-                                        }
-                                    }),
-                            ),
-                        )
-                        .child(
                             Checkbox::new("extract-open-after")
                                 .label(tr("extract-open-after"))
                                 .text_size(px(13.))
@@ -244,12 +209,12 @@ impl Workspace {
                             folder,
                             selected,
                             destination,
-                            overwrite,
                             open_after,
                         }) = this.dialogs.take()
                         {
+                            this.dialogs.close_prompt(cx);
                             let folder = folder.read(cx).value().trim().to_owned();
-                            this.extract(selected, folder, destination, overwrite, open_after, cx);
+                            this.extract(selected, folder, destination, open_after, cx);
                         }
                     }),
                     cx,

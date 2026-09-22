@@ -5,6 +5,7 @@ use gpui_kit::component::{
     button::{Button, ButtonCustomVariant, ButtonVariants},
     input::{Input, InputState},
 };
+use gpui_kit::prelude::FluentBuilder;
 use gpui_kit::*;
 
 pub fn subtle_variant(cx: &App) -> ButtonCustomVariant {
@@ -19,15 +20,22 @@ pub fn tool(
     name: ToolIcon,
     label: &str,
     disabled: bool,
-    cx: &App,
+    show_label: bool,
+    window: &mut Window,
+    cx: &mut App,
 ) -> Button {
     let p = crate::theme::palette(cx);
-    bubble_tooltip(Button::new(id), label.to_owned())
+    let height = if show_label {
+        TOOL_HEIGHT
+    } else {
+        TOOL_ICON_HEIGHT
+    };
+    let button = Button::new(id)
         .custom(subtle_variant(cx))
         .disabled(disabled)
         .accessibility_label(label.to_owned())
         .w(px(TOOL_MAX_WIDTH))
-        .h(px(TOOL_HEIGHT))
+        .h(px(height))
         .flex_1()
         .min_w(px(TOOL_MIN_WIDTH))
         .max_w(px(TOOL_MAX_WIDTH))
@@ -46,26 +54,33 @@ pub fn tool(
                         .size(px(ARTWORK_SIZE))
                         .flex_shrink_0()
                         .opacity(if disabled { 0.45 } else { 1.0 })
-                        .child(artwork(name)),
+                        .child(artwork(name, window, cx)),
                 )
-                .child(
-                    gpui_kit::component::v_flex()
-                        .w_full()
-                        .h(px(26.))
-                        .flex_shrink_0()
-                        .justify_center()
-                        .child(
-                            div()
-                                .w_full()
-                                .text_size(px(11.))
-                                .line_height(px(13.))
-                                .text_center()
-                                .whitespace_normal()
-                                .text_color(rgb(if disabled { p.muted } else { p.text }))
-                                .child(label.to_owned()),
-                        ),
-                ),
-        )
+                .when(show_label, |el| {
+                    el.child(
+                        gpui_kit::component::v_flex()
+                            .w_full()
+                            .h(px(26.))
+                            .flex_shrink_0()
+                            .justify_center()
+                            .child(
+                                div()
+                                    .w_full()
+                                    .text_size(px(11.))
+                                    .line_height(px(13.))
+                                    .text_center()
+                                    .whitespace_normal()
+                                    .text_color(rgb(if disabled { p.muted } else { p.text }))
+                                    .child(label.to_owned()),
+                            ),
+                    )
+                }),
+        );
+    if show_label {
+        button
+    } else {
+        bubble_tooltip(button, label.to_owned())
+    }
 }
 
 pub fn command(id: impl Into<ElementId>, label: &str) -> Button {
@@ -88,8 +103,14 @@ pub fn primary(id: impl Into<ElementId>, label: &str) -> Button {
     command(id, label).primary()
 }
 
-pub fn icon_button(id: impl Into<ElementId>, name: &str, title: &str, cx: &App) -> Button {
-    bubble_tooltip(Button::new(id), title.to_owned())
+pub fn icon_button(
+    id: impl Into<ElementId>,
+    name: &str,
+    title: &str,
+    hint: bool,
+    cx: &App,
+) -> Button {
+    let button = Button::new(id)
         .custom(subtle_variant(cx))
         .compact()
         .icon(icon(name, 16.))
@@ -100,5 +121,10 @@ pub fn icon_button(id: impl Into<ElementId>, name: &str, title: &str, cx: &App) 
         .flex_shrink_0()
         .rounded(px(CONTROL_RADIUS))
         .border_0()
-        .shadow_none()
+        .shadow_none();
+    if hint {
+        bubble_tooltip(button, title.to_owned())
+    } else {
+        button
+    }
 }

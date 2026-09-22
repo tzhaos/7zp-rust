@@ -1,5 +1,5 @@
 use anyhow::Result;
-use cardo_7zp_archive::Entry;
+use cardo_7zp_engine::Entry;
 use cardo_7zp_core::i18n::tf;
 use std::{
     os::windows::fs::MetadataExt,
@@ -46,7 +46,7 @@ pub struct NameConflict {
 }
 
 pub fn name_conflicts(
-    catalog: &cardo_7zp_archive::Catalog,
+    catalog: &cardo_7zp_engine::Catalog,
     selected: &[String],
     destination: &Path,
 ) -> Vec<NameConflict> {

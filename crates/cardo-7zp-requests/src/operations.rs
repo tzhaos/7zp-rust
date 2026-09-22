@@ -1,5 +1,5 @@
 use anyhow::{Context, Result, bail};
-use cardo_7zp_archive::{Cancellation, Catalog, CreateOptions, Edit, Engine, Overwrite, Progress};
+use cardo_7zp_engine::{Cancellation, Catalog, CreateOptions, Edit, Engine, Overwrite, Progress};
 use cardo_7zp_core::{
     i18n::{tf, tr},
     settings::Preferences,
@@ -19,10 +19,10 @@ pub enum Request {
         preferences: Preferences,
     },
     Open(PathBuf),
-    OpenAs(PathBuf, cardo_7zp_shell_api::OpenType),
+    OpenAs(PathBuf, cardo_7zp_commands::OpenType),
     QuickCompress {
         paths: Vec<PathBuf>,
-        format: cardo_7zp_shell_api::ArchiveFormat,
+        format: cardo_7zp_commands::ArchiveFormat,
         email: bool,
     },
     Extract {
@@ -58,7 +58,7 @@ pub enum Request {
 
 #[derive(Clone, Copy)]
 pub enum ChecksumKind {
-    Hash(cardo_7zp_shell_api::HashMethod),
+    Hash(cardo_7zp_commands::HashMethod),
     Generate,
     Verify,
 }
@@ -137,7 +137,7 @@ impl Request {
         };
         match result {
             Err(error)
-                if self.prompts_for_password() && cardo_7zp_archive::needs_password(&error) =>
+                if self.prompts_for_password() && cardo_7zp_engine::needs_password(&error) =>
             {
                 Ok(Outcome::Password(self))
             }
@@ -341,7 +341,7 @@ fn resolve_address(engine: &Engine, path: PathBuf, cancel: &Cancellation) -> Res
         .replace('\\', "/");
     match engine.list(&archive, "", cancel) {
         Ok(catalog) => Ok(Outcome::Address(catalog, folder)),
-        Err(error) if cardo_7zp_archive::needs_password(&error) => {
+        Err(error) if cardo_7zp_engine::needs_password(&error) => {
             Ok(Outcome::AddressPassword(Request::Open(archive), folder))
         }
         Err(error) => Err(error),
@@ -364,7 +364,7 @@ fn run_checksum(
     }
 }
 
-fn checksum_report(output: cardo_7zp_archive::Output) -> Outcome {
+fn checksum_report(output: cardo_7zp_engine::Output) -> Outcome {
     Outcome::Report(
         tr(if output.warning {
             "checksum-warning"

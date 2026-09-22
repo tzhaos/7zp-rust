@@ -9,11 +9,15 @@ impl Workspace {
         cx: &mut Context<Self>,
     ) -> AnyElement {
         v_flex()
+            .flex_1()
+            .min_h_0()
             .child(
                 v_flex()
+                    .flex_1()
+                    .min_h_0()
                     .px(px(24.))
-                    .py(px(22.))
-                    .gap_3()
+                    .py(px(20.))
+                    .gap(px(16.))
                     .child(source.clone())
                     .child(text_input(input)),
             )

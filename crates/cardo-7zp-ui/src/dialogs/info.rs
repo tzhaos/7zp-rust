@@ -12,9 +12,11 @@ impl Workspace {
         v_flex()
             .id("properties-body")
             .max_h(window.viewport_size().height - px(180.))
-            .overflow_y_scroll()
+            .overflow_y_scrollbar()
+            .flex_1()
+            .min_h_0()
             .px(px(24.))
-            .py(px(22.))
+            .py(px(20.))
             .gap(px(16.))
             .children(fields.iter().map(|(key, value)| {
                 h_flex()

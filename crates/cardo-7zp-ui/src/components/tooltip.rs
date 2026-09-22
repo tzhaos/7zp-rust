@@ -1,6 +1,6 @@
 use gpui_kit::base::ElementExt;
 use gpui_kit::*;
-use std::{cell::Cell, rc::Rc};
+use std::{cell::Cell, rc::Rc, time::Duration};
 
 struct BubbleTooltip {
     text: SharedString,
@@ -52,5 +52,8 @@ pub fn bubble_tooltip<E: InteractiveElement + ParentElement + Styled>(
         })
         .into()
     });
+    element
+        .interactivity()
+        .tooltip_show_delay(Duration::from_millis(700));
     element
 }

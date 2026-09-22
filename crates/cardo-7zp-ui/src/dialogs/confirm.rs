@@ -4,10 +4,15 @@ use gpui_kit::component::v_flex;
 impl Workspace {
     pub(super) fn confirm_run_view(&self, entry: &str, cx: &mut Context<Self>) -> AnyElement {
         v_flex()
+            .flex_1()
+            .min_h_0()
             .child(
                 div()
+                    .flex_1()
+                    .min_h_0()
                     .px(px(24.))
-                    .py(px(22.))
+                    .py(px(20.))
+                    .whitespace_normal()
                     .child(tf("file-run-confirm", &[("path", entry.into())])),
             )
             .child(self.footer(

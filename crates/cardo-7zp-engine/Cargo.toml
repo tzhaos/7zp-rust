@@ -1,13 +1,13 @@
 [package]
-name = "cardo-7zp-archive"
+name = "cardo-7zp-engine"
 version.workspace = true
 edition.workspace = true
 publish.workspace = true
-description = "7-Zip archive models and engine adapter"
+description = "Runs the bundled 7z.exe and parses listings, extraction, creation, and progress."
 
 [dependencies]
 cardo-7zp-core.workspace = true
-cardo-7zp-shell-api.workspace = true
+cardo-7zp-commands.workspace = true
 anyhow.workspace = true
 tempfile.workspace = true
 zip.workspace = true

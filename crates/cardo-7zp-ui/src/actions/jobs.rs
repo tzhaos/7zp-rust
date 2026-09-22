@@ -46,14 +46,18 @@ impl Workspace {
                         if let Some(next) = this.extract_follow.pop_front() {
                             follow = Some(next);
                         } else {
-                            if this.tasks.close_after()
+                            let quit = this.tasks.close_after()
                                 && !warning
                                 && open_error.is_none()
-                                && this.launches.is_empty()
-                            {
-                                cx.quit();
-                            }
+                                && this.launches.is_empty();
+                            let close_archive = this.tasks.close_archive();
                             this.tasks.set_close_after(false);
+                            this.tasks.set_close_archive(false);
+                            if quit {
+                                cx.quit();
+                            } else if close_archive {
+                                this.pending_close_archive = true;
+                            }
                             this.completion = Some((
                                 if warning {
                                     tr("extract-warning").into()
@@ -67,7 +71,7 @@ impl Workspace {
                     }
                     Ok(Outcome::Message(message)) => this.message = Some(message),
                     Ok(Outcome::Report(title, text)) => {
-                        this.dialogs.show(title, Modal::Report(text));
+                        this.show_dialog(title, Modal::Report(text), cx);
                     }
                     Ok(Outcome::Saved(path, message)) => this.completion = Some((message, path)),
                     Ok(Outcome::Moved(catalog, password, path, open_error)) => {
@@ -83,18 +87,19 @@ impl Workspace {
                         entry,
                     }) => {
                         this.pending_run = Some((directory, target));
-                        this.dialogs
-                            .show(tr("browser-open"), Modal::ConfirmRun { entry });
+                        this.show_dialog(tr("browser-open"), Modal::ConfirmRun { entry }, cx);
                     }
                     Ok(Outcome::Launched) => {}
                     Ok(Outcome::Cancelled) => {
                         this.extract_follow.clear();
                         this.tasks.set_close_after(false);
+                        this.tasks.set_close_archive(false);
                         this.browser.cancel_navigation();
                     }
                     Err(error) => {
                         this.extract_follow.clear();
                         this.tasks.set_close_after(false);
+                        this.tasks.set_close_archive(false);
                         this.browser.cancel_navigation();
                         this.after_open = None;
                         if this.tasks.cancelled() {
@@ -103,7 +108,7 @@ impl Workspace {
                             } else {
                                 "task-cancelled"
                             });
-                            this.dialogs.show(
+                            this.show_dialog(
                                 title,
                                 Modal::ExtractionResult(
                                     tr(if extraction.is_some() {
@@ -113,6 +118,7 @@ impl Workspace {
                                     })
                                     .into(),
                                 ),
+                                cx,
                             );
                         } else {
                             this.show_task_error(error, extraction.is_some(), cx);
@@ -178,13 +184,16 @@ impl Workspace {
         let extraction = request.extraction_paths();
         let progress = extraction
             .as_ref()
-            .map(|_| cardo_7zp_archive::Progress::new());
+            .map(|_| cardo_7zp_engine::Progress::new());
         let reporting = progress.clone();
         let close_after = self.tasks.close_after() && matches!(request, Request::Extract { .. });
+        let close_archive =
+            self.tasks.close_archive() && matches!(request, Request::Extract { .. });
         self.start(request.label(), cx, move |cancel| {
             request.run(password, &cancel, reporting)
         });
         self.tasks.set_close_after(close_after);
+        self.tasks.set_close_archive(close_archive);
         if let Some(((source, destination), progress)) = extraction.zip(progress) {
             self.show_extraction_progress(source, destination, progress, cx);
         }

@@ -1,5 +1,5 @@
 use crate::*;
-use gpui_kit::component::{h_flex, v_flex};
+use gpui_kit::component::{checkbox::Checkbox, h_flex, v_flex};
 
 #[derive(Clone, Copy)]
 enum Choice {
@@ -15,7 +15,10 @@ enum Choice {
 impl Workspace {
     pub(super) fn conflict_view(&self, cx: &mut Context<Self>) -> AnyElement {
         let Some(Modal::Conflict {
-            conflicts, index, ..
+            conflicts,
+            index,
+            repeat,
+            ..
         }) = self.dialogs.current()
         else {
             return div().into_any_element();
@@ -23,6 +26,7 @@ impl Workspace {
         let Some(conflict) = conflicts.get(*index) else {
             return div().into_any_element();
         };
+        let repeat = *repeat;
         let path = conflict.destination.display().to_string();
         let incoming = format!(
             "{}\n{}",
@@ -41,10 +45,16 @@ impl Workspace {
             ),
         );
         v_flex()
+            .flex_1()
+            .min_h_0()
             .child(
                 v_flex()
+                    .id("conflict-body")
+                    .flex_1()
+                    .min_h_0()
+                    .overflow_y_scrollbar()
                     .px(px(24.))
-                    .py(px(18.))
+                    .py(px(20.))
                     .gap(px(12.))
                     .child(tr("extract-conflict-exists"))
                     .child(path_strip("conflict-path", path, cx))
@@ -54,15 +64,26 @@ impl Workspace {
                     .child(existing),
             )
             .child(
-                v_flex()
-                    .px(px(16.))
-                    .py(px(12.))
-                    .gap(px(8.))
+                self.action_stack(cx)
                     .child(h_flex().gap(px(8.)).children([
                         self.conflict_button("conflict-replace", tr("conflict-replace"), Choice::Replace, cx),
                         self.conflict_button("conflict-skip", tr("conflict-skip"), Choice::Skip, cx),
                         self.conflict_button("conflict-rename", tr("conflict-rename"), Choice::Rename, cx),
                     ]))
+                    .child(
+                        Checkbox::new("conflict-repeat")
+                            .label(tr("conflict-repeat"))
+                            .text_size(px(13.))
+                            .checked(repeat)
+                            .on_click(cx.listener(|this, checked: &bool, _, cx| {
+                                if let Some(Modal::Conflict { repeat, .. }) =
+                                    this.dialogs.current_mut()
+                                {
+                                    *repeat = *checked;
+                                    cx.notify();
+                                }
+                            })),
+                    )
                     .child(h_flex().gap(px(8.)).children([
                         self.conflict_button(
                             "conflict-replace-all",
@@ -103,22 +124,25 @@ impl Workspace {
 
     fn apply_conflict(&mut self, choice: Choice, cx: &mut Context<Self>) {
         if matches!(choice, Choice::Cancel) {
-            self.dialogs.take();
-            self.tasks.set_close_after(false);
-            self.extract_follow.clear();
-            cx.notify();
+            self.close_modal(cx);
             return;
         }
+        let repeat = matches!(
+            self.dialogs.current(),
+            Some(Modal::Conflict { repeat: true, .. })
+        );
         let overwrite = match choice {
             Choice::Replace | Choice::ReplaceAll => Overwrite::Replace,
             Choice::Skip | Choice::SkipAll => Overwrite::Skip,
             Choice::Rename | Choice::RenameAll => Overwrite::RenameIncoming,
             Choice::Cancel => return,
         };
-        let all = matches!(
-            choice,
-            Choice::ReplaceAll | Choice::SkipAll | Choice::RenameAll
-        );
+        let all = repeat
+            && matches!(choice, Choice::Replace | Choice::Skip | Choice::Rename)
+            || matches!(
+                choice,
+                Choice::ReplaceAll | Choice::SkipAll | Choice::RenameAll
+            );
         if let Some(Modal::Conflict {
             conflicts,
             index,
@@ -167,6 +191,7 @@ impl Workspace {
         else {
             return;
         };
+        self.dialogs.close_prompt(cx);
         let conflicted: std::collections::BTreeSet<_> =
             conflicts.into_iter().map(|conflict| conflict.entry).collect();
         let plain: Vec<String> = catalog
@@ -200,6 +225,7 @@ impl Workspace {
         }
         if batches.is_empty() {
             self.tasks.set_close_after(false);
+            self.tasks.set_close_archive(false);
             self.message = Some(tr("extract-conflict-skipped").into());
             cx.notify();
             return;

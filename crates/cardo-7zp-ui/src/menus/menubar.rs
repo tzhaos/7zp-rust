@@ -5,7 +5,9 @@ use gpui_kit::component::{button::ButtonVariants, h_flex, menu::DropdownMenu};
 #[derive(Clone, Copy)]
 enum MenuGroup {
     File,
+    Archive,
     Edit,
+    View,
     Tools,
     Help,
 }
@@ -23,7 +25,9 @@ impl Workspace {
             .children(
                 [
                     (MenuGroup::File, "menu-file"),
+                    (MenuGroup::Archive, "menu-archive"),
                     (MenuGroup::Edit, "menu-edit"),
+                    (MenuGroup::View, "menu-view"),
                     (MenuGroup::Tools, "menu-tools"),
                     (MenuGroup::Help, "menu-help"),
                 ]
@@ -50,17 +54,52 @@ fn build_menu(
     window: &mut Window,
     cx: &mut Context<PopupMenu>,
 ) -> PopupMenu {
-    let mut menu = menu_style(menu).min_w(px(280.));
-    let Ok((catalog, busy, recent, remember)) = owner.read_with(cx, |this, cx| {
+    let mut menu = menu_style(menu);
+    struct Panel {
+        open: bool,
+        open_inside: bool,
+        open_outside: bool,
+        rename: bool,
+        copy: bool,
+        revise: bool,
+        rows: bool,
+        selected: bool,
+        all_selected: bool,
+        sort: usize,
+        up: bool,
+    }
+    let Ok((catalog, busy, recent, remember, panel)) = owner.read_with(cx, |this, cx| {
+        let on_files = this.page == Page::Files;
+        let open = on_files && this.current_item().is_some();
+        let open_inside = on_files && this.can_open_inside();
+        let open_outside = on_files && this.can_open_outside();
+        let up = on_files && this.parent_location().is_some();
+        let busy = this.tasks.is_busy() || this.settings_busy(cx);
+        let recent = this.recent_archives.clone();
+        let remember = this.preferences.remember_recent;
+        let view = this.browser.view();
+        let editable = on_files && view.catalog.as_ref().is_some_and(Catalog::editable);
+        let selected = !view.selected.is_empty();
+        let rows = view.rows.len();
+        let panel = Panel {
+            open,
+            open_inside,
+            open_outside,
+            rename: editable && view.selected.len() == 1,
+            copy: on_files && view.catalog.is_some() && selected,
+            revise: editable && selected,
+            rows: on_files && rows > 0,
+            selected: on_files && selected,
+            all_selected: on_files && rows > 0 && view.selected.len() == rows,
+            sort: view.sort,
+            up,
+        };
         (
-            this.browser
-                .view()
-                .catalog
-                .clone()
-                .filter(|_| this.page == Page::Files),
-            this.tasks.is_busy() || this.settings_busy(cx),
-            this.recent_archives.clone(),
-            this.preferences.remember_recent,
+            view.catalog.clone().filter(|_| on_files),
+            busy,
+            recent,
+            remember,
+            panel,
         )
     }) else {
         return menu;
@@ -69,6 +108,82 @@ fn build_menu(
     let commentable = active && catalog.as_ref().is_some_and(|c| c.accepts_comment());
     match group {
         MenuGroup::File => {
+            menu = menu
+                .item(command_item(
+                    owner,
+                    "browser-open",
+                    "Enter",
+                    Command::OpenItem,
+                    panel.open && !busy,
+                ))
+                .item(command_item(
+                    owner,
+                    "file-open-inside",
+                    "Ctrl+PgDn",
+                    Command::OpenInside,
+                    panel.open_inside && !busy,
+                ))
+                .item(command_item(
+                    owner,
+                    "file-open-outside",
+                    "Shift+Enter",
+                    Command::OpenOutside,
+                    panel.open_outside && !busy,
+                ))
+                .separator()
+                .item(command_item(
+                    owner,
+                    "archive-rename",
+                    "F2",
+                    Command::Rename,
+                    panel.rename && !busy,
+                ))
+                .item(command_item(
+                    owner,
+                    "archive-copy",
+                    "F5",
+                    Command::CopyTo,
+                    panel.copy && !busy,
+                ))
+                .item(command_item(
+                    owner,
+                    "archive-move",
+                    "F6",
+                    Command::MoveTo,
+                    panel.revise && !busy,
+                ))
+                .item(command_item(
+                    owner,
+                    "archive-delete",
+                    "Del",
+                    Command::Delete,
+                    panel.revise && !busy,
+                ))
+                .separator()
+                .item(command_item(
+                    owner,
+                    "properties",
+                    "Alt+Enter",
+                    Command::Properties,
+                    active,
+                ))
+                .item(command_item(
+                    owner,
+                    "archive-comment",
+                    "Ctrl+Z",
+                    Command::Comment,
+                    commentable,
+                ));
+            menu = menus::archive::checksum_menu(owner, menu, window, cx);
+            menu = menu.separator().item(command_item(
+                owner,
+                "menu-exit",
+                "Alt+F4",
+                Command::Exit,
+                !busy,
+            ));
+        }
+        MenuGroup::Archive => {
             menu = menu
                 .item(command_item(
                     owner,
@@ -85,19 +200,18 @@ fn build_menu(
                     !busy,
                 ));
             menu = menus::archive::open_as_menu(owner, menu, window, cx);
-            menu = menu.item(command_item(owner, "files-view", "", Command::Files, !busy));
             if remember && (busy || recent.is_empty()) {
                 menu = menu.item(PopupMenuItem::new(tr("recent-title")).disabled(true));
             } else if remember {
                 let history_owner = owner.clone();
                 menu = menu.submenu(tr("recent-title"), window, cx, move |menu, _, _| {
                     let owner = &history_owner;
-                    let mut menu = menu_style(menu).scrollable(true).max_h(px(320.));
+                    let mut menu = submenu_style(menu);
                     for path in &recent {
                         let path = path.clone();
                         let owner = owner.clone();
                         menu =
-                            menu.item(path_menu_item(path.display().to_string(), 360.).on_click(
+                            menu.item(path_menu_item(path.display().to_string()).on_click(
                                 move |_, window, cx| {
                                     let _ = owner.update(cx, |this, cx| {
                                         this.show_page(Page::Files, window, cx);
@@ -115,20 +229,31 @@ fn build_menu(
                     ))
                 });
             }
+            let extract_owner = owner.clone();
             menu = menu
                 .separator()
+                .submenu(tr("menu-extract"), window, cx, move |menu, _, _| {
+                    submenu_style(menu)
+                        .item(command_item(
+                            &extract_owner,
+                            "extract-options",
+                            "Alt+E",
+                            Command::Extract,
+                            active,
+                        ))
+                        .item(command_item(
+                            &extract_owner,
+                            "extract-all-quick",
+                            "",
+                            Command::QuickExtract,
+                            active,
+                        ))
+                })
                 .item(command_item(
                     owner,
-                    "extract-options",
-                    "Alt+E",
-                    Command::Extract,
-                    active,
-                ))
-                .item(command_item(
-                    owner,
-                    "extract-all-quick",
-                    "",
-                    Command::QuickExtract,
+                    "archive-check",
+                    "Alt+T",
+                    Command::Check,
                     active,
                 ))
                 .separator()
@@ -152,57 +277,108 @@ fn build_menu(
                     "",
                     Command::Close,
                     active,
-                ))
-                .separator()
-                .item(command_item(
-                    owner,
-                    "menu-exit",
-                    "Alt+F4",
-                    Command::Exit,
-                    !busy,
                 ));
         }
         MenuGroup::Edit => {
-            menu = menus::archive::entry_menu(owner, menu, false, cx)
-                .separator()
+            menu = menu
                 .item(command_item(
                     owner,
-                    "archive-comment",
-                    "Alt+M",
-                    Command::Comment,
-                    commentable,
+                    "select-all",
+                    "Ctrl+A",
+                    Command::SelectAll,
+                    panel.rows && !panel.all_selected && !busy,
                 ))
                 .item(command_item(
                     owner,
-                    "properties",
-                    "Alt+I",
-                    Command::Properties,
-                    active,
+                    "select-none",
+                    "",
+                    Command::DeselectAll,
+                    panel.selected && !busy,
+                ))
+                .item(command_item(
+                    owner,
+                    "select-invert",
+                    "",
+                    Command::InvertSelection,
+                    panel.rows && !busy,
+                ))
+                .separator()
+                .item(command_item(
+                    owner,
+                    "select-by-type",
+                    "",
+                    Command::SelectByType,
+                    panel.open && !busy,
+                ))
+                .item(command_item(
+                    owner,
+                    "deselect-by-type",
+                    "",
+                    Command::DeselectByType,
+                    panel.open && !busy,
+                ));
+        }
+        MenuGroup::View => {
+            for (column, label, shortcut) in [
+                (0, "name", "Ctrl+F3"),
+                (2, "modified", "Ctrl+F5"),
+                (1, "size", "Ctrl+F6"),
+            ] {
+                let sort_owner = owner.clone();
+                menu = menu.item(
+                    menu_command_item(tr(label), shortcut)
+                        .checked(panel.sort == column)
+                        .disabled(!panel.rows || busy)
+                        .on_click(move |_, window, cx| {
+                            let _ = sort_owner.update(cx, |this, cx| {
+                                this.command(Command::Sort(column), window, cx);
+                            });
+                        }),
+                );
+            }
+            menu = menu
+                .separator()
+                .item(command_item(
+                    owner,
+                    "parent-folder",
+                    "Backspace",
+                    Command::Up,
+                    panel.up && !busy,
+                ))
+                .item(command_item(
+                    owner,
+                    "menu-refresh",
+                    "Ctrl+R",
+                    Command::Refresh,
+                    !busy,
                 ));
         }
         MenuGroup::Tools => {
-            menu = menu.item(command_item(
-                owner,
-                "archive-check",
-                "Alt+T",
-                Command::Check,
-                active,
-            ));
-            menu = menus::archive::checksum_menu(owner, menu, window, cx).separator();
-            for tab in [
-                preferences::Tab::General,
-                preferences::Tab::Advanced,
-                preferences::Tab::Appearance,
-                preferences::Tab::Associations,
-            ] {
-                menu = menu.item(command_item_label(
-                    owner,
-                    tab.label(),
-                    "",
-                    Command::Settings(tab),
-                    !busy,
-                ));
-            }
+            let options_owner = owner.clone();
+            let options_enabled = !busy;
+            menu = menu.submenu(
+                tr("menu-options"),
+                window,
+                cx,
+                move |menu, _, _| {
+                    let mut menu = submenu_style(menu);
+                    for tab in [
+                        preferences::Tab::General,
+                        preferences::Tab::Appearance,
+                        preferences::Tab::Associations,
+                        preferences::Tab::Advanced,
+                    ] {
+                        menu = menu.item(command_item_label(
+                            &options_owner,
+                            tab.label(),
+                            "",
+                            Command::Settings(tab),
+                            options_enabled,
+                        ));
+                    }
+                    menu
+                },
+            );
         }
         MenuGroup::Help => {
             menu = menu

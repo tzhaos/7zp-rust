@@ -1,6 +1,6 @@
 use anyhow::Result;
 use cardo_7zp_core::i18n::{tf, tr};
-use cardo_7zp_shell_api::{ACTIONS, CLSID, EXTENSIONS, SHELL_KEY};
+use cardo_7zp_commands::{ACTIONS, CLSID, EXTENSIONS, SHELL_KEY};
 use std::path::Path;
 use windows_sys::Win32::UI::Shell::{SHCNE_ASSOCCHANGED, SHCNF_IDLIST, SHChangeNotify};
 use winreg::{
@@ -38,7 +38,7 @@ pub fn register(executable: &Path, dll: &Path) -> Result<()> {
         config.set_value(key, &tr(key))?;
     }
     for action in ACTIONS {
-        use cardo_7zp_shell_api::Action;
+        use cardo_7zp_commands::Action;
         let label = match action {
             Action::OpenAs(kind) => kind.value().to_owned(),
             Action::Checksum(method) => method.title().to_owned(),

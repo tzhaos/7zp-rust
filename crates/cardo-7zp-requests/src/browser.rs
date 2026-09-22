@@ -1,5 +1,5 @@
 use crate::filesystem::Directory;
-use cardo_7zp_archive::{Catalog, Entry};
+use cardo_7zp_engine::{Catalog, Entry};
 use std::{collections::BTreeSet, path::PathBuf};
 
 #[derive(Clone, PartialEq, Eq)]
@@ -164,6 +164,53 @@ impl Browser {
             .collect();
     }
 
+    pub fn deselect_all(&mut self) {
+        self.clear_selection(true);
+    }
+
+    pub fn select_by_type(&mut self, remove: bool) {
+        let Some(path) = self.current_path() else {
+            return;
+        };
+        let Some(name) = self
+            .view
+            .rows
+            .iter()
+            .find(|entry| entry.path == path)
+            .map(|entry| entry.name.clone())
+        else {
+            return;
+        };
+        let extension = name_extension(&name);
+        let matched: Vec<_> = self
+            .view
+            .rows
+            .iter()
+            .filter(|entry| name_extension(&entry.name) == extension)
+            .map(|entry| entry.path.clone())
+            .collect();
+        if remove {
+            for path in matched {
+                self.view.selected.remove(&path);
+            }
+        } else {
+            for path in matched {
+                self.view.selected.insert(path);
+            }
+        }
+    }
+
+    fn current_path(&self) -> Option<String> {
+        if let Some(path) = &self.view.cursor
+            && self.view.rows.iter().any(|entry| &entry.path == path)
+        {
+            return Some(path.clone());
+        }
+        (self.view.selected.len() == 1)
+            .then(|| self.view.selected.iter().next().cloned())
+            .flatten()
+    }
+
     pub fn invert_selection(&mut self) {
         self.view.selected = self
             .view
@@ -215,5 +262,14 @@ impl Browser {
                 order
             })
         });
+    }
+}
+
+fn name_extension(name: &str) -> String {
+    match name.rsplit_once('.') {
+        Some((stem, extension)) if !stem.is_empty() && !extension.is_empty() => {
+            extension.to_ascii_lowercase()
+        }
+        _ => String::new(),
     }
 }

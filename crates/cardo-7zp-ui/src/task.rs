@@ -1,5 +1,5 @@
 use gpui_kit::Task;
-use cardo_7zp_archive::Cancellation;
+use cardo_7zp_engine::Cancellation;
 use std::sync::{
     Arc,
     atomic::{AtomicBool, Ordering},
@@ -15,6 +15,7 @@ pub(crate) struct TaskState {
     extraction: Option<ExtractionProgress>,
     temporary_files: Vec<tempfile::TempDir>,
     close_after: bool,
+    close_archive: bool,
 }
 
 impl Default for TaskState {
@@ -27,6 +28,7 @@ impl Default for TaskState {
             extraction: None,
             temporary_files: Vec::new(),
             close_after: false,
+            close_archive: false,
         }
     }
 }
@@ -46,6 +48,12 @@ impl TaskState {
     }
     pub(crate) fn set_close_after(&mut self, close: bool) {
         self.close_after = close;
+    }
+    pub(crate) fn close_archive(&self) -> bool {
+        self.close_archive
+    }
+    pub(crate) fn set_close_archive(&mut self, close: bool) {
+        self.close_archive = close;
     }
 
     pub(crate) fn begin(&mut self, label: &str) -> Cancellation {

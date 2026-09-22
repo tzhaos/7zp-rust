@@ -1,4 +1,4 @@
-use cardo_7zp_shell_api::{
+use cardo_7zp_commands::{
     ACTIONS, Action, ArchiveFormat, CLSID_VALUE, REQUEST_PREFIX, Request, SHELL_KEY, archive_name,
     extract_folder, may_extract,
 };

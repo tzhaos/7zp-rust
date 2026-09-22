@@ -21,20 +21,48 @@ impl Workspace {
             || self.settings_busy(cx)
             || self.preferences_task.is_some();
         let inactive = blocked || self.browser.view().catalog.is_none() || self.page != Page::Files;
+        let show_labels = !self.preferences.hide_tool_labels;
+        let tool_height = if show_labels {
+            TOOL_HEIGHT
+        } else {
+            TOOL_ICON_HEIGHT
+        };
+        let toolbar_height = if show_labels {
+            TOOLBAR_HEIGHT
+        } else {
+            TOOLBAR_ICON_HEIGHT
+        };
         // Reserve the left actions, toolbar padding/gaps, toggle and divider.
         let fixed_width = 4. * TOOL_MIN_WIDTH + 2. * TOOLBAR_PADDING + 8. * TOOL_GAP + 28.;
         let item_width = ((f32::from(window.viewport_size().width) - fixed_width) / 5. - TOOL_GAP)
             .clamp(TOOL_MIN_WIDTH, TOOL_MAX_WIDTH);
+        // One shared width for every non-current page tool. Separate springs do
+        // not stay complementary, so the collapse button and the open tool shift
+        // back and forth while a view changes.
+        let slot = item_width + TOOL_GAP;
+        let step = 1.0 / (slot * window.scale_factor()).max(1.0);
+        let expand = presented_openness(
+            gpui_kit::base::transition(
+                "toolbar-expand",
+                if self.tools_expanded { 1.0 } else { 0.0 },
+                gpui_kit::base::Transition::new(std::time::Duration::from_millis(180))
+                    .ease(motion_ease),
+                window,
+                cx,
+            ),
+            if self.tools_expanded { 1.0 } else { 0.0 },
+            step,
+        );
         h_flex()
             .relative()
-            .h(px(TOOLBAR_HEIGHT))
+            .h(px(toolbar_height))
             .flex_shrink_0()
             .px(px(TOOLBAR_PADDING))
             .gap(px(TOOL_GAP))
             .items_center()
             .bg(rgb(p.panel))
             .child(
-                tool("open", ToolIcon::Open, tr("open"), blocked, cx).on_click(cx.listener(
+                tool("open", ToolIcon::Open, tr("open"), blocked, show_labels, window, cx).on_click(cx.listener(
                     |this, _, window, cx| {
                         this.show_page(Page::Files, window, cx);
                         this.open(cx);
@@ -47,6 +75,8 @@ impl Workspace {
                     ToolIcon::Extract,
                     tr("extract-options"),
                     inactive,
+                    show_labels,
+                    window,
                     cx,
                 )
                 .on_click(cx.listener(|this, _, window, cx| this.extract_dialog(window, cx))),
@@ -61,6 +91,8 @@ impl Workspace {
                         tr("extract-selected")
                     },
                     inactive,
+                    show_labels,
+                    window,
                     cx,
                 )
                 .on_click(cx.listener(|this, _, _, cx| {
@@ -68,7 +100,7 @@ impl Workspace {
                 })),
             )
             .child(
-                tool("check", ToolIcon::Check, tr("check"), inactive, cx).on_click(cx.listener(
+                tool("check", ToolIcon::Check, tr("check"), inactive, show_labels, window, cx).on_click(cx.listener(
                     |this, _, _, cx| {
                         if let Some(catalog) = this.browser.view().catalog.clone() {
                             this.execute(
@@ -94,6 +126,7 @@ impl Workspace {
                     } else {
                         "toolbar-expand"
                     }),
+                    self.allow_hint(true),
                     cx,
                 )
                 .custom(subtle_variant(cx))
@@ -115,7 +148,7 @@ impl Workspace {
                     .bg(rgb(p.border)),
             )
             .child(
-                h_flex().h(px(TOOL_HEIGHT)).flex_shrink_0().children(
+                h_flex().h(px(tool_height)).flex_shrink_0().children(
                     [
                         ("files", ToolIcon::Files, Page::Files),
                         (
@@ -142,14 +175,10 @@ impl Workspace {
                     .into_iter()
                     .map(|(id, icon, page)| {
                         let visible = self.tools_expanded || self.page == page;
-                        let openness = gpui_kit::base::spring(
-                            (id, "toolbar-width"),
-                            if visible { 1.0_f32 } else { 0.0_f32 },
-                            gpui_kit::base::Spring::new(std::time::Duration::from_millis(560))
-                                .with_damping(1.15),
-                            window,
-                            cx,
-                        );
+                        // The current page keeps a full slot. Other pages follow the
+                        // single expansion value, so a view change does not resize
+                        // the group or move the collapse button.
+                        let openness = if self.page == page { 1.0 } else { expand };
                         let label = match page {
                             Page::Files => tr("files-view"),
                             Page::Settings(preferences::Tab::Associations) => {
@@ -157,7 +186,7 @@ impl Workspace {
                             }
                             Page::Settings(tab) => tab.label(),
                         };
-                        let button = tool(id, icon, label, blocked, cx)
+                        let button = tool(id, icon, label, blocked, show_labels, window, cx)
                             .disabled(blocked || !visible)
                             .relative()
                             .flex_none()
@@ -174,13 +203,37 @@ impl Workspace {
                             }));
                         div()
                             .id(("toolbar-slot", page.order() as u32))
-                            .h(px(TOOL_HEIGHT))
-                            .w(px((item_width + TOOL_GAP) * openness))
+                            .h(px(tool_height))
+                            .w(px(slot * openness))
                             .flex_shrink_0()
                             .overflow_hidden()
                             .when(openness > 0., |el| el.child(button))
                     }),
                 ),
             )
+    }
+}
+
+fn presented_openness(value: f32, target: f32, step: f32) -> f32 {
+    if (value - target).abs() <= step {
+        target
+    } else {
+        (value / step).round() * step
+    }
+}
+
+/// Fast at the start, then linear through the final distance.
+///
+/// A critically damped spring only approaches its target, so the last pixels
+/// arrive further and further apart and the toolbar looks like it is stuttering.
+pub(super) fn motion_ease(progress: f32) -> f32 {
+    let progress = progress.clamp(0.0, 1.0);
+    const KNEE: f32 = 0.62;
+    const COVERED: f32 = 0.78;
+    if progress < KNEE {
+        let unit = progress / KNEE;
+        (1.0 - (1.0 - unit) * (1.0 - unit)) * COVERED
+    } else {
+        COVERED + (1.0 - COVERED) * ((progress - KNEE) / (1.0 - KNEE))
     }
 }

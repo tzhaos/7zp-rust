@@ -10,7 +10,6 @@ pub(crate) enum Modal {
         folder: Entity<InputState>,
         selected: bool,
         destination: usize,
-        overwrite: Overwrite,
         open_after: bool,
     },
     Password {
@@ -23,7 +22,8 @@ pub(crate) enum Modal {
         source: String,
         input: Entity<InputState>,
     },
-    Update(cardo_7zp_application::update::Status),
+    Update(cardo_7zp_requests::update::Status),
+    Help,
     ConfirmRun {
         entry: String,
     },
@@ -34,9 +34,10 @@ pub(crate) enum Modal {
         folder: String,
         open_after: bool,
         password: String,
-        conflicts: Vec<cardo_7zp_application::filesystem::NameConflict>,
+        conflicts: Vec<cardo_7zp_requests::filesystem::NameConflict>,
         index: usize,
         decisions: Vec<(String, Overwrite)>,
+        repeat: bool,
     },
 }
 
@@ -49,6 +50,12 @@ pub(crate) struct DialogState {
     previous_focus: Option<FocusHandle>,
     pending_password: Option<Request>,
     pending_comment: Option<String>,
+    prompt: Option<gpui_kit::AnyWindowHandle>,
+    prompt_generation: u64,
+    pub(crate) pending_create: Option<Vec<PathBuf>>,
+    pub(crate) pending_name: Option<String>,
+    pub(crate) pending_email: bool,
+    open_failed: bool,
 }
 
 impl DialogState {
@@ -62,6 +69,12 @@ impl DialogState {
             previous_focus: None,
             pending_password: None,
             pending_comment: None,
+            prompt: None,
+            prompt_generation: 0,
+            pending_create: None,
+            pending_name: None,
+            pending_email: false,
+            open_failed: false,
         }
     }
 
@@ -100,8 +113,51 @@ impl DialogState {
         self.input_subscription = Some(subscription);
     }
 
+    pub(crate) fn has_prompt(&self) -> bool {
+        self.prompt.is_some()
+    }
+
+    pub(crate) fn prompt_handle(&self) -> Option<gpui_kit::AnyWindowHandle> {
+        self.prompt
+    }
+
+    pub(crate) fn generation(&self) -> u64 {
+        self.prompt_generation
+    }
+
+    pub(crate) fn bump_generation(&mut self) {
+        self.prompt_generation = self.prompt_generation.wrapping_add(1);
+    }
+
+    pub(crate) fn open_failed(&self) -> bool {
+        self.open_failed
+    }
+
+    pub(crate) fn set_open_failed(&mut self, failed: bool) {
+        self.open_failed = failed;
+    }
+
+    pub(crate) fn set_prompt(&mut self, window: gpui_kit::AnyWindowHandle) {
+        self.open_failed = false;
+        self.prompt = Some(window);
+    }
+
+    pub(crate) fn detach_prompt(&mut self) {
+        self.prompt = None;
+    }
+
+    pub(crate) fn close_prompt(&mut self, cx: &mut App) {
+        if let Some(window) = self.prompt.take() {
+            let _ = window.update(cx, |_, window, _| window.remove_window());
+        }
+    }
+
     pub(crate) fn take(&mut self) -> Option<Modal> {
         self.input_subscription = None;
+        self.pending_create = None;
+        self.pending_name = None;
+        self.pending_email = false;
+        self.open_failed = false;
         self.active.take()
     }
 
@@ -123,7 +179,7 @@ impl DialogState {
             self.observe_input(cx.observe(&input, |_, _, cx| cx.notify()));
             self.show(tr("password-input"), Modal::Password { input, request });
         }
-        if self.active.is_some() && !self.was_active {
+        if self.active.is_some() && !self.was_active && self.prompt.is_none() && self.open_failed {
             self.previous_focus = window.focused(cx);
             self.focus.focus(window, cx);
             if let Some(Modal::Password { input, .. } | Modal::Rename { input, .. }) = &self.active

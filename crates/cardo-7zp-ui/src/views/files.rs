@@ -23,7 +23,7 @@ impl Workspace {
                 .id("recent-list")
                 .flex_1()
                 .min_h_0()
-                .overflow_y_scroll()
+                .overflow_y_scrollbar()
                 .children(self.matching_recent_archives(cx).map(|(index, path)| {
                     let open_path = path.clone();
                     let remove_path = path.clone();
@@ -69,7 +69,7 @@ impl Workspace {
                                         .opacity(if self.tasks.is_busy() { 0.4 } else { 1.0 })
                                         .child(list_entry(
                                             &name,
-                                            file_icon(path, false, true),
+                                            file_icon(path, false, true, cx),
                                             Some(
                                                 path.parent().unwrap_or(path).display().to_string(),
                                             ),
@@ -95,6 +95,7 @@ impl Workspace {
                                         ("recent-remove", index),
                                         "Dismiss",
                                         tr("recent-remove"),
+                                        self.allow_hint(!self.tasks.is_busy()),
                                         cx,
                                     )
                                     .custom(subtle_variant(cx))
@@ -150,8 +151,9 @@ impl Workspace {
                         Path::new(&entry.path),
                         directory,
                         self.browser.view().directory.is_some(),
+                        cx,
                     ),
-                    (!self.search.read(cx).value().is_empty()).then(|| entry.path.clone()),
+                    None,
                     cx,
                 )
                 .when(entry.encrypted, |el| el.child(icon("LockClosed", 12.))),
@@ -160,7 +162,7 @@ impl Workspace {
                 div()
                     .w(px(108.))
                     .flex_shrink_0()
-                    .text_size(px(12.))
+                    .text_size(crate::theme::ui_font_size(cx))
                     .text_color(rgb(p.muted))
                     .child(if directory {
                         "—".into()
@@ -172,7 +174,7 @@ impl Workspace {
                 div()
                     .w(px(120.))
                     .flex_shrink_0()
-                    .text_size(px(12.))
+                    .text_size(crate::theme::ui_font_size(cx))
                     .text_color(rgb(p.muted))
                     .child(file_kind(&entry.name, directory)),
             )
@@ -180,7 +182,7 @@ impl Workspace {
                 div()
                     .w(px(166.))
                     .flex_shrink_0()
-                    .text_size(px(12.))
+                    .text_size(crate::theme::ui_font_size(cx))
                     .text_color(rgb(p.muted))
                     .child(if entry.modified.is_empty() {
                         "—".into()

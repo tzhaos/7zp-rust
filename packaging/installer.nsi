@@ -68,7 +68,7 @@ Function ${Prefix}RetireShell
     retire_old_close:
     FindClose $ShellFind
     retire_new_name:
-    FindFirst $ShellFind $ShellFile "$INSTDIR\cardo_7zp_shell*.dll"
+    FindFirst $ShellFind $ShellFile "$INSTDIR\cardo_7zp_*.dll"
     IfErrors retire_versions
     retire_next:
     StrCmp $ShellFile "" retire_close
@@ -140,7 +140,7 @@ Function un.CleanupRetired
     SetOutPath "$TEMP"
     ClearErrors
     Delete "$INSTDIR\sevenzip_shell*.dll"
-    Delete "$INSTDIR\cardo_7zp_shell*.dll"
+    Delete "$INSTDIR\cardo_7zp_*.dll"
     ClearErrors
     Delete "$INSTDIR\7-zip-plus.dll"
     ${If} ${Errors}

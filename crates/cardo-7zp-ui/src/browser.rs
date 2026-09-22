@@ -1,7 +1,7 @@
 use super::*;
-pub(super) use cardo_7zp_application::filesystem::Directory;
+pub(super) use cardo_7zp_requests::filesystem::Directory;
 
-pub(super) use cardo_7zp_application::browser::Location;
+pub(super) use cardo_7zp_requests::browser::Location;
 
 impl Workspace {
     pub(super) fn location(&self) -> Location {
@@ -146,6 +146,126 @@ impl Workspace {
         self.refresh(cx);
     }
 
+    pub(super) fn current_item(&self) -> Option<&Entry> {
+        let view = self.browser.view();
+        let path = if view
+            .cursor
+            .as_ref()
+            .is_some_and(|path| view.rows.iter().any(|entry| &entry.path == path))
+        {
+            view.cursor.as_deref()
+        } else if view.selected.len() == 1 {
+            view.selected.iter().next().map(String::as_str)
+        } else {
+            None
+        }?;
+        view.rows.iter().find(|entry| entry.path == path)
+    }
+
+    pub(super) fn can_open_inside(&self) -> bool {
+        let Some(entry) = self.current_item() else {
+            return false;
+        };
+        if self.browser.view().directory.is_some() {
+            entry.directory || cardo_7zp_commands::may_extract(Path::new(&entry.path))
+        } else {
+            self.browser.view().catalog.is_some() && entry.directory
+        }
+    }
+
+    pub(super) fn can_open_outside(&self) -> bool {
+        let Some(entry) = self.current_item() else {
+            return false;
+        };
+        if self.browser.view().directory.is_some() {
+            true
+        } else {
+            self.browser.view().catalog.is_some() && !entry.directory
+        }
+    }
+
+    pub(super) fn open_current(&mut self, window: &mut Window, cx: &mut Context<Self>) {
+        let Some(path) = self.current_item().map(|entry| entry.path.clone()) else {
+            return;
+        };
+        self.open_entry(path, window, cx);
+    }
+
+    pub(super) fn open_inside(&mut self, window: &mut Window, cx: &mut Context<Self>) {
+        let Some((path, directory)) = self
+            .current_item()
+            .map(|entry| (entry.path.clone(), entry.directory))
+        else {
+            return;
+        };
+        if self.browser.view().directory.is_some() {
+            if directory {
+                self.visit(Location::Directory(PathBuf::from(path)), window, cx);
+            } else if cardo_7zp_commands::may_extract(Path::new(&path)) {
+                self.execute(Request::Open(PathBuf::from(path)), String::new(), cx);
+            }
+        } else if directory {
+            self.navigate(path, window, cx);
+        }
+    }
+
+    pub(super) fn open_outside(&mut self, _window: &mut Window, cx: &mut Context<Self>) {
+        let Some((path, directory)) = self
+            .current_item()
+            .map(|entry| (entry.path.clone(), entry.directory))
+        else {
+            return;
+        };
+        if self.browser.view().directory.is_some() {
+            self.start(tr("opening"), cx, move |_| {
+                if directory {
+                    cardo_7zp_platform::open_directory(Path::new(&path))?;
+                } else {
+                    cardo_7zp_platform::open_file(Path::new(&path))?;
+                }
+                Ok(Outcome::Cancelled)
+            });
+            return;
+        }
+        if directory {
+            return;
+        }
+        let Some(catalog) = self.browser.view().catalog.clone() else {
+            return;
+        };
+        self.execute(
+            Request::OpenEntry {
+                catalog,
+                path,
+                preferences: self.preferences.clone(),
+            },
+            self.browser.view().password.clone(),
+            cx,
+        );
+    }
+
+    pub(super) fn reload_location(&mut self, cx: &mut Context<Self>) {
+        if self.tasks.is_busy() || self.settings_busy(cx) {
+            return;
+        }
+        match self.location() {
+            Location::Home => {
+                self.reload_history(cx);
+                self.refresh(cx);
+            }
+            Location::Directory(path) => {
+                self.start(tr("browser-loading"), cx, move |_| {
+                    Directory::read(path).map(Outcome::Directory)
+                });
+            }
+            Location::Archive(path, folder) => {
+                let password = self.browser.view().password.clone();
+                self.browser.request_folder(folder);
+                self.execute(Request::Open(path), password, cx);
+            }
+        }
+    }
+
     pub(super) fn open_entry(&mut self, path: String, window: &mut Window, cx: &mut Context<Self>) {
         if self.tasks.is_busy() {
             return;
@@ -156,7 +276,7 @@ impl Workspace {
         if self.browser.view().directory.is_some() {
             if entry.directory {
                 self.visit(Location::Directory(PathBuf::from(path)), window, cx);
-            } else if cardo_7zp_shell_api::may_extract(std::path::Path::new(&path)) {
+            } else if cardo_7zp_commands::may_extract(std::path::Path::new(&path)) {
                 self.execute(Request::Open(PathBuf::from(path)), String::new(), cx);
             } else {
                 self.start(tr("opening"), cx, move |_| {

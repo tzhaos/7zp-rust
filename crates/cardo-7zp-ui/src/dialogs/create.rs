@@ -1,8 +1,7 @@
-use crate::{Workspace, components::*, format::size_text};
+use crate::{ScrollableElement, Workspace, components::*, format::size_text};
 use gpui_kit::{
     component::{
         Disableable,
-        button::ButtonVariants,
         checkbox::Checkbox,
         h_flex,
         input::InputState,
@@ -13,8 +12,8 @@ use gpui_kit::{
     prelude::FluentBuilder,
     *,
 };
-use cardo_7zp_application::filesystem::{self, SourceInfo};
-use cardo_7zp_archive::{CreateOptions, Format, Level, Method, Threads, Volume};
+use cardo_7zp_requests::filesystem::{self, SourceInfo};
+use cardo_7zp_engine::{CreateOptions, Format, Level, Method, Threads, Volume};
 use cardo_7zp_core::i18n::{tf, tr};
 use std::{collections::HashMap, path::PathBuf};
 
@@ -219,6 +218,140 @@ fn volume_label(volume: Volume) -> String {
     }
 }
 
+impl CreateForm {
+    fn source_list(&self, total_label: String, cx: &mut Context<Self>) -> Div {
+        let p = crate::theme::palette(cx);
+        v_flex()
+            .border_1()
+            .border_color(rgb(p.border))
+            .rounded(px(6.))
+            .overflow_hidden()
+            .child(
+                h_flex()
+                    .h(px(36.))
+                    .px(px(10.))
+                    .gap(px(8.))
+                    .items_center()
+                    .flex_shrink_0()
+                    .bg(rgb(p.panel))
+                    .border_b_1()
+                    .border_color(rgb(p.border))
+                    .child(
+                        div()
+                            .flex_1()
+                            .min_w_0()
+                            .text_size(px(12.))
+                            .text_color(rgb(p.muted))
+                            .child(tr("source-files")),
+                    )
+                    .child(
+                        div()
+                            .flex_shrink_0()
+                            .text_size(px(11.))
+                            .text_color(rgb(p.muted))
+                            .child(total_label),
+                    )
+                    .child(
+                        command("add-files", tr("add-files"))
+                            .icon(icon("Add", 14.))
+                            .on_click(cx.listener(|this, _, window, cx| this.choose_files(window, cx))),
+                    ),
+            )
+            .child(
+                v_flex()
+                    .id("source-list")
+                    .min_h(px(112.))
+                    .max_h(px(220.))
+                    .overflow_y_scrollbar()
+                    .when(self.files.is_empty(), |el| {
+                        el.h(px(112.))
+                            .items_center()
+                            .justify_center()
+                            .gap(px(6.))
+                            .text_color(rgb(p.muted))
+                            .child(icon("FolderOpen", 22.))
+                            .child(div().text_size(px(12.)).child(tr("source-empty")))
+                    })
+                    .children(self.files.iter().enumerate().map(|(index, path)| {
+                        let name = path
+                            .file_name()
+                            .unwrap_or_default()
+                            .to_string_lossy()
+                            .into_owned();
+                        let directory = path
+                            .parent()
+                            .map(|parent| parent.display().to_string())
+                            .filter(|parent| !parent.is_empty());
+                        let detail = match self.metadata.get(path) {
+                            Some(Err(error)) => Some(error.clone()),
+                            _ => directory,
+                        };
+                        let failed = self
+                            .metadata
+                            .get(path)
+                            .is_some_and(|value| value.is_err());
+                        let size = match self.metadata.get(path) {
+                            Some(Ok(meta)) if meta.file => size_text(meta.size),
+                            None => tr("source-reading").to_owned(),
+                            _ => String::new(),
+                        };
+                        let folder = self.metadata.get(path).is_some_and(|value| {
+                            value.as_ref().is_ok_and(|meta| meta.directory)
+                        });
+                        div()
+                            .id(("source-file", index))
+                            .h(px(48.))
+                            .px(px(10.))
+                            .flex()
+                            .items_center()
+                            .gap(px(8.))
+                            .border_b_1()
+                            .border_color(rgb(p.border))
+                            .hover(move |el| el.bg(rgb(p.hover)))
+                            .child(file_icon(path, folder, true, cx))
+                            .child(
+                                v_flex()
+                                    .flex_1()
+                                    .min_w_0()
+                                    .child(div().truncate().text_size(px(13.)).child(name.clone()))
+                                    .when_some(detail, |el, detail| {
+                                        el.child(
+                                            div()
+                                                .truncate()
+                                                .text_size(px(11.))
+                                                .text_color(rgb(if failed { p.danger } else { p.muted }))
+                                                .child(detail),
+                                        )
+                                    }),
+                            )
+                            .child(
+                                div()
+                                    .w(px(72.))
+                                    .flex_shrink_0()
+                                    .text_right()
+                                    .text_size(px(11.))
+                                    .text_color(rgb(p.muted))
+                                    .child(size),
+                            )
+                            .child(
+                                icon_button(
+                                    ("remove-file", index),
+                                    "Dismiss",
+                                    &tf("remove-file", &[("name", name.as_str().into())]),
+                                    true,
+                                    cx,
+                                )
+                                .on_click(cx.listener(move |this, _, _, cx| {
+                                    let path = this.files.remove(index);
+                                    this.metadata.remove(&path);
+                                    cx.notify();
+                                })),
+                            )
+                    })),
+            )
+    }
+}
+
 fn field(label: &str, content: impl IntoElement) -> Div {
     v_flex()
         .flex_1()
@@ -278,102 +411,12 @@ impl Render for CreateForm {
             .child(
                 v_flex()
                     .id("create-body")
-                    .overflow_y_scroll()
+                    .overflow_y_scrollbar()
                     .min_h_0()
                     .px(px(24.))
                     .py(px(22.))
                     .gap(px(20.))
-                    .child(
-                        h_flex().justify_between().child(tr("source-files")).child(
-                            div()
-                                .text_size(px(11.))
-                                .text_color(rgb(p.muted))
-                                .child(total_label.clone()),
-                        ),
-                    )
-                    .child(
-                        v_flex()
-                            .border_1()
-                            .border_color(rgb(p.border))
-                            .rounded(px(4.))
-                            .overflow_hidden()
-                            .when(self.files.is_empty(), |el| {
-                                el.child(
-                                    command("add-empty", tr("add-files"))
-                                        .custom(subtle_variant(cx))
-                                        .icon(icon("Add", 24.))
-                                        .border_0()
-                                        .rounded(px(0.))
-                                        .h(px(92.))
-                                        .w_full()
-                                        .on_click(cx.listener(|this, _, window, cx| {
-                                            this.choose_files(window, cx)
-                                        })),
-                                )
-                            })
-                            .children(self.files.iter().enumerate().map(|(index, path)| {
-                                let name = path
-                                    .file_name()
-                                    .unwrap_or_default()
-                                    .to_string_lossy()
-                                    .into_owned();
-                                h_flex()
-                                    .h(px(40.))
-                                    .px(px(10.))
-                                    .gap(px(8.))
-                                    .items_center()
-                                    .child(file_icon(
-                                        path,
-                                        self.metadata.get(path).is_some_and(|value| {
-                                            value.as_ref().is_ok_and(|meta| meta.directory)
-                                        }),
-                                        true,
-                                    ))
-                                    .child(div().flex_1().truncate().child(name.clone()))
-                                    .child(div().text_size(px(11.)).text_color(rgb(p.muted)).child(
-                                        match self.metadata.get(path) {
-                                            Some(Ok(meta)) if meta.file => size_text(meta.size),
-                                            None => tr("source-reading").to_owned(),
-                                            _ => String::new(),
-                                        },
-                                    ))
-                                    .child(
-                                        icon_button(
-                                            ("remove-file", index),
-                                            "Dismiss",
-                                            &tf("remove-file", &[("name", name.as_str().into())]),
-                                            cx,
-                                        )
-                                        .on_click(
-                                            cx.listener(move |this, _, _, cx| {
-                                                let path = this.files.remove(index);
-                                                this.metadata.remove(&path);
-                                                cx.notify();
-                                            }),
-                                        ),
-                                    )
-                            }))
-                            .when(!self.files.is_empty(), |el| {
-                                el.child(
-                                    command("add-more", tr("add-files"))
-                                        .icon(icon("Add", 16.))
-                                        .on_click(cx.listener(|this, _, window, cx| {
-                                            this.choose_files(window, cx)
-                                        })),
-                                )
-                            }),
-                    )
-                    .children(self.files.iter().filter_map(|path| {
-                        self.metadata
-                            .get(path)
-                            .and_then(|value| value.as_ref().err())
-                            .map(|error| {
-                                div()
-                                    .text_size(px(12.))
-                                    .text_color(rgb(p.danger))
-                                    .child(error.clone())
-                            })
-                    }))
+                    .child(self.source_list(total_label.clone(), cx))
                     .child(field(
                         tr("archive-name"),
                         h_flex()
@@ -464,6 +507,7 @@ impl Render for CreateForm {
                                                 } else {
                                                     tr("password-show")
                                                 },
+                                                true,
                                                 cx,
                                             )
                                             .on_click(
@@ -592,7 +636,6 @@ impl Render for CreateForm {
                     .gap(px(8.))
                     .items_center()
                     .bg(rgb(p.panel))
-                    .rounded_b(px(7.))
                     .border_t_1()
                     .border_color(rgb(p.border))
                     .child(

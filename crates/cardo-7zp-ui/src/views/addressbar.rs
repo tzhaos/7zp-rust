@@ -14,7 +14,15 @@ impl Workspace {
         let current_path = self.address_text();
         navigation_row(cx)
             .child(
-                icon_button("back", "ArrowLeft", tr("back"), cx)
+                icon_button(
+                    "back",
+                    "ArrowLeft",
+                    tr("back"),
+                    self.allow_hint(
+                        !self.tasks.is_busy() && !self.browser.view().history.is_empty(),
+                    ),
+                    cx,
+                )
                     .w(px(30.))
                     .h(px(30.))
                     .disabled(self.tasks.is_busy() || self.browser.view().history.is_empty())
@@ -23,7 +31,13 @@ impl Workspace {
                     })),
             )
             .child(
-                icon_button("up", "ArrowUp", tr("parent-folder"), cx)
+                icon_button(
+                    "up",
+                    "ArrowUp",
+                    tr("parent-folder"),
+                    self.allow_hint(!self.tasks.is_busy() && self.parent_location().is_some()),
+                    cx,
+                )
                     .w(px(30.))
                     .h(px(30.))
                     .disabled(self.tasks.is_busy() || self.parent_location().is_none())
@@ -50,19 +64,14 @@ impl Workspace {
                                 "recent-locations",
                                 "ChevronDown",
                                 tr("browser-location-menu"),
+                                self.allow_hint(!self.tasks.is_busy()),
                                 cx,
                             )
                             .w(px(24.))
                             .h(px(24.))
                             .disabled(self.tasks.is_busy())
-                            .dropdown_menu_with_anchor(
-                                Anchor::TopRight,
-                                move |menu, _, _| {
-                                    let mut menu = menu_style(menu)
-                                        .min_w(px(460.))
-                                        .max_w(px(460.))
-                                        .max_h(px(420.))
-                                        .scrollable(true);
+                            .dropdown_menu(move |menu, _, _| {
+                                    let mut menu = menu_style(menu).max_h(px(320.)).scrollable(true);
                                     let browse = owner.clone();
                                     let copy_path = current_path.clone();
                                     menu = menu
@@ -118,7 +127,7 @@ impl Workspace {
                                             };
                                             let owner = owner.clone();
                                             menu = menu.item(
-                                                path_menu_item(path.display().to_string(), 440.)
+                                                path_menu_item(path.display().to_string())
                                                     .on_click(move |_, window, cx| {
                                                         let _ = owner.update(cx, |this, cx| {
                                                             this.visit(location.clone(), window, cx)
@@ -160,7 +169,13 @@ impl Workspace {
                             .prefix(icon("Search", 16.).text_color(rgb(p.muted)))
                             .when(!self.search.read(cx).value().is_empty(), |input| {
                                 input.suffix(
-                                    icon_button("clear-search", "Dismiss", tr("search-clear"), cx)
+                                    icon_button(
+                                        "clear-search",
+                                        "Dismiss",
+                                        tr("search-clear"),
+                                        self.allow_hint(true),
+                                        cx,
+                                    )
                                         .w(px(24.))
                                         .h(px(24.))
                                         .on_click(cx.listener(|this, _, window, cx| {

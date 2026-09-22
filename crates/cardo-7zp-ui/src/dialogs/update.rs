@@ -1,17 +1,14 @@
 use crate::*;
-use gpui_kit::{
-    component::{h_flex, v_flex},
-    prelude::FluentBuilder,
-};
+use gpui_kit::{component::v_flex, prelude::FluentBuilder};
 
 impl Workspace {
     pub(super) fn update_view(
         &self,
-        status: &cardo_7zp_application::update::Status,
+        status: &cardo_7zp_requests::update::Status,
         cx: &mut Context<Self>,
     ) -> AnyElement {
         {
-            use cardo_7zp_application::update::Status;
+            use cardo_7zp_requests::update::Status;
             let description = match status {
                 Status::Checking => tr("update-checking").to_owned(),
                 Status::Unconfigured => tr("update-unconfigured").to_owned(),
@@ -21,42 +18,44 @@ impl Workspace {
                 }
                 Status::Failed(error) => tf("update-failed", &[("error", error.as_str().into())]),
             };
+            let actions = match status {
+                Status::Available { download, release, .. } => Some((download.clone(), release.clone())),
+                _ => None,
+            };
+            let retry = !matches!(status, Status::Checking);
             v_flex()
-                .px(px(24.))
-                .py(px(22.))
-                .gap(px(16.))
-                .child(tf(
-                    "update-installed",
-                    &[("version", cardo_7zp_application::update::VERSION.into())],
-                ))
-                .child(description)
-                .when(matches!(status, Status::Available { .. }), |el| {
-                    let Status::Available {
-                        download, release, ..
-                    } = status
-                    else {
-                        return el;
-                    };
-                    let download = download.clone();
-                    let release = release.clone();
-                    el.child(tr("update-package-note")).child(
-                        h_flex()
-                            .gap(px(8.))
-                            .child(
-                                primary("update-download", tr("update-download"))
-                                    .on_click(move |_, _, cx| cx.open_url(&download)),
-                            )
-                            .child(
-                                command("update-notes", tr("update-notes"))
-                                    .on_click(move |_, _, cx| cx.open_url(&release)),
-                            ),
-                    )
-                })
-                .when(!matches!(status, Status::Checking), |el| {
-                    el.child(
-                        command("update-retry", tr("update-check"))
-                            .on_click(cx.listener(|this, _, _, cx| this.check_update(cx))),
-                    )
+                .flex_1()
+                .min_h_0()
+                .child(
+                    v_flex()
+                        .flex_1()
+                        .min_h_0()
+                        .px(px(24.))
+                        .py(px(20.))
+                        .gap(px(16.))
+                        .child(tf(
+                            "update-installed",
+                            &[("version", cardo_7zp_requests::update::VERSION.into())],
+                        ))
+                        .child(description)
+                        .when(actions.is_some(), |el| el.child(tr("update-package-note"))),
+                )
+                .when(actions.is_some() || retry, |el| {
+                    el.child(self.action_row(cx).when_some(actions, |row, (download, release)| {
+                        row.child(
+                            primary("update-download", tr("update-download"))
+                                .on_click(move |_, _, cx| cx.open_url(&download)),
+                        )
+                        .child(
+                            command("update-notes", tr("update-notes"))
+                                .on_click(move |_, _, cx| cx.open_url(&release)),
+                        )
+                    }).when(retry, |row| {
+                        row.child(
+                            command("update-retry", tr("update-check"))
+                                .on_click(cx.listener(|this, _, _, cx| this.check_update(cx))),
+                        )
+                    }))
                 })
                 .into_any_element()
         }

@@ -4,7 +4,7 @@ use super::{
 };
 use anyhow::{Context, Result, bail};
 use cardo_7zp_core::i18n::tr;
-use cardo_7zp_shell_api::{ArchiveFormat, HashMethod, archive_name};
+use cardo_7zp_commands::{ArchiveFormat, HashMethod, archive_name};
 use std::path::PathBuf;
 use std::sync::atomic::Ordering;
 
@@ -21,7 +21,7 @@ impl Engine {
             .parent()
             .context(tr("destination-required"))?
             .join(format!("{name}.{}", format.value()));
-        let format = Format::from_shell(format);
+        let format = Format::from_command(format);
         self.create(
             sources,
             &destination,

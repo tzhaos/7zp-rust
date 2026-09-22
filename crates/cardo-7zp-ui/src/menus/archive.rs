@@ -102,9 +102,9 @@ pub(crate) fn checksum_menu(
         window,
         cx,
         move |mut menu, _, _| {
-            menu = menu_style(menu);
-            for action in cardo_7zp_shell_api::ACTIONS.iter().copied() {
-                let cardo_7zp_shell_api::Action::Checksum(method) = action else {
+            menu = submenu_style(menu);
+            for action in cardo_7zp_commands::ACTIONS.iter().copied() {
+                let cardo_7zp_commands::Action::Checksum(method) = action else {
                     continue;
                 };
                 let owner = hashes.clone();
@@ -145,9 +145,9 @@ pub(crate) fn open_as_menu(
         return menu.item(PopupMenuItem::new(tr("archive-open-as")).disabled(true));
     };
     menu.submenu(tr("archive-open-as"), window, cx, move |mut menu, _, _| {
-        menu = menu_style(menu);
-        for action in cardo_7zp_shell_api::ACTIONS.iter().copied() {
-            let cardo_7zp_shell_api::Action::OpenAs(kind) = action else {
+        menu = submenu_style(menu);
+        for action in cardo_7zp_commands::ACTIONS.iter().copied() {
+            let cardo_7zp_commands::Action::OpenAs(kind) = action else {
                 continue;
             };
             let owner = opening.clone();

@@ -2,7 +2,9 @@ pub const CONTROL_HEIGHT: f32 = 32.;
 pub const CONTROL_RADIUS: f32 = 4.;
 pub const ICON_BUTTON_SIZE: f32 = 30.;
 pub const TOOLBAR_HEIGHT: f32 = 94.;
+pub const TOOLBAR_ICON_HEIGHT: f32 = 68.;
 pub const TOOL_HEIGHT: f32 = 80.;
+pub const TOOL_ICON_HEIGHT: f32 = 56.;
 pub const TOOL_MIN_WIDTH: f32 = 66.;
 pub const TOOL_MAX_WIDTH: f32 = 72.;
 pub const TOOL_GAP: f32 = 5.;
@@ -24,7 +26,6 @@ pub mod home {
     pub const ACTION_GAP: f32 = 12.;
     pub const ACTION_ICON_SIZE: f32 = 17.;
     pub const HISTORY_GAP: f32 = 8.;
-    pub const HISTORY_TEXT_SIZE: f32 = 12.;
     pub const HISTORY_ROW_HEIGHT: f32 = 48.;
     pub const HISTORY_ROW_PADDING: f32 = 8.;
     pub const HISTORY_REMOVE_WIDTH: f32 = 38.;

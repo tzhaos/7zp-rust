@@ -3,7 +3,7 @@ mod edit;
 mod engine;
 mod model;
 mod progress;
-mod shell;
+mod quick;
 
 pub use edit::Edit;
 pub use engine::{Engine, Output, SourceError, needs_password};

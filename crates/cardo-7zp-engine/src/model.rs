@@ -1,4 +1,4 @@
-use cardo_7zp_shell_api::OpenType;
+use cardo_7zp_commands::OpenType;
 use std::{
     collections::BTreeMap,
     path::PathBuf,
@@ -29,10 +29,10 @@ impl Format {
         Self::Wim,
     ];
 
-    pub fn from_shell(format: cardo_7zp_shell_api::ArchiveFormat) -> Self {
+    pub fn from_command(format: cardo_7zp_commands::ArchiveFormat) -> Self {
         match format {
-            cardo_7zp_shell_api::ArchiveFormat::SevenZip => Self::SevenZip,
-            cardo_7zp_shell_api::ArchiveFormat::Zip => Self::Zip,
+            cardo_7zp_commands::ArchiveFormat::SevenZip => Self::SevenZip,
+            cardo_7zp_commands::ArchiveFormat::Zip => Self::Zip,
         }
     }
 
