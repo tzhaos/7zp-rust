@@ -1,0 +1,18 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="256" height="256" viewBox="0 0 256 256">
+  <defs>
+    <linearGradient id="cover" x1="46" y1="56" x2="193" y2="214" gradientUnits="userSpaceOnUse"><stop stop-color="#ffb9ae"/><stop offset=".5" stop-color="#ed7d7f"/><stop offset="1" stop-color="#be4f68"/></linearGradient>
+    <linearGradient id="left" x1="42" y1="61" x2="130" y2="192" gradientUnits="userSpaceOnUse"><stop stop-color="#fff9f0"/><stop offset="1" stop-color="#f1d9d3"/></linearGradient>
+    <linearGradient id="right" x1="149" y1="58" x2="209" y2="199" gradientUnits="userSpaceOnUse"><stop stop-color="#fffdf7"/><stop offset="1" stop-color="#f6e8dd"/></linearGradient>
+  </defs>
+  <g transform="rotate(-8 128 128)" stroke-linejoin="round">
+    <path d="M31 66Q78 46 127 71Q177 46 225 66V209Q177 189 134 218Q127 224 120 218Q78 189 31 209Z" fill="#a64b60"/>
+    <path d="M26 59Q77 38 126 65Q175 38 221 59V201Q173 182 133 209Q126 216 119 209Q76 182 26 201Z" fill="url(#cover)"/>
+    <path d="M37 51Q83 38 124 63V195Q82 174 37 189Z" fill="url(#left)"/>
+    <path d="M128 63Q169 38 210 51V189Q168 174 128 195Z" fill="url(#right)"/>
+    <path d="M124 65V195" stroke="#d49994" stroke-width="4"/>
+    <path d="M52 80Q77 75 104 89M52 99Q77 94 104 108M52 118Q74 114 96 125" fill="none" stroke="#d3aaa1" stroke-width="7" stroke-linecap="round"/>
+    <path d="M150 94C150 72 187 70 188 93C189 105 168 108 168 122" fill="none" stroke="#cf6c7d" stroke-width="12" stroke-linecap="round"/>
+    <circle cx="168" cy="144" r="7" fill="#cf6c7d"/>
+    <path d="M142 49L160 44V80L151 75L142 84Z" fill="url(#cover)"/>
+  </g>
+</svg>

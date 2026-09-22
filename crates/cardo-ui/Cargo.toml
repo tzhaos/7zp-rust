@@ -1,0 +1,10 @@
+[package]
+name = "cardo-ui"
+version.workspace = true
+edition.workspace = true
+publish.workspace = true
+description = "Shared GPUI desktop presentation and popup menus"
+
+[dependencies]
+gpui-kit.workspace = true
+tracing.workspace = true

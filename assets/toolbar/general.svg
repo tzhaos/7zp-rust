@@ -1,0 +1,17 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="256" height="256" viewBox="0 0 256 256"><defs>
+    <linearGradient id="general-face" x1="50" y1="42" x2="189" y2="213" gradientUnits="userSpaceOnUse"><stop stop-color="#d0b5ff"/><stop offset=".47" stop-color="#9672ee"/><stop offset="1" stop-color="#6349d5"/></linearGradient>
+    <linearGradient id="general-side" x1="59" y1="66" x2="198" y2="213" gradientUnits="userSpaceOnUse"><stop stop-color="#9672ee"/><stop offset="1" stop-color="#422aa8"/></linearGradient>
+    <linearGradient id="general-top" x1="80" y1="35" x2="168" y2="150" gradientUnits="userSpaceOnUse"><stop stop-color="#d0b5ff"/><stop offset="1" stop-color="#9672ee"/></linearGradient>
+    <radialGradient id="general-glow" cx=".28" cy=".2" r=".8"><stop stop-color="white" stop-opacity=".52"/><stop offset=".55" stop-color="white" stop-opacity=".04"/><stop offset="1" stop-color="white" stop-opacity="0"/></radialGradient>
+    <radialGradient id="general-round" cx=".33" cy=".25" r=".76"><stop stop-color="#d0b5ff"/><stop offset=".36" stop-color="#9672ee"/><stop offset=".8" stop-color="#6349d5"/><stop offset="1" stop-color="#422aa8"/></radialGradient>
+    <linearGradient id="general-white" x1="86" y1="85" x2="161" y2="174" gradientUnits="userSpaceOnUse"><stop stop-color="white"/><stop offset="1" stop-color="#e8f6ff"/></linearGradient>
+    <filter id="general-shadow" x="-35%" y="-35%" width="175%" height="180%"><feDropShadow dx="0" dy="5" stdDeviation="4" flood-color="#422aa8" flood-opacity=".13"/></filter>
+  </defs>
+    <g transform="rotate(-12 128 128)" filter="url(#general-shadow)" stroke-linejoin="round">
+      <path d="M125 34Q129 32 134 35L210 81Q214 84 214 90V165Q214 172 208 176L137 221Q130 225 124 221L51 176Q45 172 45 165V90Q45 84 51 80Z" fill="url(#general-side)"/>
+      <path d="M129 34L210 84L129 136L47 84Z" fill="url(#general-top)"/>
+      <path d="M47 85L128 136V217L51 170Q47 167 47 162Z" fill="url(#general-face)"/>
+      <path d="M129 136L210 85V163Q210 168 205 172L129 218Z" fill="url(#general-side)"/>
+      <path d="M52 84L129 37L204 83M52 88L124 134" fill="none" stroke="#efe2ff" stroke-opacity=".48" stroke-width="3" stroke-linecap="round"/>
+      <path d="M129 138V211" fill="none" stroke="#baa5ff" stroke-opacity=".3" stroke-width="2"/>
+    </g></svg>

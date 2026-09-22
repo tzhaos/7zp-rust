@@ -1,0 +1,16 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="256" height="256" viewBox="0 0 256 256">
+  <defs>
+    <linearGradient id="side" x1="63" y1="55" x2="190" y2="218" gradientUnits="userSpaceOnUse"><stop stop-color="#6bcbe7"/><stop offset="1" stop-color="#26729f"/></linearGradient>
+    <linearGradient id="face" x1="65" y1="42" x2="187" y2="212" gradientUnits="userSpaceOnUse"><stop stop-color="#b1edfa"/><stop offset=".46" stop-color="#60c6e3"/><stop offset="1" stop-color="#3895c2"/></linearGradient>
+    <linearGradient id="white" x1="103" y1="80" x2="152" y2="173" gradientUnits="userSpaceOnUse"><stop stop-color="#ffffff"/><stop offset="1" stop-color="#d7f4ff"/></linearGradient>
+  </defs>
+  <g transform="rotate(-8 128 128)">
+    <circle cx="133" cy="134" r="91" fill="url(#side)"/>
+    <circle cx="126" cy="126" r="91" fill="url(#face)"/>
+    <path d="M54 96A78 78 0 0 1 177 66" fill="none" stroke="#e7fcff" stroke-opacity=".6" stroke-width="3" stroke-linecap="round"/>
+    <circle cx="130" cy="85" r="13" fill="#348bb5"/>
+    <path d="M114 116H139V169H151V181H111V169H120V129H114Z" fill="#348bb5"/>
+    <circle cx="126" cy="81" r="13" fill="url(#white)"/>
+    <path d="M109 111H135V164H147V176H106V164H115V124H109Z" fill="url(#white)"/>
+  </g>
+</svg>

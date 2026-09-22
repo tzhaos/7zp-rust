@@ -1,0 +1,18 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="256" height="256" viewBox="0 0 256 256"><defs>
+    <linearGradient id="open-face" x1="50" y1="42" x2="189" y2="213" gradientUnits="userSpaceOnUse"><stop stop-color="#ffe49b"/><stop offset=".47" stop-color="#ffb542"/><stop offset="1" stop-color="#dc7029"/></linearGradient>
+    <linearGradient id="open-side" x1="59" y1="66" x2="198" y2="213" gradientUnits="userSpaceOnUse"><stop stop-color="#ffb542"/><stop offset="1" stop-color="#a84921"/></linearGradient>
+    <linearGradient id="open-top" x1="80" y1="35" x2="168" y2="150" gradientUnits="userSpaceOnUse"><stop stop-color="#ffe49b"/><stop offset="1" stop-color="#ffb542"/></linearGradient>
+    <radialGradient id="open-glow" cx=".28" cy=".2" r=".8"><stop stop-color="white" stop-opacity=".52"/><stop offset=".55" stop-color="white" stop-opacity=".04"/><stop offset="1" stop-color="white" stop-opacity="0"/></radialGradient>
+    <radialGradient id="open-round" cx=".33" cy=".25" r=".76"><stop stop-color="#ffe49b"/><stop offset=".36" stop-color="#ffb542"/><stop offset=".8" stop-color="#dc7029"/><stop offset="1" stop-color="#a84921"/></radialGradient>
+    <linearGradient id="open-white" x1="86" y1="85" x2="161" y2="174" gradientUnits="userSpaceOnUse"><stop stop-color="white"/><stop offset="1" stop-color="#e8f6ff"/></linearGradient>
+    <filter id="open-shadow" x="-35%" y="-35%" width="175%" height="180%"><feDropShadow dx="0" dy="5" stdDeviation="4" flood-color="#a84921" flood-opacity=".13"/></filter>
+  </defs>
+    <g filter="url(#open-shadow)">
+      <path d="M49 71Q49 56 66 56H103Q111 56 118 65L129 80H193Q210 80 210 98V183Q210 203 190 203H58Q40 203 40 184Z" fill="url(#open-side)"/>
+      <path d="M38 68Q38 53 54 53H96Q105 53 111 62L122 76H185Q201 76 201 93V182Q201 196 186 196H51Q35 196 35 180Z" fill="url(#open-top)"/>
+      <path d="M40 82H185Q195 82 195 94V116H42Z" fill="#b86024" opacity=".28"/>
+      <path d="M64 105H214Q229 105 224 120L205 184Q200 203 182 203H53Q37 203 41 187L54 119Q57 105 64 105Z" fill="url(#open-side)"/>
+      <path d="M63 101H210Q223 101 219 115L199 180Q195 193 181 193H51Q36 193 40 179L53 115Q56 101 63 101Z" fill="url(#open-face)"/>
+      <path d="M63 104H207" fill="none" stroke="#fff2ce" stroke-opacity=".8" stroke-width="3" stroke-linecap="round"/>
+      <path d="M59 110H196L173 184H45Z" fill="url(#open-glow)"/>
+    </g></svg>

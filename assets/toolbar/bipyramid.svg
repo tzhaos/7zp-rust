@@ -1,0 +1,19 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="256" height="256" viewBox="0 0 256 256">
+  <defs>
+    <linearGradient id="upper-left" x1="90" y1="40" x2="118" y2="156" gradientUnits="userSpaceOnUse"><stop stop-color="#c0fbd2"/><stop offset="1" stop-color="#52cf91"/></linearGradient>
+    <linearGradient id="upper-right" x1="134" y1="40" x2="205" y2="134" gradientUnits="userSpaceOnUse"><stop stop-color="#74e9ad"/><stop offset="1" stop-color="#26aa73"/></linearGradient>
+    <linearGradient id="lower-left" x1="50" y1="116" x2="133" y2="224" gradientUnits="userSpaceOnUse"><stop stop-color="#36bd83"/><stop offset="1" stop-color="#14865d"/></linearGradient>
+    <linearGradient id="lower-right" x1="211" y1="116" x2="134" y2="224" gradientUnits="userSpaceOnUse"><stop stop-color="#209d70"/><stop offset="1" stop-color="#0a6249"/></linearGradient>
+    <filter id="shadow" x="-30%" y="-25%" width="160%" height="165%"><feDropShadow dx="0" dy="6" stdDeviation="5" flood-color="#175d46" flood-opacity=".16"/></filter>
+  </defs>
+  <g filter="url(#shadow)" stroke-linejoin="round">
+    <path d="M128 28L218 119L128 228L38 119Z" fill="#249f70"/>
+    <path d="M128 28L38 119L128 154Z" fill="url(#upper-left)"/>
+    <path d="M128 28L218 119L128 154Z" fill="url(#upper-right)"/>
+    <path d="M38 119L128 154V228Z" fill="url(#lower-left)"/>
+    <path d="M218 119L128 154V228Z" fill="url(#lower-right)"/>
+    <path d="M43 118L128 33L212 118M128 34V150" fill="none" stroke="#e1ffeb" stroke-opacity=".55" stroke-width="2.5" stroke-linecap="round"/>
+    <path d="M42 121L128 155L214 121" fill="none" stroke="#b3f9d1" stroke-opacity=".38" stroke-width="2"/>
+    <path d="M128 157V220" stroke="#6dd4a3" stroke-opacity=".4" stroke-width="2"/>
+  </g>
+</svg>

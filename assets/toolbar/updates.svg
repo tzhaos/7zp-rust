@@ -1,0 +1,14 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="256" height="256" viewBox="0 0 256 256">
+  <defs>
+    <linearGradient id="blue" x1="60" y1="44" x2="206" y2="141" gradientUnits="userSpaceOnUse"><stop stop-color="#b0ddff"/><stop offset=".46" stop-color="#70aff1"/><stop offset="1" stop-color="#426ec5"/></linearGradient>
+    <linearGradient id="mint" x1="51" y1="124" x2="188" y2="218" gradientUnits="userSpaceOnUse"><stop stop-color="#a8efd1"/><stop offset=".5" stop-color="#61caa7"/><stop offset="1" stop-color="#319984"/></linearGradient>
+  </defs>
+  <g transform="rotate(-8 128 128)" stroke-linejoin="round">
+    <path d="M47 108C53 51 120 23 169 53Q189 65 198 86L218 66L220 125L161 125L180 105C174 76 140 64 115 72Q83 82 78 112Z" fill="#3664aa" transform="translate(4 6)"/>
+    <path d="M47 108C53 51 120 23 169 53Q189 65 198 86L218 66L220 125L161 125L180 105C174 76 140 64 115 72Q83 82 78 112Z" fill="url(#blue)"/>
+    <path d="M209 148C203 205 136 233 87 203Q67 191 58 170L38 190L36 131L95 131L76 151C82 180 116 192 141 184Q173 174 178 144Z" fill="#2c8276" transform="translate(4 6)"/>
+    <path d="M209 148C203 205 136 233 87 203Q67 191 58 170L38 190L36 131L95 131L76 151C82 180 116 192 141 184Q173 174 178 144Z" fill="url(#mint)"/>
+    <path d="M55 103C64 57 121 33 164 60" fill="none" stroke="#e1f2ff" stroke-opacity=".7" stroke-width="3" stroke-linecap="round"/>
+    <path d="M200 153C189 195 139 215 100 200" fill="none" stroke="#d5ffeb" stroke-opacity=".6" stroke-width="3" stroke-linecap="round"/>
+  </g>
+</svg>

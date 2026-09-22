@@ -1,0 +1,17 @@
+[package]
+name = "cardo-7zp-explorer"
+version.workspace = true
+edition.workspace = true
+publish.workspace = true
+description = "Explorer context-menu DLL. It records a request for 7zplus.exe and does not link the window or 7z.exe."
+
+[lib]
+crate-type = ["cdylib"]
+
+[dependencies]
+cardo-7zp-commands.workspace = true
+serde_json.workspace = true
+tempfile.workspace = true
+winreg.workspace = true
+windows-core = "=0.61.2"
+windows = { version = "=0.61.3", features = ["Win32_Foundation", "Win32_System_Com", "Win32_System_SystemServices", "Win32_UI_Shell"] }

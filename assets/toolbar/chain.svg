@@ -1,0 +1,24 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="256" height="256" viewBox="0 0 256 256">
+  <defs>
+    <linearGradient id="chain-coral" x1="70" y1="45" x2="177" y2="150" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#ffc4ad"/><stop offset=".45" stop-color="#ff867a"/><stop offset="1" stop-color="#d64b65"/>
+    </linearGradient>
+    <linearGradient id="chain-blue" x1="68" y1="131" x2="180" y2="217" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#9bd7ff"/><stop offset=".48" stop-color="#5b9fe9"/><stop offset="1" stop-color="#3b65b4"/>
+    </linearGradient>
+    <filter id="chain-shadow" x="-40%" y="-30%" width="180%" height="170%">
+      <feDropShadow dx="1" dy="5" stdDeviation="4" flood-color="#48547e" flood-opacity=".18"/>
+    </filter>
+  </defs>
+  <g transform="rotate(38 128 128)" filter="url(#chain-shadow)" fill="none" stroke-linecap="round">
+    <rect x="92" y="38" width="74" height="113" rx="35" stroke="#b7435c" stroke-width="23"/>
+    <rect x="89" y="33" width="74" height="113" rx="35" stroke="url(#chain-coral)" stroke-width="23"/>
+    <rect x="92" y="118" width="74" height="108" rx="35" stroke="#345b9e" stroke-width="23"/>
+    <rect x="89" y="113" width="74" height="108" rx="35" stroke="url(#chain-blue)" stroke-width="23"/>
+    <path d="M89 102V111Q89 146 124 146" stroke="#b7435c" stroke-width="24"/>
+    <path d="M89 97V109Q89 144 124 144" stroke="url(#chain-coral)" stroke-width="23"/>
+    <path d="M97 60Q105 42 125 42" stroke="#ffe4d6" stroke-opacity=".8" stroke-width="4"/>
+    <path d="M97 160V181Q97 208 123 212" stroke="#d7eeff" stroke-opacity=".65" stroke-width="4"/>
+    <path d="M90 113Q93 136 113 140" stroke="#ffcbba" stroke-opacity=".65" stroke-width="3"/>
+  </g>
+</svg>

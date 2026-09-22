@@ -1,0 +1,85 @@
+name: Windows package
+
+on:
+  push:
+    branches: ['**']
+    tags: ['v*']
+  pull_request:
+  workflow_dispatch:
+    inputs:
+      release_tag:
+        description: 'Existing tag at the selected commit, for example v0.2.0 (creates a draft)'
+        required: false
+        type: string
+
+permissions:
+  contents: read
+
+concurrency:
+  group: windows-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: ${{ github.ref_type != 'tag' && inputs.release_tag == '' }}
+
+jobs:
+  package:
+    runs-on: windows-2025
+    outputs:
+      release_tag: ${{ steps.version.outputs.release_tag }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: Install pinned Rust toolchain
+        shell: pwsh
+        run: |
+          rustup show
+          if ($LASTEXITCODE -ne 0) { throw 'Rust toolchain installation failed' }
+      - name: Validate version and release tag
+        id: version
+        shell: pwsh
+        env:
+          REQUESTED_TAG: ${{ inputs.release_tag }}
+        run: |
+          $version = ./tools/version.ps1
+          $tag = if ($env:GITHUB_REF_TYPE -eq 'tag') { $env:GITHUB_REF_NAME } else { $env:REQUESTED_TAG }
+          if ($tag) {
+            if ($tag -cne "v$version") { throw 'Release tag must match Cargo.toml version' }
+            $commit = git rev-parse "refs/tags/$tag^{}"
+            if ($LASTEXITCODE -ne 0 -or $commit -ne $env:GITHUB_SHA) { throw 'Tag must already exist at the selected commit' }
+          }
+          "release_tag=$tag" >> $env:GITHUB_OUTPUT
+      - name: Build application, portable archive and installer
+        shell: pwsh
+        run: ./tools/build.ps1 -ReleaseRepository $env:GITHUB_REPOSITORY -Package All
+      - uses: actions/upload-artifact@v4
+        with:
+          name: 7zplus-windows-x64
+          if-no-files-found: error
+          path: |
+            dist/7zplus-amd64-installer.exe
+            dist/7zplus-amd64-portable.zip
+            dist/SHA256SUMS.txt
+
+  release:
+    needs: package
+    if: needs.package.outputs.release_tag != '' && github.event_name != 'pull_request'
+    concurrency:
+      group: release-${{ needs.package.outputs.release_tag }}
+      cancel-in-progress: false
+    runs-on: windows-2025
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: actions/download-artifact@v4
+        with:
+          name: 7zplus-windows-x64
+          path: dist
+      - name: Publish verified release assets
+        shell: pwsh
+        env:
+          GH_TOKEN: ${{ github.token }}
+          RELEASE_TAG: ${{ needs.package.outputs.release_tag }}
+          PUBLISH_RELEASE: ${{ github.event_name == 'push' && github.ref_type == 'tag' }}
+        run: ./tools/release.ps1 -Tag $env:RELEASE_TAG -Publish:($env:PUBLISH_RELEASE -eq 'true')
