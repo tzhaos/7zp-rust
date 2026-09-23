@@ -1,0 +1,16 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="256" height="256" viewBox="0 0 256 256">
+  <defs>
+    <linearGradient id="side" x1="63" y1="55" x2="190" y2="218" gradientUnits="userSpaceOnUse"><stop stop-color="#6bcbe7"/><stop offset="1" stop-color="#26729f"/></linearGradient>
+    <linearGradient id="face" x1="65" y1="42" x2="187" y2="212" gradientUnits="userSpaceOnUse"><stop stop-color="#b1edfa"/><stop offset=".46" stop-color="#60c6e3"/><stop offset="1" stop-color="#3895c2"/></linearGradient>
+    <linearGradient id="white" x1="103" y1="80" x2="152" y2="181" gradientUnits="userSpaceOnUse"><stop stop-color="#ffffff"/><stop offset="1" stop-color="#d7f4ff"/></linearGradient>
+  </defs>
+  <g transform="rotate(-8 128 128)">
+    <circle cx="133" cy="134" r="91" fill="url(#side)"/>
+    <circle cx="126" cy="126" r="91" fill="url(#face)"/>
+    <path d="M54 96A78 78 0 0 1 177 66" fill="none" stroke="#e7fcff" stroke-opacity=".6" stroke-width="3" stroke-linecap="round"/>
+    <path d="M116 78Q116 74 120 74H140Q144 74 144 78L140 142Q140 146 136 146H124Q120 146 120 142Z" fill="#348bb5"/>
+    <circle cx="130" cy="172" r="13" fill="#348bb5"/>
+    <path d="M112 74Q112 70 116 70H136Q140 70 140 74L136 138Q136 142 132 142H120Q116 142 116 138Z" fill="url(#white)"/>
+    <circle cx="126" cy="168" r="13" fill="url(#white)"/>
+  </g>
+</svg>

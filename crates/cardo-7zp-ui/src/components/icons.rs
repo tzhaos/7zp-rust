@@ -25,6 +25,7 @@ pub enum ToolIcon {
     Associations,
     History,
     About,
+    Warning,
 }
 
 impl ToolIcon {
@@ -40,6 +41,7 @@ impl ToolIcon {
             Self::Associations => "toolbar/chain.svg",
             Self::History => "toolbar/history.svg",
             Self::About => "toolbar/about.svg",
+            Self::Warning => "toolbar/warning.svg",
         }
     }
 }

@@ -98,7 +98,7 @@ impl Workspace {
             Modal::Password { input, .. } => self.password_view(input, cx),
             Modal::ConfirmRun { entry } => self.confirm_run_view(entry, cx),
             Modal::ConfirmDelete { count, .. } => self.confirm_delete_view(*count, cx),
-            Modal::Conflict { .. } => self.conflict_view(cx),
+            Modal::Conflict { .. } => self.conflict_view(window, cx),
             Modal::Extract {
                 folder,
                 selected,

@@ -2,7 +2,7 @@ use crate::*;
 use gpui_kit::component::h_flex;
 
 impl Workspace {
-    pub(super) fn conflict_view(&self, cx: &mut Context<Self>) -> AnyElement {
+    pub(super) fn conflict_view(&self, window: &mut Window, cx: &mut Context<Self>) -> AnyElement {
         let Some(Modal::Conflict {
             plan,
             index,
@@ -15,7 +15,7 @@ impl Workspace {
         let Some(conflict) = plan.conflicts.get(*index) else {
             return div().into_any_element();
         };
-        let p = crate::theme::palette(cx);
+        let notice_icon = artwork(ToolIcon::Warning, window, cx).into_any_element();
         let file = |label: &'static str, bytes: Option<u64>, modified: &str| {
             panel_card(cx)
                 .flex_1()
@@ -47,11 +47,15 @@ impl Workspace {
         panel_layout(cx)
             .child(
                 panel_body("conflict-body")
-                    .child(panel_notice(
-                        "Info",
-                        tr("extract-conflict-exists"),
-                        p.accent,
-                    ))
+                    .child(
+                        h_flex()
+                            .w_full()
+                            .min_w_0()
+                            .flex_shrink_0()
+                            .gap(px(12.))
+                            .child(notice_icon)
+                            .child(body_text(tr("extract-conflict-exists")).flex_1()),
+                    )
                     .child(
                         compact_text(
                             "conflict-filename",
