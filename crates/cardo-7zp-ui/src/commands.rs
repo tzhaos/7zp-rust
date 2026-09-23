@@ -10,12 +10,10 @@ pub(super) enum Command {
     OpenOutside,
     Create,
     Save,
-    Close,
     ArchiveInfo,
     ClearRecent,
     Exit,
     Extract,
-    QuickExtract,
     QuickExtractSelection,
     Add,
     AddFolder,
@@ -33,6 +31,7 @@ pub(super) enum Command {
     Up,
     Refresh,
     Settings(preferences::Tab),
+    About,
 }
 
 impl Workspace {
@@ -60,11 +59,9 @@ impl Workspace {
                 archive && view.catalog.as_ref().is_some_and(Catalog::accepts_comment)
             }
             Command::Save
-            | Command::Close
             | Command::ArchiveInfo
             | Command::Properties
             | Command::Extract
-            | Command::QuickExtract
             | Command::QuickExtractSelection
             | Command::Check => archive,
             Command::OpenItem => self.current_item().is_some(),
@@ -82,7 +79,8 @@ impl Workspace {
             | Command::Create
             | Command::ClearRecent
             | Command::Exit
-            | Command::Settings(_) => true,
+            | Command::Settings(_)
+            | Command::About => true,
         }
     }
 
@@ -97,7 +95,7 @@ impl Workspace {
         }
         if !matches!(
             command,
-            Command::Settings(_) | Command::ClearRecent | Command::Exit
+            Command::Settings(_) | Command::About | Command::ClearRecent | Command::Exit
         ) {
             self.show_browser(window, cx);
         }
@@ -110,27 +108,10 @@ impl Workspace {
             Command::OpenOutside => self.open_outside(window, cx),
             Command::Create => self.create_dialog(Vec::new(), window, cx),
             Command::Save => self.save_copy(cx),
-            Command::Close => {
-                let parent = self
-                    .browser
-                    .view()
-                    .catalog
-                    .as_ref()
-                    .and_then(|c| c.path.parent())
-                    .map(Path::to_owned);
-                self.visit(
-                    parent
-                        .map(browser::Location::Directory)
-                        .unwrap_or(browser::Location::Home),
-                    window,
-                    cx,
-                );
-            }
             Command::ArchiveInfo => self.properties(false, cx),
             Command::ClearRecent => self.update_recent(recent::Change::Clear, cx),
             Command::Exit => window.remove_window(),
             Command::Extract => self.extract_dialog(window, cx),
-            Command::QuickExtract => self.quick_extract(false, cx),
             Command::QuickExtractSelection => {
                 self.quick_extract(!self.browser.view().selected.is_empty(), cx)
             }
@@ -180,6 +161,7 @@ impl Workspace {
                 }
             }
             Command::Settings(tab) => self.preferences_category(tab, window, cx),
+            Command::About => self.open_settings(views::SettingsPage::About, window, cx),
         }
     }
 }
@@ -254,7 +236,7 @@ impl Workspace {
             (true, false, true, "s") => Some(commands::Command::Save),
             (false, true, _, "e") => Some(commands::Command::Extract),
             (false, true, _, "a") => Some(commands::Command::Add),
-            (false, true, _, "i") => Some(commands::Command::Properties),
+            (false, true, _, "i") => Some(commands::Command::ArchiveInfo),
             (false, true, _, "m") => Some(commands::Command::Comment),
             (false, true, _, "t") => Some(commands::Command::Check),
             _ => None,

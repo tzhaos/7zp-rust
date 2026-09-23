@@ -6,9 +6,7 @@ use gpui_kit::component::{button::ButtonVariants, h_flex};
 #[derive(Clone, Copy)]
 pub(crate) enum MenuGroup {
     File,
-    Edit,
-    View,
-    Archive,
+    Operations,
     Tools,
 }
 
@@ -25,9 +23,7 @@ impl Workspace {
             .children(
                 [
                     (MenuGroup::File, "menu-file"),
-                    (MenuGroup::Edit, "menu-edit"),
-                    (MenuGroup::View, "menu-view"),
-                    (MenuGroup::Archive, "menu-archive"),
+                    (MenuGroup::Operations, "menu-operations"),
                     (MenuGroup::Tools, "menu-tools"),
                 ]
                 .into_iter()
@@ -62,44 +58,36 @@ pub(crate) fn menu_items(group: MenuGroup) -> &'static [(&'static str, &'static 
     match group {
         MenuGroup::File => &[
             ("archive-open", "Ctrl+O", Open),
-            ("archive-create-command", "", Create),
+            ("archive-save-as", "Ctrl+Shift+S", Save),
             ("", "", Open),
-            ("browser-open", "Enter", OpenItem),
-            ("file-open-inside", "Ctrl+PgDn", OpenInside),
-            ("file-open-outside", "Shift+Enter", OpenOutside),
-            ("file-properties", "Alt+Enter", Properties),
+            ("recent-clear", "", ClearRecent),
             ("", "", Open),
-            ("archive-close", "", Close),
-            ("", "", Open),
+            ("menu-exit", "Alt+F4", Exit),
+        ],
+        MenuGroup::Operations => &[
+            ("extract-options", "Alt+E", Extract),
+            ("archive-add", "Alt+A", Add),
+            ("file-properties", "Alt+I", ArchiveInfo),
+            ("archive-comment", "Alt+M", Comment),
+            ("archive-check", "Alt+T", Check),
+        ],
+        MenuGroup::Tools => &[
             (
-                "settings-title",
+                "settings-general",
                 "Ctrl+,",
                 Settings(preferences::Tab::Application),
             ),
-            ("menu-exit", "Alt+F4", Exit),
-        ],
-        MenuGroup::Edit => &[
-            ("archive-rename", "F2", Rename),
-            ("archive-copy", "F5", CopyTo),
-            ("archive-move", "F6", MoveTo),
-            ("archive-delete", "Del", Delete),
-        ],
-        MenuGroup::View => &[("menu-refresh", "F5", Refresh)],
-        MenuGroup::Archive => &[
-            ("archive-add", "Alt+A", Add),
-            ("archive-add-folder", "", AddFolder),
-            ("", "", Add),
-            ("archive-comment", "Ctrl+Z", Comment),
-            ("archive-save-as", "Ctrl+Shift+S", Save),
-            ("", "", Save),
-            ("archive-info", "", ArchiveInfo),
-        ],
-        MenuGroup::Tools => &[
-            ("extract-options", "Alt+E", Extract),
-            ("extract-all-quick", "", QuickExtract),
-            ("extract-selected", "", QuickExtractSelection),
-            ("", "", Extract),
-            ("archive-check", "Alt+T", Check),
+            (
+                "settings-integration",
+                "",
+                Settings(preferences::Tab::Integration),
+            ),
+            (
+                "settings-advanced",
+                "",
+                Settings(preferences::Tab::Advanced),
+            ),
+            ("menu-about", "", About),
         ],
     }
 }
@@ -117,6 +105,9 @@ pub(crate) fn build_menu(owner: &WeakEntity<Workspace>, group: MenuGroup, cx: &m
         })
         .ok();
     for &(label, shortcut, action) in items {
+        if matches!(action, ClearRecent) {
+            menu = history_items(owner, menu, cx);
+        }
         if label.is_empty() {
             menu = menu.separator();
             continue;
@@ -125,6 +116,7 @@ pub(crate) fn build_menu(owner: &WeakEntity<Workspace>, group: MenuGroup, cx: &m
             .read_with(cx, |this, cx| {
                 let view = this.browser.view();
                 let relevant = match action {
+                    ClearRecent => !this.history.is_empty(),
                     SelectAll => !view.rows.is_empty() && view.selected.len() < view.rows.len(),
                     DeselectAll => !view.selected.is_empty(),
                     InvertSelection | Sort(_) => !view.rows.is_empty(),
@@ -159,15 +151,44 @@ pub(crate) fn build_menu(owner: &WeakEntity<Workspace>, group: MenuGroup, cx: &m
                     });
                 }),
         );
-        match (group, action) {
-            (MenuGroup::Archive, ArchiveInfo) => {
-                menu = menus::archive::open_as_menu(owner, menu, cx);
-            }
-            (MenuGroup::Tools, Check) => {
-                menu = menus::archive::checksum_menu(owner, menu, cx);
-            }
-            _ => {}
-        }
+    }
+    menu
+}
+
+fn history_items(owner: &WeakEntity<Workspace>, mut menu: Menu, cx: &App) -> Menu {
+    let Ok((entries, enabled)) = owner.read_with(cx, |this, cx| {
+        (
+            this.history
+                .iter()
+                .filter(|entry| entry.kind == recent::Kind::Archives)
+                .take(crate::theme::metrics::home::HISTORY_LIMIT)
+                .cloned()
+                .collect::<Vec<_>>(),
+            this.command_available(Command::Open, cx),
+        )
+    }) else {
+        return menu;
+    };
+    for (index, entry) in entries.into_iter().enumerate() {
+        let owner = owner.clone();
+        menu = menu.item(
+            MenuItem::new(tf(
+                "menu-history-entry",
+                &[
+                    ("number", (index + 1).into()),
+                    ("path", entry.path.display().to_string().into()),
+                ],
+            ))
+            .disabled(!enabled)
+            .on_select(move |window, cx| {
+                let _ = owner.update(cx, |this, cx| {
+                    if this.command_available(Command::Open, cx) {
+                        this.show_browser(window, cx);
+                        this.visit_history(entry.clone(), window, cx);
+                    }
+                });
+            }),
+        );
     }
     menu
 }

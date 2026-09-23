@@ -1,25 +1,6 @@
 use crate::*;
 
 impl Workspace {
-    pub(crate) fn open_as(
-        &mut self,
-        path: PathBuf,
-        kind: cardo_7zp_commands::OpenType,
-        cx: &mut Context<Self>,
-    ) {
-        if !self.command_available(commands::Command::Open, cx)
-            || self
-                .browser
-                .view()
-                .catalog
-                .as_ref()
-                .is_none_or(|catalog| catalog.path != path)
-        {
-            return;
-        }
-        self.execute(Request::OpenAs(path, kind), String::new(), cx);
-    }
-
     pub(crate) fn compress_from_context(
         &mut self,
         paths: Vec<PathBuf>,

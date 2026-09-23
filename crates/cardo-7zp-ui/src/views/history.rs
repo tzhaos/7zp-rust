@@ -32,7 +32,7 @@ impl Workspace {
         self.visit_history(entry, window, cx);
     }
 
-    fn visit_history(
+    pub(crate) fn visit_history(
         &mut self,
         entry: cardo_7zp_core::settings::recent::Entry,
         window: &mut Window,
