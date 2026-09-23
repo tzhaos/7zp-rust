@@ -9,6 +9,7 @@ mod menus;
 mod preferences;
 mod progress;
 mod recent;
+mod shortcuts;
 mod system;
 mod task;
 pub mod theme;

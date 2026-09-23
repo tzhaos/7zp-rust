@@ -210,7 +210,7 @@ pub struct MenuItem {
     label: SharedString,
     description: Option<SharedString>,
     icon: Option<Icon>,
-    shortcut: Option<&'static str>,
+    shortcut: Option<SharedString>,
     disabled: bool,
     checked: bool,
     handler: Option<Handler>,
@@ -228,7 +228,8 @@ impl MenuItem {
             handler: None,
         }
     }
-    pub fn shortcut(mut self, shortcut: &'static str) -> Self {
+    pub fn shortcut(mut self, shortcut: impl Into<SharedString>) -> Self {
+        let shortcut = shortcut.into();
         self.shortcut = (!shortcut.is_empty()).then_some(shortcut);
         self
     }
@@ -451,7 +452,7 @@ impl Menu {
                                             )
                                         }),
                                 )
-                                .when_some(shortcut, |row, shortcut| {
+                                .when_some(shortcut.clone(), |row, shortcut| {
                                     row.child(
                                         div()
                                             .flex_shrink_0()

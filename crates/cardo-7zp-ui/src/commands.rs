@@ -1,6 +1,6 @@
 use super::*;
 
-#[derive(Clone, Copy)]
+#[derive(Clone, Copy, PartialEq, Eq)]
 pub(super) enum Command {
     Open,
     Browse,
@@ -212,6 +212,8 @@ impl Workspace {
         }
         if self.settings_page.is_some() {
             if modifiers.control
+                && !modifiers.alt
+                && !modifiers.shift
                 && key == "s"
                 && let Some(form) = self.settings_form.clone()
             {
@@ -222,101 +224,24 @@ impl Workspace {
             }
             return;
         }
-        let global_command = match (modifiers.control, modifiers.alt, modifiers.shift, key) {
-            (true, false, false, "o") => Some(Command::Open),
-            (true, false, false, ",") => Some(Command::Settings(preferences::Tab::Application)),
-            _ => None,
-        };
-        if let Some(command) = global_command {
-            self.command(command, window, cx);
-            cx.stop_propagation();
+        if !self.focus.is_focused(window) || self.tasks.is_busy() {
             return;
         }
-        let command = match (modifiers.control, modifiers.alt, modifiers.shift, key) {
-            (true, false, true, "s") => Some(commands::Command::Save),
-            (false, true, _, "e") => Some(commands::Command::Extract),
-            (false, true, _, "a") => Some(commands::Command::Add),
-            (false, true, _, "i") => Some(commands::Command::ArchiveInfo),
-            (false, true, _, "m") => Some(commands::Command::Comment),
-            (false, true, _, "t") => Some(commands::Command::Check),
-            _ => None,
-        };
-        if let Some(command) = command {
-            self.command(command, window, cx);
-            cx.stop_propagation();
-            return;
-        }
-        if modifiers.control && key == "l" && !self.tasks.is_busy() {
-            self.address.update(cx, |input, cx| {
-                input.focus(window, cx);
-                input.select_all(window, cx);
-            });
-            cx.stop_propagation();
-            return;
-        }
-        if modifiers.control && key == "f" {
-            self.search.update(cx, |input, cx| input.focus(window, cx));
-            cx.stop_propagation();
-            return;
-        }
-        if !self.focus.is_focused(window) {
-            return;
-        }
-        if self.tasks.is_busy() {
-            return;
-        }
-        if modifiers.alt && key == "left" {
-            self.back(window, cx);
-            cx.stop_propagation();
-            return;
-        }
-        if key == "backspace" || modifiers.alt && key == "up" {
+        if key == "backspace" && !modifiers.control && !modifiers.alt && !modifiers.shift {
             self.up(window, cx);
             cx.stop_propagation();
             return;
         }
-        if key == "contextmenu" || (modifiers.shift && key == "f10") {
+        if !modifiers.control
+            && !modifiers.alt
+            && (key == "contextmenu" || (modifiers.shift && key == "f10"))
+        {
             self.open_context_menu(
                 menus::context::Target::Keyboard,
                 point(px(32.), px(196.)),
                 window,
                 cx,
             );
-            cx.stop_propagation();
-            return;
-        }
-        if modifiers.control && !modifiers.alt && !modifiers.shift && key == "a" {
-            self.browser.select_all();
-            cx.notify();
-            cx.stop_propagation();
-            return;
-        }
-        if modifiers.control && !modifiers.alt && !modifiers.shift && key == "r" {
-            self.command(commands::Command::Refresh, window, cx);
-            cx.stop_propagation();
-            return;
-        }
-        if modifiers.control && !modifiers.alt && !modifiers.shift && key == "z" {
-            self.command(commands::Command::Comment, window, cx);
-            cx.stop_propagation();
-            return;
-        }
-        if modifiers.control && !modifiers.alt && !modifiers.shift {
-            let column = match key {
-                "f3" => Some(0),
-                "f4" => Some(3),
-                "f5" => Some(2),
-                "f6" => Some(1),
-                _ => None,
-            };
-            if let Some(column) = column {
-                self.command(commands::Command::Sort(column), window, cx);
-                cx.stop_propagation();
-                return;
-            }
-        }
-        if modifiers.alt && !modifiers.control && key == "enter" {
-            self.command(commands::Command::Properties, window, cx);
             cx.stop_propagation();
             return;
         }
@@ -330,21 +255,11 @@ impl Workspace {
             cx.stop_propagation();
             return;
         }
-        if !modifiers.control && !modifiers.alt && !modifiers.shift {
-            let command = match key {
-                "f2" => Some(commands::Command::Rename),
-                "f5" => Some(commands::Command::CopyTo),
-                "f6" => Some(commands::Command::MoveTo),
-                "delete" => Some(commands::Command::Delete),
-                _ => None,
-            };
-            if let Some(command) = command {
-                self.command(command, window, cx);
-                cx.stop_propagation();
-                return;
-            }
-        }
-        if ["up", "down", "home", "end"].contains(&key) && !self.browser.view().rows.is_empty() {
+        if !modifiers.control
+            && !modifiers.alt
+            && ["up", "down", "home", "end"].contains(&key)
+            && !self.browser.view().rows.is_empty()
+        {
             let browser = self.browser.view();
             let current = browser
                 .cursor
@@ -361,13 +276,16 @@ impl Workspace {
             self.scroll.scroll_to_item(next, ScrollStrategy::Center);
             cx.stop_propagation();
         }
-        if key == "enter" {
+        if key == "enter" && !modifiers.control && !modifiers.alt && !modifiers.shift {
             if self.command_available(commands::Command::OpenItem, cx) {
                 self.command(commands::Command::OpenItem, window, cx);
                 cx.stop_propagation();
             }
         }
         if key == "space"
+            && !modifiers.control
+            && !modifiers.alt
+            && !modifiers.shift
             && let Some(path) = self.browser.view().cursor.clone()
         {
             self.browser.toggle_selection(path, false);

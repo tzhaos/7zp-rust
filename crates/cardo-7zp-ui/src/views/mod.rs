@@ -45,8 +45,15 @@ impl Render for Workspace {
             .capture_any_mouse_up(cx.listener(|this, _, window, cx| {
                 if this.settings_saving(cx) { window.prevent_default(); cx.stop_propagation(); }
             }))
-            .capture_key_down(cx.listener(|this, _, window, cx| {
-                if this.settings_saving(cx) { window.prevent_default(); cx.stop_propagation(); }
+            .capture_key_down(cx.listener(|this, event, window, cx| {
+                if this.settings_saving(cx) { window.prevent_default(); cx.stop_propagation(); return; }
+                let recording = this.settings_page.is_some() && this.settings_form.clone().is_some_and(|form| {
+                    form.update(cx, |form, cx| form.record_shortcut(event, window, cx))
+                });
+                if recording || this.dispatch_shortcut(event, window, cx) {
+                    window.prevent_default();
+                    cx.stop_propagation();
+                }
             }))
             .capture_key_up(cx.listener(|this, _, window, cx| {
                 if this.settings_saving(cx) { window.prevent_default(); cx.stop_propagation(); }

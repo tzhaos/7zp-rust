@@ -3,6 +3,7 @@ mod appearance;
 mod application;
 mod controller;
 mod integration;
+mod shortcuts;
 mod view;
 
 use super::*;
@@ -83,6 +84,11 @@ pub(super) struct PreferencesForm {
     patterns: Entity<TextareaState>,
     task: Option<Task<()>>,
     saving: bool,
+    shortcut_expanded: bool,
+    shortcut_search: Entity<InputState>,
+    shortcut_recording: Option<cardo_7zp_core::settings::shortcuts::ShortcutAction>,
+    shortcut_focus: FocusHandle,
+    shortcut_error: Option<String>,
     error: Option<String>,
     font_error: Option<String>,
     _watch: Vec<Subscription>,
@@ -91,6 +97,7 @@ pub(super) struct PreferencesForm {
 impl PreferencesForm {
     pub(super) fn set_tab(&mut self, tab: Tab, window: &mut Window, cx: &mut Context<Self>) {
         self.dismiss_associations(window, cx);
+        self.shortcut_recording = None;
         self.tab = tab;
         cx.notify();
     }
@@ -139,6 +146,13 @@ impl PreferencesForm {
             })
             .collect();
         let association_popup = cx.new(|cx| gpui_kit::base::PopoverState::new(false, cx));
+        let shortcut_search =
+            cx.new(|cx| InputState::new(window, cx).placeholder(tr("shortcuts-search")));
+        watch.push(cx.subscribe(&shortcut_search, |_, _, event, cx| {
+            if matches!(event, InputEvent::Change) {
+                cx.notify();
+            }
+        }));
         let association_search =
             cx.new(|cx| InputState::new(window, cx).placeholder(tr("association-search")));
         watch.push(cx.subscribe(&association_search, |_, _, event, cx| {
@@ -152,6 +166,8 @@ impl PreferencesForm {
         }));
         watch.push(cx.observe_window_activation(window, |this, window, cx| {
             if !window.is_window_active() {
+                this.shortcut_recording = None;
+                cx.notify();
                 this.dismiss_associations(window, cx);
             }
         }));
@@ -171,6 +187,11 @@ impl PreferencesForm {
             patterns,
             task: None,
             saving: false,
+            shortcut_expanded: false,
+            shortcut_search,
+            shortcut_recording: None,
+            shortcut_focus: cx.focus_handle(),
+            shortcut_error: None,
             error: None,
             font_error: None,
             _watch: watch,

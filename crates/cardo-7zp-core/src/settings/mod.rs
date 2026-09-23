@@ -1,5 +1,6 @@
 use anyhow::{Context, Result, bail};
 pub mod recent;
+pub mod shortcuts;
 use serde::{Deserialize, Serialize};
 use std::path::PathBuf;
 use std::sync::atomic::AtomicBool;
@@ -9,6 +10,7 @@ pub static LOW_PRIORITY: AtomicBool = AtomicBool::new(true);
 #[derive(Clone, Serialize, Deserialize)]
 #[serde(default)]
 pub struct Preferences {
+    pub shortcuts: shortcuts::Shortcuts,
     pub remember_recent: bool,
     pub open_after: bool,
     pub close_after_quick: bool,
@@ -25,6 +27,7 @@ pub struct Preferences {
 impl Default for Preferences {
     fn default() -> Self {
         Self {
+            shortcuts: shortcuts::Shortcuts::default(),
             remember_recent: true,
             open_after: true,
             close_after_quick: false,
@@ -46,10 +49,19 @@ impl Default for Preferences {
 }
 
 pub fn load_preferences() -> Result<Preferences> {
-    Ok(store()?.read_json("preferences.json")?.unwrap_or_default())
+    let store = store()?;
+    let value: Preferences = store.read_json("preferences.json")?.unwrap_or_default();
+    shortcuts::validate(&value.shortcuts).with_context(|| {
+        format!(
+            "Invalid shortcuts in {}",
+            store.directory().join("preferences.json").display()
+        )
+    })?;
+    Ok(value)
 }
 
 pub fn save_preferences(preferences: &Preferences) -> Result<()> {
+    shortcuts::validate(&preferences.shortcuts)?;
     store()?.write_json("preferences.json", preferences)
 }
 

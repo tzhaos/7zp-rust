@@ -15,13 +15,13 @@ pub(crate) fn entry_menu(
     }) else {
         return menu;
     };
-    for (command, label, shortcut) in [
-        (Command::Add, "archive-add", "Alt+A"),
-        (Command::AddFolder, "archive-add-folder", ""),
-        (Command::CopyTo, "archive-copy", "F5"),
-        (Command::MoveTo, "archive-move", "F6"),
-        (Command::Rename, "archive-rename", "F2"),
-        (Command::Delete, "archive-delete", "Del"),
+    for (command, label) in [
+        (Command::Add, "archive-add"),
+        (Command::AddFolder, "archive-add-folder"),
+        (Command::CopyTo, "archive-copy"),
+        (Command::MoveTo, "archive-move"),
+        (Command::Rename, "archive-rename"),
+        (Command::Delete, "archive-delete"),
     ] {
         let enabled = owner
             .read_with(cx, |this, cx| this.command_available(command, cx))
@@ -33,6 +33,11 @@ pub(crate) fn entry_menu(
             menu = menu.separator();
         }
         let owner = owner.clone();
+        let shortcut = owner
+            .read_with(cx, |this, _| {
+                command.shortcut_label(&this.preferences.shortcuts)
+            })
+            .unwrap_or_default();
         let location = location.clone();
         let selected = selected.clone();
         menu = menu.item(

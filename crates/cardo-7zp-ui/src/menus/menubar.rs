@@ -53,41 +53,32 @@ impl Workspace {
     }
 }
 
-pub(crate) fn menu_items(group: MenuGroup) -> &'static [(&'static str, &'static str, Command)] {
+pub(crate) fn menu_items(group: MenuGroup) -> &'static [(&'static str, Command)] {
     use Command::*;
     match group {
         MenuGroup::File => &[
-            ("archive-open", "Ctrl+O", Open),
-            ("archive-save-as", "Ctrl+Shift+S", Save),
-            ("", "", Open),
-            ("recent-clear", "", ClearRecent),
-            ("", "", Open),
-            ("menu-exit", "Alt+F4", Exit),
+            ("archive-open", Open),
+            ("archive-save-as", Save),
+            ("", Open),
+            ("recent-clear", ClearRecent),
+            ("", Open),
+            ("menu-exit", Exit),
         ],
         MenuGroup::Operations => &[
-            ("extract-options", "Alt+E", Extract),
-            ("archive-add", "Alt+A", Add),
-            ("file-properties", "Alt+I", ArchiveInfo),
-            ("archive-comment", "Alt+M", Comment),
-            ("archive-check", "Alt+T", Check),
+            ("extract-options", Extract),
+            ("archive-add", Add),
+            ("file-properties", ArchiveInfo),
+            ("archive-comment", Comment),
+            ("archive-check", Check),
         ],
         MenuGroup::Tools => &[
-            (
-                "settings-general",
-                "Ctrl+,",
-                Settings(preferences::Tab::Application),
-            ),
+            ("settings-general", Settings(preferences::Tab::Application)),
             (
                 "settings-integration",
-                "",
                 Settings(preferences::Tab::Integration),
             ),
-            (
-                "settings-advanced",
-                "",
-                Settings(preferences::Tab::Advanced),
-            ),
-            ("menu-about", "", About),
+            ("settings-advanced", Settings(preferences::Tab::Advanced)),
+            ("menu-about", About),
         ],
     }
 }
@@ -104,7 +95,7 @@ pub(crate) fn build_menu(owner: &WeakEntity<Workspace>, group: MenuGroup, cx: &m
             )
         })
         .ok();
-    for &(label, shortcut, action) in items {
+    for &(label, action) in items {
         if matches!(action, ClearRecent) {
             menu = history_items(owner, menu, cx);
         }
@@ -130,6 +121,15 @@ pub(crate) fn build_menu(owner: &WeakEntity<Workspace>, group: MenuGroup, cx: &m
             })
             .unwrap_or((false, false));
         let callback_owner = owner.clone();
+        let shortcut = owner
+            .read_with(cx, |this, _| {
+                if matches!(action, Exit) {
+                    "Alt+F4".to_owned()
+                } else {
+                    action.shortcut_label(&this.preferences.shortcuts)
+                }
+            })
+            .unwrap_or_default();
         let snapshot = snapshot.clone();
         menu = menu.item(
             menu_command_item(tr(label), shortcut)

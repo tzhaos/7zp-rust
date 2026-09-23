@@ -86,5 +86,6 @@ impl PreferencesForm {
                 ),
                 cx,
             ))
+            .child(self.shortcuts_section(cx))
     }
 }
