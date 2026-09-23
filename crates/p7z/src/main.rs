@@ -1,8 +1,8 @@
 #![cfg_attr(target_os = "windows", windows_subsystem = "windows")]
 
-use zip_core::i18n;
-use zip_platform as platform;
-use zip_ui as ui;
+use p7z_core::i18n;
+use p7z_platform as platform;
+use p7z_ui as ui;
 
 use gpui_kit::{component::Root, *};
 
@@ -17,7 +17,7 @@ fn report(error: impl std::fmt::Display) {
 }
 
 fn main() {
-    let log_guard = match zip_core::settings::directory()
+    let log_guard = match p7z_core::settings::directory()
         .and_then(|directory| cardo_runtime::diagnostics::init(&directory.join("logs"), "Plus7z"))
     {
         Ok(guard) => guard,
@@ -102,7 +102,7 @@ fn main() {
             return;
         }
     };
-    let startup = match zip_core::settings::StartupSettings::load() {
+    let startup = match p7z_core::settings::StartupSettings::load() {
         Ok(settings) => settings,
         Err(error) => {
             report(error);

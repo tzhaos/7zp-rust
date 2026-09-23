@@ -491,3 +491,6 @@ update-restart-failed = Update processing finished, but restart failed. Start Pl
 update-running = An update is in progress. Wait before opening the application.
 update-recovered = An interrupted update was recovered. The previous version was restored.
 update-install-error = The update could not be completed. Details are shown below.
+
+settings-schema-unsupported = Configuration schema { $version } is unsupported. This version requires schema 1.
+appearance-font-size-invalid = Font size must be between 12 and 20.

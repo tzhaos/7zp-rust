@@ -1,4 +1,4 @@
-// Import Microsoft's Fluent Filled assets from the prototype's pinned package.
+// Import filled glyphs from the pinned upstream icon package.
 const fs = require('node:fs/promises');
 const path = require('node:path');
 const { createRequire } = require('node:module');
@@ -8,7 +8,7 @@ async function main() {
   const React = fromPrototype('react');
   const { renderToStaticMarkup } = fromPrototype('react-dom/server');
   const icons = fromPrototype('@fluentui/react-icons');
-  const assets = path.resolve(__dirname, '../assets/fluent');
+  const assets = path.resolve(__dirname, '../assets/glyphs');
   const sizes = {
     FolderOpen: 24,
     ArrowDownload: 24,

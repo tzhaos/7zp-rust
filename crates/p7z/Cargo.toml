@@ -13,9 +13,9 @@ path = "src/main.rs"
 [dependencies]
 cardo-runtime.workspace = true
 tracing.workspace = true
-zip-core.workspace = true
-zip-platform.workspace = true
-zip-ui.workspace = true
+p7z-core.workspace = true
+p7z-platform.workspace = true
+p7z-ui.workspace = true
 anyhow.workspace = true
 gpui-kit.workspace = true
 rfd.workspace = true

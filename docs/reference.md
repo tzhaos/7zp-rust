@@ -54,7 +54,9 @@ The Windows workflow builds branches and pull requests. Matching tags publish pa
 
 ## Settings and Diagnostics
 
-Settings and history live in `%LOCALAPPDATA%\7zplus-rust`. Writes are atomic. Missing configuration uses defaults; unreadable or malformed files produce explicit errors. Fonts are validated against installed families instead of silently replacing missing names.
+Configuration and runtime data live in `%LOCALAPPDATA%\p7z`. `settings.toml` owns language, theme, appearance, shortcuts and preferences. One atomic save preserves comments and detects external edits; the previous source is saved as `settings.toml.bak`. Restart after manual edits. Missing configuration uses defaults; unreadable, malformed or unsupported configurations produce explicit errors.
+
+`state.sqlite3` owns ordered history, the last extraction directory and update recovery state. Writes use short transactions; history is limited to 20 entries. JSON remains an API/command format and a structured payload inside SQLite. The database uses local WAL, full synchronization and a five-second lock timeout. Database identity and schema must match exactly. No previous configuration or history is imported, and no compatibility or schema conversion is performed. Fonts are validated against installed families instead of silently replacing missing names. See [storage boundaries and implementation plan](storage-plan.zh.md).
 
 Logs in the `logs/` subdirectory rotate daily in UTC and retain up to 14 files. They record operation failures and error chains; command arguments and passwords are not logged by the application.
 
@@ -63,17 +65,17 @@ Logs in the `logs/` subdirectory rotate daily in UTC and retain up to 14 files. 
 | Crate | Responsibility |
 | --- | --- |
 | `p7z` | Startup and packaging |
-| `zip-ui` | Workspace, settings, dialogs and command dispatch |
-| `zip-core` | Preferences, localization, history and shortcut definitions |
-| `zip-engine` | 7-Zip adapter, operations and progress |
-| `zip-requests` | Background requests, release checks and update downloads |
-| `zip-platform` | Windows integration, registry policy, update application and single instance |
-| `zip-explorer` | Explorer extension, independent of GPUI and the engine adapter |
-| `zip-commands` | Shared command identities, routing and request data |
+| `p7z-ui` | Workspace, settings, dialogs and command dispatch |
+| `p7z-core` | Preferences, localization, history and shortcut definitions |
+| `p7z-engine` | 7-Zip adapter, operations and progress |
+| `p7z-requests` | Background requests, release checks and update downloads |
+| `p7z-platform` | Windows integration, registry policy, update application and single instance |
+| `p7z-explorer` | Explorer extension, independent of GPUI and the engine adapter |
+| `p7z-commands` | Shared command identities, routing and request data |
 | `cardo-ui` | Reusable settings, menus, tooltips, text, font and theme components |
-| `cardo-runtime` | Atomic storage, Fluent catalogs, diagnostics and registry ownership |
+| `cardo-runtime` | TOML configuration, SQLite state, localization, diagnostics and registry ownership |
 
-The `cardo-*` crates live in the separate [Cardo repository](https://github.com/tzhaos/cardo-rust) at the commit pinned by the submodule. This repository owns the `zip-*` crates and its own release version.
+The `cardo-*` crates live in the separate [Cardo repository](https://github.com/tzhaos/cardo-rust) at the commit pinned by the submodule. This repository owns the `p7z-*` crates and its own release version.
 
 Business work runs outside render. Product modules own values and persistence; shared components own presentation. Dialogs share frames and artwork notices. Command menus are native Windows surfaces; settings selectors remain themed. Constrained text uses ellipsis with full-text hints only when truncated.
 

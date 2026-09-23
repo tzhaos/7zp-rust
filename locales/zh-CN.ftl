@@ -485,3 +485,6 @@ update-restart-failed = 更新已处理，但无法重新启动程序，请手�
 update-running = 更新正在进行，请等待完成后再打开程序。
 update-recovered = 上次更新被中断，已恢复原版本。
 update-install-error = 未能完成更新，详细信息如下。
+
+settings-schema-unsupported = 不支持配置版本 { $version }，当前程序要求版本 1。
+appearance-font-size-invalid = 字体大小必须介于 12 和 20 之间。

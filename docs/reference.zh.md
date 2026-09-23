@@ -33,7 +33,7 @@ Enter、Shift+Enter、Ctrl+Page Down、方向键、空格、Backspace、Escape �
 
 需要 Windows x64、Visual Studio C++ Build Tools 与 Windows SDK、PowerShell，以及 `rust-toolchain.toml` 固定的 Rust 工具链（当前为 1.95.0）。首次下载依赖需要网络。
 
-克隆时使用 `git clone --recurse-submodules`；已有工作区执行 `git submodule update --init --recursive`。`cardo/` 子模块包含共用 crate，`crates/` 下的 `zip-*` crate 由本仓库维护。
+克隆时使用 `git clone --recurse-submodules`；已有工作区执行 `git submodule update --init --recursive`。`cardo/` 子模块包含共用 crate，`crates/` 下的 `p7z-*` crate 由本仓库维护。
 
 ```powershell
 ./tools/build.ps1 -ReleaseRepository tzhaos/7zp-rust -Package All
@@ -54,7 +54,9 @@ Windows 工作流构建分支和 Pull Request。匹配版本号的标签在验�
 
 ## 设置与诊断
 
-设置与历史位于 `%LOCALAPPDATA%\7zplus-rust`，采用原子写入。缺失配置时使用默认值；无法读取或格式错误时明确报错。字体根据已安装字体校验，不会静默替换缺失的字体名称。
+配置与运行数据位于 `%LOCALAPPDATA%\p7z`。`settings.toml` 保存语言、主题、字体、快捷键和行为设置；一次原子保存保留注释并检测外部编辑，上一份原文备份为 `settings.toml.bak`。手工编辑后重启应用。缺失配置使用默认值，无法读取、格式错误或版本不支持时明确报错。
+
+`state.sqlite3` 保存有序历史、最近解压目录和更新恢复状态，使用短事务，历史最多 20 条。JSON 用于 API、进程命令及数据库中的结构化载荷。数据库使用本地 WAL、完整同步和五秒锁等待，归属与 schema 版本必须精确匹配。不读取旧配置、不导入旧历史、不做兼容或版本转换。字体根据已安装字体校验，不会静默替换缺失的字体名称。详见[存储边界与实施方案](storage-plan.zh.md)。
 
 `logs/` 子目录中的日志按 UTC 日期轮转，最多保留 14 个文件，记录操作失败与错误链；应用不记录命令参数和密码。
 
@@ -63,17 +65,17 @@ Windows 工作流构建分支和 Pull Request。匹配版本号的标签在验�
 | Crate | 职责 |
 | --- | --- |
 | `p7z` | 启动与打包 |
-| `zip-ui` | 工作区、设置、弹窗和命令分发 |
-| `zip-core` | 配置、本地化、历史与快捷键定义 |
-| `zip-engine` | 7-Zip 适配、操作与进度 |
-| `zip-requests` | 后台请求、发布检查与更新下载 |
-| `zip-platform` | Windows 集成、注册策略、更新应用与单实例 |
-| `zip-explorer` | 独立于 GPUI 和引擎适配器的资源管理器扩展 |
-| `zip-commands` | 共用命令标识、路由和请求数据 |
+| `p7z-ui` | 工作区、设置、弹窗和命令分发 |
+| `p7z-core` | 配置、本地化、历史与快捷键定义 |
+| `p7z-engine` | 7-Zip 适配、操作与进度 |
+| `p7z-requests` | 后台请求、发布检查与更新下载 |
+| `p7z-platform` | Windows 集成、注册策略、更新应用与单实例 |
+| `p7z-explorer` | 独立于 GPUI 和引擎适配器的资源管理器扩展 |
+| `p7z-commands` | 共用命令标识、路由和请求数据 |
 | `cardo-ui` | 可复用设置、菜单、提示、文本、字体与主题组件 |
-| `cardo-runtime` | 原子存储、Fluent 语言目录、诊断和注册表归属检查 |
+| `cardo-runtime` | TOML 配置、SQLite 状态、本地化、诊断和注册表归属检查 |
 
-`cardo-*` crate 位于独立的 [Cardo 仓库](https://github.com/tzhaos/cardo-rust)，由子模块固定提交；本仓库维护 `zip-*` crate 和独立的发布版本。
+`cardo-*` crate 位于独立的 [Cardo 仓库](https://github.com/tzhaos/cardo-rust)，由子模块固定提交；本仓库维护 `p7z-*` crate 和独立的发布版本。
 
 业务操作不在 render 中执行。产品模块负责值与持久化，共享组件负责展示。弹窗共用框架和大图标提示。命令菜单采用 Windows 原生表面，设置选择器沿用自绘主题。受限文本使用省略号，仅在实际截断时提供全文提示。
 

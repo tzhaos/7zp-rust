@@ -6,15 +6,15 @@ The application bundles the official 7-Zip 26.03 Windows binaries, pinned in `to
 
 Upstream: https://github.com/ip7z/7zip
 
-## Fluent UI System Icons
+## Small UI glyphs
 
-The SVG icons in `assets/fluent` come from `@fluentui/react-icons` 2.0.339, copyright Microsoft Corporation, under the MIT license. Regular exports were extracted from the original application prototype through React static rendering with their paths and view boxes preserved. The asset set also includes Filled variants imported by `tools/import-filled-icons.cjs`. Small UI glyphs receive their colors from the theme; file listings load Windows system icons. `HomeRegular.svg` uses the same package's `lib/atoms/svg/home.js` export.
+The SVG icons in `assets/glyphs` come from `@fluentui/react-icons` 2.0.339, copyright Microsoft Corporation, under the MIT license. Regular exports were extracted from the original application prototype through React static rendering with their paths and view boxes preserved. The asset set also includes Filled variants imported by `tools/import-filled-icons.cjs`. Small UI glyphs receive their colors from the theme; file listings load Windows system icons. `HomeRegular.svg` uses the same package's `lib/atoms/svg/home.js` export.
 
-The license is retained in `assets/fluent/LICENSE` and installed as `Fluent-LICENSE.txt`.
+The license is retained in `assets/glyphs/LICENSE` and installed as `Glyphs-LICENSE.txt`.
 
 Upstream: https://github.com/microsoft/fluentui-system-icons
 
-`assets/fluent/ArrowClockwiseRegular.svg` was imported on 2026-09-23 from the same MIT-licensed upstream repository, `assets/Arrow Clockwise/SVG/ic_fluent_arrow_clockwise_20_regular.svg`, to restore the path-bar refresh glyph.
+`assets/glyphs/ArrowClockwiseRegular.svg` was imported on 2026-09-23 from the same MIT-licensed upstream repository, `assets/Arrow Clockwise/SVG/ic_fluent_arrow_clockwise_20_regular.svg`, to restore the path-bar refresh glyph.
 
 ## Project Artwork
 
@@ -36,7 +36,7 @@ Redistribution guidance: https://learn.microsoft.com/en-us/cpp/windows/redistrib
 - GPUI Kit: Apache-2.0, https://github.com/longbridge/gpui-kit
 - GPUI Component 0.6.1: Apache-2.0, https://github.com/longbridge/gpui-component. Resolved from crates.io through GPUI Kit; provides the themed PopupMenu component, cascading and keyboard interactions.
 - ZIP comment support: zip 2.4.2, MIT, https://github.com/zip-rs/zip2
-- Fluent localization: fluent-bundle and fluent-syntax, Apache-2.0 OR MIT, https://github.com/projectfluent/fluent-rs
+- Localization engine: fluent-bundle and fluent-syntax, Apache-2.0 OR MIT, https://github.com/projectfluent/fluent-rs
 - Diagnostics: tracing, tracing-subscriber and tracing-appender, MIT, https://github.com/tokio-rs/tracing
 - Windows registry access: winreg 0.55, MIT, https://github.com/gentoo90/winreg-rs
 

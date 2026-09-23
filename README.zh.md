@@ -20,7 +20,7 @@
 | `p7z-amd64-installer.exe` | 当前用户安装，提供资源管理器集成 |
 | `p7z-amd64-portable.zip` | 完整解压文件夹后运行 `p7z.exe` |
 
-发行包附带 `SHA256SUMS.txt`。两种版本均可在**关于**页检查更新，设置与历史保存在 `%LOCALAPPDATA%\7zplus-rust`。
+发行包附带 `SHA256SUMS.txt`。两种版本均可在**关于**页检查更新，设置与历史保存在 `%LOCALAPPDATA%\p7z`。
 
 ## 功能
 
@@ -46,8 +46,8 @@ cd 7zp-rust
 
 已有工作区执行 `git submodule update --init --recursive`。`-Package Run` 只构建可运行目录；`All` 还会在 `dist/` 生成安装包与绿色 ZIP。
 
-应用包名为 `p7z`，配套 crate 使用 `zip-*`；共用的 `cardo-runtime` 和 `cardo-ui` 来自固定提交的 [Cardo](https://github.com/tzhaos/cardo-rust) 子模块。[架构、快捷键与发布流程 →](docs/reference.zh.md)
+应用包名为 `p7z`，配套 crate 使用 `p7z-*`；共用的 `cardo-runtime` 和 `cardo-ui` 来自固定提交的 [Cardo](https://github.com/tzhaos/cardo-rust) 子模块。[架构、快捷键与发布流程 →](docs/reference.zh.md)
 
 ## 许可
 
-项目采用 [MIT](LICENSE)。随包的 7-Zip、Fluent 图标及 Visual C++ 运行库保留各自许可，详见[第三方声明](THIRD_PARTY.md)。
+项目采用 [MIT](LICENSE)。随包的 7-Zip、小图标资源及 Visual C++ 运行库保留各自许可，详见[第三方声明](THIRD_PARTY.md)。

@@ -1,13 +1,13 @@
 [workspace]
 members = [
     "crates/p7z",
-    "crates/zip-core",
-    "crates/zip-engine",
-    "crates/zip-requests",
-    "crates/zip-platform",
-    "crates/zip-ui",
-    "crates/zip-commands",
-    "crates/zip-explorer",
+    "crates/p7z-core",
+    "crates/p7z-engine",
+    "crates/p7z-requests",
+    "crates/p7z-platform",
+    "crates/p7z-ui",
+    "crates/p7z-commands",
+    "crates/p7z-explorer",
 ]
 exclude = ["cardo"]
 resolver = "3"
@@ -22,12 +22,12 @@ license = "MIT"
 cardo-runtime = { path = "cardo/crates/cardo-runtime" }
 cardo-ui = { path = "cardo/crates/cardo-ui" }
 tracing = "0.1"
-zip-core = { path = "crates/zip-core" }
-zip-engine = { path = "crates/zip-engine" }
-zip-requests = { path = "crates/zip-requests" }
-zip-platform = { path = "crates/zip-platform" }
-zip-ui = { path = "crates/zip-ui" }
-zip-commands = { path = "crates/zip-commands" }
+p7z-core = { path = "crates/p7z-core" }
+p7z-engine = { path = "crates/p7z-engine" }
+p7z-requests = { path = "crates/p7z-requests" }
+p7z-platform = { path = "crates/p7z-platform" }
+p7z-ui = { path = "crates/p7z-ui" }
+p7z-commands = { path = "crates/p7z-commands" }
 anyhow = "1.0"
 gpui-kit = "=0.6.1"
 image = { version = "0.25", default-features = false }
@@ -37,7 +37,6 @@ rust-embed = "8"
 dirs = "6"
 serde = { version = "1", features = ["derive"] }
 serde_json = "1"
-fluent-bundle = "0.16"
 winreg = "0.55"
 reqwest = { version = "0.12", default-features = false, features = ["blocking", "json", "rustls-tls"] }
 semver = "1"
