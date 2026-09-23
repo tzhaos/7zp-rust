@@ -42,6 +42,9 @@ impl Workspace {
                             if this.tasks.extraction().is_some() {
                                 cx.notify();
                             }
+                            if this.update_transfer.is_some() {
+                                cx.notify();
+                            }
                             if this.dragging && !cx.has_active_drag() {
                                 this.dragging = false;
                                 cx.notify();

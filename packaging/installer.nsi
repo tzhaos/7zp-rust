@@ -50,6 +50,7 @@ Var ShellFile
 Var ShellPath
 Var ShellName
 Var CleanupOnly
+Var Updating
 
 ; Retired modules have no registration. Each cleanup job owns a separate directory,
 ; so signing in after reinstalling cannot delete files from the new installation.
@@ -133,6 +134,13 @@ Function OpenDefaultAppsSettings
 FunctionEnd
 
 Function .onInit
+    StrCpy $Updating 0
+    ${GetParameters} $0
+    ClearErrors
+    ${GetOptions} $0 "/UPDATE" $1
+    ${IfNot} ${Errors}
+        StrCpy $Updating 1
+    ${EndIf}
     ${IfNot} ${RunningX64}
         Abort
     ${EndIf}
@@ -166,6 +174,7 @@ Section
         Abort
     ${EndIf}
     SetOutPath "$INSTDIR"
+    ClearErrors
     File "${PROJECT_ROOT}\bin\7zplus.exe"
     File "${PROJECT_ROOT}\bin\vcruntime140.dll"
     ; Explorer can keep earlier modules loaded; identical content needs no overwrite.
@@ -177,15 +186,22 @@ Section
     File /oname=Fluent-LICENSE.txt "${PROJECT_ROOT}\assets\fluent\LICENSE"
     SetOutPath "$INSTDIR\runtime\7zip"
     File "${PROJECT_ROOT}\bin\runtime\7zip\*.*"
+    ${If} ${Errors}
+        SetErrorLevel 1
+        Abort
+    ${EndIf}
     SetOutPath "$INSTDIR"
     ExecWait '"$INSTDIR\7zplus.exe" --lang $AppLanguage --register "$INSTDIR\shell\${SHELL_HASH}\7-zip-plus.dll"' $0
     ${If} $0 != 0
+        SetErrorLevel 1
         Abort
     ${EndIf}
     StrCpy $ShellKeep "${SHELL_HASH}"
-    Call RetireShell
-    CreateShortcut "$DESKTOP\7zplus.lnk" "$INSTDIR\7zplus.exe"
-    CreateShortcut "$SMPROGRAMS\7zplus.lnk" "$INSTDIR\7zplus.exe"
+    ${If} $Updating == 0
+        Call RetireShell
+        CreateShortcut "$DESKTOP\7zplus.lnk" "$INSTDIR\7zplus.exe"
+        CreateShortcut "$SMPROGRAMS\7zplus.lnk" "$INSTDIR\7zplus.exe"
+    ${EndIf}
     WriteUninstaller "$INSTDIR\Uninstall.exe"
     WriteRegStr HKCU "Software\7zplus.Rust" "InstallDir" "$INSTDIR"
     WriteRegDWORD HKCU "Software\7zplus.Rust" "Language" $LANGUAGE
@@ -196,6 +212,10 @@ Section
     WriteRegStr HKCU "Software\Microsoft\Windows\CurrentVersion\Uninstall\7zplus.Rust" "InstallLocation" "$INSTDIR"
     WriteRegDWORD HKCU "Software\Microsoft\Windows\CurrentVersion\Uninstall\7zplus.Rust" "NoModify" 1
     WriteRegDWORD HKCU "Software\Microsoft\Windows\CurrentVersion\Uninstall\7zplus.Rust" "NoRepair" 1
+    ${If} ${Errors}
+        SetErrorLevel 1
+        Abort
+    ${EndIf}
 SectionEnd
 
 Function un.onInit

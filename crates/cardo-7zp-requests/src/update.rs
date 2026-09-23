@@ -4,18 +4,25 @@ use reqwest::blocking::Client;
 use semver::Version;
 use serde::Deserialize;
 use std::time::Duration;
+mod download;
+pub use download::{Phase, Progress, prepare};
 
 pub const VERSION: &str = env!("CARGO_PKG_VERSION");
 pub const REPOSITORY: Option<&str> = option_env!("SEVENZIP_RELEASE_REPOSITORY");
 
+#[derive(Clone)]
 pub enum Status {
     Checking,
     Unconfigured,
     Current,
+    Downloading,
     Available {
         version: String,
         download: String,
         portable: String,
+        checksums: String,
+        installer_size: u64,
+        portable_size: u64,
         release: String,
     },
     Failed(String),
@@ -33,6 +40,7 @@ struct Release {
 struct Asset {
     name: String,
     browser_download_url: String,
+    size: u64,
 }
 
 pub fn check() -> Result<Status> {
@@ -88,6 +96,17 @@ pub fn check() -> Result<Status> {
     };
     let download = download_asset("7zplus-amd64-installer.exe")?;
     let portable = download_asset("7zplus-amd64-portable.zip")?;
+    let checksums = download_asset("SHA256SUMS.txt")?;
+    let size = |name: &str| {
+        release
+            .assets
+            .iter()
+            .find(|asset| asset.name == name)
+            .map(|asset| asset.size)
+            .unwrap_or(0)
+    };
+    let installer_size = size("7zplus-amd64-installer.exe");
+    let portable_size = size("7zplus-amd64-portable.zip");
     let mut page = reqwest::Url::parse(&format!("{base}tag/"))?;
     page.path_segments_mut()
         .map_err(|_| anyhow::anyhow!(tr("update-url-invalid")))?
@@ -97,6 +116,9 @@ pub fn check() -> Result<Status> {
         version: version.to_string(),
         download,
         portable,
+        checksums,
+        installer_size,
+        portable_size,
         release: page.into(),
     })
 }

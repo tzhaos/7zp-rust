@@ -71,7 +71,7 @@ Enter、Shift+Enter、Ctrl+Page Down、方向键、空格、Backspace、Escape �
 
 ## 更新与发布
 
-关于页检查 GitHub 最新稳定版本，分别提供安装版和绿色版下载。启动时检查可选。更新采用**手动下载**，不会自动安装。升级前关闭程序；绿色版请完整替换，不要仅替换主程序。
+关于页检查 GitHub 最新稳定版本，启动时检查可选。点击**下载并安装更新**后，程序根据当前副本是否登记为安装版，自动选择安装包或绿色版 ZIP。下载可取消；程序依据发行包的 SHA-256 清单校验，准备好后退出，由独立更新助手完成安装并重启。助手会备份被替换的文件，失败时恢复；更新中断后，下次启动会尝试恢复。绿色版目录需要可写权限。未配置发布仓库的构建仍可运行，但无法检查更新。
 
 通过 `./tools/version.ps1 -Part Patch`（或 `Minor` / `Major`）推进工作区版本并同步 Cargo.lock。提交两个文件后，创建并推送对应的 `vX.Y.Z` 标签。
 
@@ -91,8 +91,8 @@ Windows 工作流构建分支和 Pull Request。匹配版本号的标签在验�
 | `cardo-7zp-ui` | 工作区、设置、弹窗和命令分发 |
 | `cardo-7zp-core` | 配置、本地化、历史与快捷键定义 |
 | `cardo-7zp-engine` | 7-Zip 适配、操作与进度 |
-| `cardo-7zp-requests` | 后台请求与发布检查 |
-| `cardo-7zp-platform` | Windows 集成、注册策略与单实例 |
+| `cardo-7zp-requests` | 后台请求、发布检查与更新下载 |
+| `cardo-7zp-platform` | Windows 集成、注册策略、更新应用与单实例 |
 | `cardo-7zp-explorer` | 独立于 GPUI 和引擎适配器的资源管理器扩展 |
 | `cardo-7zp-commands` | 共用命令标识、路由和请求数据 |
 | `cardo-ui` | 可复用设置、菜单、提示、文本、字体与主题组件 |

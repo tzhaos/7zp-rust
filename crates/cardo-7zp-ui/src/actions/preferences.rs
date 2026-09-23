@@ -118,9 +118,11 @@ impl Workspace {
 
 impl Workspace {
     pub(crate) fn settings_busy(&self, cx: &App) -> bool {
-        self.settings_form
-            .as_ref()
-            .is_some_and(|form| form.read(cx).is_busy())
+        self.update_transfer.is_some()
+            || self
+                .settings_form
+                .as_ref()
+                .is_some_and(|form| form.read(cx).is_busy())
     }
 
     pub(crate) fn settings_saving(&self, cx: &App) -> bool {

@@ -3,6 +3,7 @@ mod instance;
 pub mod mail;
 mod maintenance;
 mod registry;
+pub mod updater;
 
 pub use instance::instance;
 pub use maintenance::close_application;

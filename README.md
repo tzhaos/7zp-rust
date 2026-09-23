@@ -71,7 +71,7 @@ Requirements: Windows x64, Visual Studio C++ Build Tools with Windows SDK, Power
 
 ## Updates and Releases
 
-About checks the latest stable GitHub release and offers installer and portable downloads. Startup checks are optional. Updates are **manual downloads**, not automatic installation. Close the application before upgrading; replace the complete portable folder rather than only the executable.
+About checks the latest stable GitHub release; startup checks are optional. **Download and install** detects whether the running copy is registered as an installation, then downloads the matching installer or portable ZIP. The download is cancellable. 7zplus verifies its SHA-256 against the release manifest, prepares the update, exits, applies it with a separate helper process, and restarts. The helper backs up the files it replaces and restores them if installation fails; an interrupted update is recovered on the next launch. A portable copy needs write access to its directory. Builds without a release repository can still run, but cannot check for updates.
 
 Use `./tools/version.ps1 -Part Patch` (or `Minor` / `Major`) to advance the workspace version and synchronize Cargo.lock. Commit both files before creating and pushing a matching `vX.Y.Z` tag.
 
@@ -91,8 +91,8 @@ Logs in the `logs/` subdirectory rotate daily in UTC and retain up to 14 files. 
 | `cardo-7zp-ui` | Workspace, settings, dialogs and command dispatch |
 | `cardo-7zp-core` | Preferences, localization, history and shortcut definitions |
 | `cardo-7zp-engine` | 7-Zip adapter, operations and progress |
-| `cardo-7zp-requests` | Background requests and release checks |
-| `cardo-7zp-platform` | Windows integration, registry policy and single instance |
+| `cardo-7zp-requests` | Background requests, release checks and update downloads |
+| `cardo-7zp-platform` | Windows integration, registry policy, update application and single instance |
 | `cardo-7zp-explorer` | Explorer extension, independent of GPUI and the engine adapter |
 | `cardo-7zp-commands` | Shared command identities, routing and request data |
 | `cardo-ui` | Reusable settings, menus, tooltips, text, font and theme components |

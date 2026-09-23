@@ -889,10 +889,14 @@ dependencies = [
  "cardo-7zp-commands",
  "cardo-7zp-core",
  "cardo-runtime",
+ "serde",
  "serde_json",
+ "sha2 0.10.9",
+ "tempfile",
  "tracing",
  "windows-sys 0.59.0",
  "winreg",
+ "zip",
 ]
 
 [[package]]
@@ -907,7 +911,9 @@ dependencies = [
  "reqwest",
  "semver",
  "serde",
+ "sha2 0.10.9",
  "tempfile",
+ "tokio",
  "windows-sys 0.59.0",
 ]
 
@@ -7110,7 +7116,19 @@ dependencies = [
  "mio",
  "pin-project-lite",
  "socket2",
+ "tokio-macros",
  "windows-sys 0.61.2",
+]
+
+[[package]]
+name = "tokio-macros"
+version = "2.7.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "385a6cb71ab9ab790c5fe8d67f1645e6c450a7ce006a33de03daa956cf70a496"
+dependencies = [
+ "proc-macro2",
+ "quote",
+ "syn 2.0.119",
 ]
 
 [[package]]
@@ -9247,9 +9265,11 @@ dependencies = [
  "crc32fast",
  "crossbeam-utils",
  "displaydoc",
+ "flate2",
  "indexmap",
  "memchr",
  "thiserror 2.0.20",
+ "zopfli",
 ]
 
 [[package]]
@@ -9263,6 +9283,18 @@ name = "zmij"
 version = "1.0.23"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "29666d0abbfad1e3dc4dcf6144730dd3a3ab225bbbdac83319345b1b44ccfc1b"
+
+[[package]]
+name = "zopfli"
+version = "0.8.3"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "f05cd8797d63865425ff89b5c4a48804f35ba0ce8d125800027ad6017d2b5249"
+dependencies = [
+ "bumpalo",
+ "crc32fast",
+ "log",
+ "simd-adler32",
+]
 
 [[package]]
 name = "zune-core"

@@ -21,6 +21,31 @@ impl Workspace {
                 p.success,
                 tr("update-current").to_owned(),
             ),
+            Some(Status::Downloading) => {
+                use cardo_7zp_requests::update::Phase;
+                let description = self
+                    .update_transfer
+                    .as_ref()
+                    .map(|progress| {
+                        if progress.cancel.load(Ordering::Relaxed) {
+                            return tr("update-cancelling").into();
+                        }
+                        match progress.phase() {
+                            Phase::Download => tf(
+                                "update-download-progress",
+                                &[
+                                    ("received", size_text(progress.received()).into()),
+                                    ("total", size_text(progress.total()).into()),
+                                ],
+                            ),
+                            Phase::Verify => tr("update-verifying").into(),
+                            Phase::Prepare => tr("update-preparing").into(),
+                            Phase::Install => tr("update-installing").into(),
+                        }
+                    })
+                    .unwrap_or_else(|| tr("update-preparing").into());
+                ("ArrowDownload", p.accent, description)
+            }
             Some(Status::Available { version, .. }) => (
                 "ArrowDownload",
                 p.accent,
@@ -46,15 +71,7 @@ impl Workspace {
                     .child(icon(name, 16.)),
                 tr("settings-update-source"),
             ));
-        if let Some(Status::Available {
-            download,
-            portable,
-            release,
-            ..
-        }) = status
-        {
-            let download = download.clone();
-            let portable = portable.clone();
+        if let Some(Status::Available { release, .. }) = status {
             let release = release.clone();
             actions = actions
                 .child(
@@ -63,17 +80,20 @@ impl Workspace {
                     ),
                 )
                 .child(
-                    settings_action("update-portable", tr("update-portable"), cx).on_click(
-                        cx.listener(move |this, _, _, cx| this.open_update_link(&portable, cx)),
-                    ),
-                )
-                .child(
-                    settings_primary("update-download", tr("update-installer"), cx)
+                    settings_primary("update-download", tr("update-install"), cx)
+                        .disabled(self.tasks.is_busy() || self.settings_busy(cx))
                         .icon(icon("ArrowDownload", 16.))
-                        .on_click(
-                            cx.listener(move |this, _, _, cx| this.open_update_link(&download, cx)),
-                        ),
+                        .on_click(cx.listener(|this, _, _, cx| this.install_update(cx))),
                 );
+        } else if matches!(status, Some(Status::Downloading)) {
+            actions = actions.child(
+                settings_action("update-cancel", tr("cancel"), cx)
+                    .disabled(self.update_transfer.as_ref().is_none_or(|progress| {
+                        progress.phase() == cardo_7zp_requests::update::Phase::Install
+                            || progress.cancel.load(Ordering::Relaxed)
+                    }))
+                    .on_click(cx.listener(|this, _, _, cx| this.cancel_update(cx))),
+            );
         } else {
             actions = actions.child(
                 settings_action("update-retry", tr("update-check"), cx)

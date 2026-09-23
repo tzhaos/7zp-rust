@@ -12,6 +12,92 @@ const CAPABILITIES: &str = r"Software\7zplus.Rust\Capabilities";
 pub const DEFAULT_APPS_URI: &str = "ms-settings:defaultapps";
 const MENU_KEY: &str = r"AllFilesystemObjects\shell\7zplus.Rust";
 
+#[derive(Clone, serde::Serialize, serde::Deserialize)]
+pub(crate) struct UpdateRegistration {
+    pub dll: std::path::PathBuf,
+    pub version: Option<String>,
+}
+
+pub(crate) fn update_registration(directory: &Path) -> Result<Option<UpdateRegistration>> {
+    let user = RegKey::predef(HKEY_CURRENT_USER);
+    let Some(registered) = string(&user, r"Software\7zplus.Rust", "InstallDir")? else {
+        return Ok(None);
+    };
+    let installed = match std::fs::canonicalize(&registered) {
+        Ok(path) => path,
+        Err(error) if error.kind() == std::io::ErrorKind::NotFound => return Ok(None),
+        Err(error) => {
+            return Err(error).with_context(|| format!("Cannot inspect installation {registered}"));
+        }
+    };
+    if installed != std::fs::canonicalize(directory)? {
+        return Ok(None);
+    }
+    let executable =
+        string(&user, SHELL_KEY, "Executable")?.context(tr("update-ownership-error"))?;
+    if std::fs::canonicalize(executable)? != std::fs::canonicalize(directory.join("7zplus.exe"))? {
+        bail!(tr("update-ownership-error"));
+    }
+    let dll = string(
+        &user,
+        &format!(r"Software\Classes\CLSID\{CLSID}\InprocServer32"),
+        "",
+    )?
+    .context(tr("update-ownership-error"))?;
+    let dll = std::path::PathBuf::from(dll);
+    if !std::fs::canonicalize(&dll)?.starts_with(installed) {
+        bail!(tr("update-ownership-error"));
+    }
+    Ok(Some(UpdateRegistration {
+        dll,
+        version: string(
+            &user,
+            r"Software\Microsoft\Windows\CurrentVersion\Uninstall\7zplus.Rust",
+            "DisplayVersion",
+        )?,
+    }))
+}
+
+pub(crate) fn restore_update_registration(
+    directory: &Path,
+    previous: &UpdateRegistration,
+) -> Result<()> {
+    let user = RegKey::predef(HKEY_CURRENT_USER);
+    let installed = string(&user, r"Software\7zplus.Rust", "InstallDir")?
+        .context(tr("update-ownership-error"))?;
+    let directory = std::fs::canonicalize(directory)?;
+    if std::fs::canonicalize(installed)? != directory {
+        bail!(tr("update-ownership-error"));
+    }
+    if let Some(executable) = string(&user, SHELL_KEY, "Executable")? {
+        if std::fs::canonicalize(executable)?
+            != std::fs::canonicalize(directory.join("7zplus.exe"))?
+        {
+            bail!(tr("update-ownership-error"));
+        }
+    }
+    if let Some(dll) = string(
+        &user,
+        &format!(r"Software\Classes\CLSID\{CLSID}\InprocServer32"),
+        "",
+    )? {
+        let dll = std::path::PathBuf::from(dll);
+        let parent = dll.parent().context(tr("update-ownership-error"))?;
+        if !std::fs::canonicalize(parent)?.starts_with(&directory) {
+            bail!(tr("update-ownership-error"));
+        }
+    }
+    register(&directory.join("7zplus.exe"), &previous.dll)?;
+    let key = r"Software\Microsoft\Windows\CurrentVersion\Uninstall\7zplus.Rust";
+    if let Some(version) = &previous.version {
+        user.open_subkey_with_flags(key, winreg::enums::KEY_SET_VALUE)?
+            .set_value("DisplayVersion", version)?;
+    } else {
+        remove_value(&user, key, "DisplayVersion")?;
+    }
+    Ok(())
+}
+
 pub fn register(executable: &Path, dll: &Path) -> Result<()> {
     let dll = std::path::absolute(dll)?;
     if !extension_belongs_to(&dll, executable) {

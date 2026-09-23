@@ -84,6 +84,7 @@ pub(super) struct PreferencesForm {
     patterns: Entity<TextareaState>,
     task: Option<Task<()>>,
     saving: bool,
+    update_busy: bool,
     shortcut_expanded: bool,
     shortcut_search: Entity<InputState>,
     shortcut_recording: Option<cardo_7zp_core::settings::shortcuts::ShortcutAction>,
@@ -103,7 +104,12 @@ impl PreferencesForm {
     }
 
     pub fn is_busy(&self) -> bool {
-        self.task.is_some()
+        self.task.is_some() || self.update_busy
+    }
+
+    pub(crate) fn set_update_busy(&mut self, busy: bool, cx: &mut Context<Self>) {
+        self.update_busy = busy;
+        cx.notify();
     }
 
     pub fn controls_disabled(&self) -> bool {
@@ -187,6 +193,7 @@ impl PreferencesForm {
             patterns,
             task: None,
             saving: false,
+            update_busy: false,
             shortcut_expanded: false,
             shortcut_search,
             shortcut_recording: None,

@@ -47,9 +47,11 @@ fn main() {
     }
     if matches!(
         args.first().map(String::as_str),
-        Some("--register" | "--unregister" | "--prepare-install")
+        Some("--register" | "--unregister" | "--prepare-install" | "--apply-update")
     ) {
-        let result = if args[0] == "--register" {
+        let result = if args[0] == "--apply-update" {
+            platform::updater::apply()
+        } else if args[0] == "--register" {
             std::env::current_exe()
                 .map_err(anyhow::Error::from)
                 .and_then(|path| {
@@ -73,6 +75,14 @@ fn main() {
             std::process::exit(1);
         }
         return;
+    }
+    match platform::updater::recover() {
+        Ok(Some(message)) => report(message),
+        Ok(None) => {}
+        Err(error) => {
+            report(error);
+            return;
+        }
     }
     let first_path = usize::from(args.first().is_some_and(|arg| arg.starts_with("--")));
     for argument in args.iter_mut().skip(first_path) {
