@@ -110,6 +110,55 @@ pub fn action(id: impl Into<ElementId>, label: &str, _cx: &App) -> Button {
         .shadow_none()
 }
 
+pub fn shortcut_badge(label: impl Into<SharedString>, recording: bool, cx: &App) -> Div {
+    div()
+        .min_w_0()
+        .max_w(px(180.))
+        .px(px(8.))
+        .py(px(2.))
+        .rounded(px(12.))
+        .bg(cx.theme().secondary)
+        .text_color(cx.theme().muted_foreground)
+        .when(recording, |el| {
+            el.bg(cx.theme().accent)
+                .text_color(cx.theme().accent_foreground)
+        })
+        .child(
+            crate::text::compact_text("shortcut-key", label)
+                .text_size(px(12.))
+                .line_height(px(18.)),
+        )
+}
+
+pub fn shortcut_row(
+    label: impl Into<SharedString>,
+    description: impl Into<SharedString>,
+    controls: impl IntoElement,
+    cx: &App,
+) -> Div {
+    h_flex()
+        .w_full()
+        .min_w_0()
+        .min_h(px(metrics::ROW_HEIGHT))
+        .py(px(metrics::ROW_PADDING))
+        .gap(px(20.))
+        .child(
+            v_flex()
+                .flex_1()
+                .min_w_0()
+                .gap(px(3.))
+                .child(body_text(label).font_weight(FontWeight::SEMIBOLD))
+                .child(body_text(description).text_color(cx.theme().muted_foreground)),
+        )
+        .child(
+            div()
+                .w(relative(0.52))
+                .min_w_0()
+                .flex_shrink_0()
+                .child(controls),
+        )
+}
+
 pub fn primary_action(id: impl Into<ElementId>, label: &str, cx: &App) -> Button {
     action(id, label, cx).custom(
         ButtonCustomVariant::new(cx)

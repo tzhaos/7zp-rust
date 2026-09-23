@@ -9,62 +9,73 @@ impl PreferencesForm {
             .copied()
             .filter(|action| {
                 tr(action.label()).to_lowercase().contains(&query)
+                    || tr(action.description()).to_lowercase().contains(&query)
                     || action
                         .binding(&self.value.shortcuts)
                         .is_some_and(|key| key.display().to_lowercase().contains(&query))
             })
             .collect::<Vec<_>>();
         let busy = self.controls_disabled();
-        let mut section = v_flex().gap(px(16.)).child(settings_row(
-            tr("shortcuts-title"),
-            settings_action(
-                "shortcuts-expand",
-                tr(if self.shortcut_expanded {
-                    "shortcuts-collapse"
-                } else {
-                    "shortcuts-configure"
-                }),
-                cx,
-            )
-            .disabled(busy)
-            .on_click(cx.listener(|this, _, _, cx| {
-                if this.is_busy() {
-                    return;
-                }
-                this.shortcut_expanded = !this.shortcut_expanded;
-                this.shortcut_recording = None;
-                cx.notify();
-            })),
-            cx,
-        ));
+        let mut section = v_flex().gap(px(24.)).child(
+            h_flex()
+                .w_full()
+                .min_w_0()
+                .gap(px(12.))
+                .child(
+                    body_text(tr("shortcuts-title"))
+                        .flex_1()
+                        .text_size(px(24.))
+                        .font_weight(FontWeight::MEDIUM),
+                )
+                .child(
+                    settings_action(
+                        "shortcuts-expand",
+                        tr(if self.shortcut_expanded {
+                            "shortcuts-collapse"
+                        } else {
+                            "shortcuts-configure"
+                        }),
+                        cx,
+                    )
+                    .disabled(busy)
+                    .on_click(cx.listener(|this, _, _, cx| {
+                        if this.is_busy() {
+                            return;
+                        }
+                        this.shortcut_expanded = !this.shortcut_expanded;
+                        this.shortcut_recording = None;
+                        cx.notify();
+                    })),
+                ),
+        );
         if !self.shortcut_expanded {
             return section;
         }
-        section = section
-            .child(body_text(tr("shortcuts-description")))
-            .child(
-                body_text(tr("shortcuts-fixed")).text_color(rgb(crate::theme::palette(cx).muted)),
-            )
-            .child(
-                h_flex()
-                    .gap(px(12.))
-                    .child(
-                        settings_input(&self.shortcut_search, tr("shortcuts-search")).w(px(280.)),
+        section = section.child(
+            settings_input(&self.shortcut_search, tr("shortcuts-search"))
+                .w_full()
+                .rounded(px(20.))
+                .prefix(icon("Search", 16.))
+                .suffix(
+                    icon_button(
+                        "shortcuts-reset-all",
+                        "ArrowClockwise",
+                        tr("shortcuts-reset-all"),
+                        true,
+                        cx,
                     )
-                    .child(
-                        settings_action("shortcuts-reset-all", tr("shortcuts-reset-all"), cx)
-                            .disabled(busy)
-                            .on_click(cx.listener(|this, _, window, cx| {
-                                if this.is_busy() {
-                                    return;
-                                }
-                                this.shortcut_recording = None;
-                                this.shortcut_error = None;
-                                this.value.shortcuts.clear();
-                                this.save(window, cx);
-                            })),
-                    ),
-            );
+                    .disabled(busy || self.value.shortcuts.is_empty())
+                    .on_click(cx.listener(|this, _, window, cx| {
+                        if this.is_busy() {
+                            return;
+                        }
+                        this.shortcut_recording = None;
+                        this.shortcut_error = None;
+                        this.value.shortcuts.clear();
+                        this.save(window, cx);
+                    })),
+                ),
+        );
         if actions.is_empty() {
             return section.child(body_text(tr("shortcuts-no-matches")));
         }
@@ -75,39 +86,51 @@ impl PreferencesForm {
                 .child(settings_group(
                     actions.into_iter().map(|action| {
                         let recording = self.shortcut_recording == Some(action);
+                        let binding = action.binding(&self.value.shortcuts);
                         let label = if recording {
                             tr("shortcuts-recording").to_owned()
                         } else {
-                            action
-                                .binding(&self.value.shortcuts)
+                            binding
+                                .as_ref()
                                 .map(|key| key.display())
                                 .unwrap_or_else(|| tr("shortcuts-unassigned").to_owned())
                         };
-                        settings_row(
-                            tr(action.label()),
-                            h_flex()
-                                .gap(px(8.))
-                                .child(
-                                    settings_action(
-                                        SharedString::from(format!("shortcut-{action:?}")),
-                                        &label,
-                                        cx,
-                                    )
-                                    .min_w(px(120.))
-                                    .disabled(busy)
-                                    .on_click(cx.listener(
-                                        move |this, _, window, cx| {
-                                            if this.is_busy() {
-                                                return;
-                                            }
-                                            this.shortcut_error = None;
-                                            this.shortcut_recording = Some(action);
-                                            this.shortcut_focus.focus(window, cx);
-                                            cx.notify();
-                                        },
-                                    )),
+                        let controls = h_flex()
+                            .w_full()
+                            .min_w_0()
+                            .gap(px(4.))
+                            .child(cardo_ui::settings::shortcut_badge(label, recording, cx))
+                            .child(
+                                icon_button(
+                                    SharedString::from(format!("shortcut-edit-{action:?}")),
+                                    if recording { "Dismiss" } else { "Edit" },
+                                    tr(if recording {
+                                        "shortcuts-cancel"
+                                    } else {
+                                        "shortcuts-edit"
+                                    }),
+                                    true,
+                                    cx,
                                 )
-                                .child(
+                                .disabled(busy)
+                                .on_click(cx.listener(
+                                    move |this, _, window, cx| {
+                                        if this.is_busy() {
+                                            return;
+                                        }
+                                        this.shortcut_error = None;
+                                        this.shortcut_recording =
+                                            if recording { None } else { Some(action) };
+                                        if !recording {
+                                            this.shortcut_focus.focus(window, cx);
+                                        }
+                                        cx.notify();
+                                    },
+                                )),
+                            )
+                            .child(div().flex_1().min_w_0())
+                            .when(self.value.shortcuts.contains_key(&action), |el| {
+                                el.child(
                                     icon_button(
                                         SharedString::from(format!("shortcut-reset-{action:?}")),
                                         "ArrowClockwise",
@@ -115,33 +138,53 @@ impl PreferencesForm {
                                         true,
                                         cx,
                                     )
-                                    .disabled(busy || !self.value.shortcuts.contains_key(&action))
+                                    .disabled(busy)
                                     .on_click(cx.listener(
                                         move |this, _, window, cx| {
-                                            if this.is_busy() {
-                                                return;
+                                            if !this.is_busy() {
+                                                this.assign_shortcut(
+                                                    action,
+                                                    action.default_shortcut(),
+                                                    window,
+                                                    cx,
+                                                );
                                             }
-                                            this.assign_shortcut(
-                                                action,
-                                                action.default_shortcut(),
-                                                window,
-                                                cx,
-                                            );
                                         },
                                     )),
-                                ),
-                            cx,
-                        )
-                        .map(|row| {
-                            v_flex().child(row).when(recording, |el| {
+                                )
+                            })
+                            .child(
+                                icon_button(
+                                    SharedString::from(format!("shortcut-remove-{action:?}")),
+                                    "Delete",
+                                    tr("shortcuts-remove"),
+                                    true,
+                                    cx,
+                                )
+                                .disabled(busy || binding.is_none())
+                                .on_click(cx.listener(
+                                    move |this, _, window, cx| {
+                                        if !this.is_busy() {
+                                            this.assign_shortcut(action, None, window, cx);
+                                        }
+                                    },
+                                )),
+                            );
+                        v_flex()
+                            .child(cardo_ui::settings::shortcut_row(
+                                tr(action.label()),
+                                tr(action.description()),
+                                controls,
+                                cx,
+                            ))
+                            .when(recording, |el| {
                                 el.children(self.shortcut_error.clone().map(|error| {
                                     body_text(error)
                                         .pb(px(12.))
                                         .text_color(rgb(crate::theme::palette(cx).danger))
                                 }))
                             })
-                        })
-                        .into_any_element()
+                            .into_any_element()
                     }),
                     cx,
                 )),

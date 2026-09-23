@@ -86,6 +86,44 @@ impl ShortcutAction {
         Self::SortSize,
     ];
 
+    pub fn description(self) -> &'static str {
+        match self {
+            Self::Open => "shortcut-desc-open",
+            Self::Create => "shortcut-desc-create",
+            Self::Save => "shortcut-desc-save",
+            Self::Extract => "shortcut-desc-extract",
+            Self::QuickExtract => "shortcut-desc-quick-extract",
+            Self::Add => "shortcut-desc-add",
+            Self::AddFolder => "shortcut-desc-add-folder",
+            Self::ArchiveInfo => "shortcut-desc-archive-info",
+            Self::Comment => "shortcut-desc-comment",
+            Self::Check => "shortcut-desc-check",
+            Self::Rename => "shortcut-desc-rename",
+            Self::CopyTo => "shortcut-desc-copy-to",
+            Self::MoveTo => "shortcut-desc-move-to",
+            Self::Delete => "shortcut-desc-delete",
+            Self::Properties => "shortcut-desc-properties",
+            Self::Refresh => "shortcut-desc-refresh",
+            Self::SelectAll => "shortcut-desc-select-all",
+            Self::DeselectAll => "shortcut-desc-deselect-all",
+            Self::InvertSelection => "shortcut-desc-invert-selection",
+            Self::Home => "shortcut-desc-home",
+            Self::Browse => "shortcut-desc-browse",
+            Self::Back => "shortcut-desc-back",
+            Self::Up => "shortcut-desc-up",
+            Self::FocusAddress => "shortcut-desc-focus-address",
+            Self::FocusSearch => "shortcut-desc-focus-search",
+            Self::Application => "shortcut-desc-application",
+            Self::System => "shortcut-desc-system",
+            Self::Advanced => "shortcut-desc-advanced",
+            Self::About => "shortcut-desc-about",
+            Self::SortName => "shortcut-desc-sort-name",
+            Self::SortModified => "shortcut-desc-sort-modified",
+            Self::SortType => "shortcut-desc-sort-type",
+            Self::SortSize => "shortcut-desc-sort-size",
+        }
+    }
+
     pub fn label(self) -> &'static str {
         match self {
             Self::Open => "archive-open",
