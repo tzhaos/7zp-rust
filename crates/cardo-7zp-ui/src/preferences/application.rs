@@ -22,8 +22,6 @@ impl PreferencesForm {
                                         let owner = languages.clone();
                                         menu = menu.item(
                                             MenuItem::new(language.label())
-                                                .description(language.code())
-                                                .icon(icon("Translate", 16.))
                                                 .checked(language == selected_language)
                                                 .on_select(move |window, cx| {
                                                     let _ = owner.update(cx, |this, cx| {

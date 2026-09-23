@@ -119,7 +119,7 @@ fn main() {
                 }
             })
             .detach();
-            let bounds = WindowBounds::centered(size(px(900.), px(580.)), cx);
+            let bounds = WindowBounds::centered(size(px(900.), px(680.)), cx);
             cx.spawn(async move |cx| {
                 let options = WindowOptions {
                     window_bounds: Some(bounds),
