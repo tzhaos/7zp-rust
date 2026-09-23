@@ -2,7 +2,7 @@ use gpui_kit::*;
 
 pub fn compact_text(id: impl Into<ElementId>, text: impl Into<SharedString>) -> Stateful<Div> {
     let text = text.into();
-    crate::tooltip::bubble_tooltip(
+    crate::tooltip::text_tooltip(
         div()
             .id(id)
             .min_w_0()

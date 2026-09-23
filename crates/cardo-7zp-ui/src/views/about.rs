@@ -1,5 +1,8 @@
 use crate::*;
-use gpui_kit::component::{Disableable, h_flex};
+use gpui_kit::{
+    component::{Disableable, h_flex},
+    prelude::FluentBuilder,
+};
 
 impl Workspace {
     pub(super) fn about_view(
@@ -34,12 +37,15 @@ impl Workspace {
             .flex_wrap()
             .justify_end()
             .gap(px(8.))
-            .child(
+            .child(bubble_tooltip(
                 div()
+                    .id("update-source-hint")
+                    .aria_label(tr("settings-update-source"))
                     .flex_shrink_0()
                     .text_color(rgb(color))
                     .child(icon(name, 16.)),
-            );
+                tr("settings-update-source"),
+            ));
         if let Some(Status::Available {
             download, release, ..
         }) = status
@@ -88,14 +94,9 @@ impl Workspace {
                 settings_group(rows, cx),
                 cx,
             ))
-            .child(
-                body_text(if matches!(status, Some(Status::Available { .. })) {
-                    tr("update-package-note")
-                } else {
-                    tr("settings-update-source")
-                })
-                .text_color(rgb(p.muted)),
-            );
+            .when(matches!(status, Some(Status::Available { .. })), |body| {
+                body.child(body_text(tr("update-package-note")).text_color(rgb(p.muted)))
+            });
         if let Some(form) = &self.settings_form {
             body = body.child(settings_section(
                 tr("settings-update-preferences"),

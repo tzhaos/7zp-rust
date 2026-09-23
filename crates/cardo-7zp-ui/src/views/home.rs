@@ -2,12 +2,13 @@ use crate::commands::Command;
 use crate::theme::metrics::home as metrics;
 use crate::*;
 use gpui_kit::{
-    component::{Disableable, h_flex, v_flex},
+    component::{Disableable, button::ButtonVariants, h_flex, v_flex},
     prelude::FluentBuilder,
 };
 
 impl Workspace {
     pub(crate) fn home_view(&self, cx: &mut Context<Self>) -> Div {
+        let palette = crate::theme::palette(cx);
         let busy = self.tasks.is_busy() || self.settings_busy(cx);
         let has_history = self.matching_recent_archives(cx).next().is_some();
         v_flex()
@@ -29,7 +30,7 @@ impl Workspace {
                             .justify_center()
                             .gap(px(metrics::ACTION_GAP))
                             .child(
-                                settings_primary("home-open", tr("archive-open"), cx)
+                                primary("home-open", tr("archive-open"))
                                     .icon(icon("FolderOpen", metrics::ACTION_ICON_SIZE))
                                     .disabled(busy)
                                     .on_click(cx.listener(|this, _, window, cx| {
@@ -37,7 +38,9 @@ impl Workspace {
                                     })),
                             )
                             .child(
-                                settings_action("home-create", tr("archive-create-command"), cx)
+                                command("home-create", tr("archive-create-command"))
+                                    .custom(subtle_variant(cx).color(rgb(palette.surface).into()))
+                                    .border_color(rgb(palette.border))
                                     .icon(icon("Add", metrics::ACTION_ICON_SIZE))
                                     .disabled(busy)
                                     .on_click(cx.listener(|this, _, window, cx| {

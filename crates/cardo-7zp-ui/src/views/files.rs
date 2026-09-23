@@ -11,7 +11,6 @@ impl Workspace {
         let view = self.browser.view();
         let all = !view.rows.is_empty() && view.selected.len() == view.rows.len();
         let busy = self.tasks.is_busy();
-        let owner = cx.entity().downgrade();
         let p = crate::theme::palette(cx);
         h_flex()
             .w_full()
@@ -40,25 +39,6 @@ impl Workspace {
                                     cx,
                                 )
                             })),
-                    )
-                    .child(
-                        icon_button(
-                            "selection-menu",
-                            "ChevronDown",
-                            tr("menu-selection"),
-                            true,
-                            cx,
-                        )
-                        .w(px(22.))
-                        .h(px(26.))
-                        .disabled(busy || view.rows.is_empty())
-                        .popup_menu(move |_, cx| {
-                            crate::menus::menubar::build_menu(
-                                &owner,
-                                crate::menus::menubar::MenuGroup::Selection,
-                                cx,
-                            )
-                        }),
                     ),
             )
             .children(

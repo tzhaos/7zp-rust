@@ -20,7 +20,7 @@ impl PreferencesForm {
                                 let owner = cx.entity().downgrade();
                                 settings_segment(
                                     ("theme-option", index),
-                                    theme.label(),
+                                    crate::theme::label(theme),
                                     self.theme == theme,
                                     busy,
                                     cx,

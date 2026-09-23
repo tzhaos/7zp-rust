@@ -53,14 +53,20 @@ pub fn save_preferences(preferences: &Preferences) -> Result<()> {
     store()?.write_json("preferences.json", preferences)
 }
 
-pub fn read_theme() -> Result<Option<Vec<u8>>> {
-    store()?
-        .read("theme.json")
-        .context(crate::i18n::tr("theme-settings-invalid"))
+#[derive(Clone, Copy, Default, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(rename_all = "kebab-case")]
+pub enum ThemeId {
+    #[default]
+    Light,
+    OneDark,
 }
 
-pub fn write_theme(bytes: &[u8]) -> Result<()> {
-    store()?.write("theme.json", bytes)
+pub fn load_theme() -> Result<ThemeId> {
+    Ok(store()?.read_json("theme.json")?.unwrap_or_default())
+}
+
+pub fn save_theme(theme: ThemeId) -> Result<()> {
+    store()?.write_json("theme.json", &theme)
 }
 
 pub fn load_destination() -> Result<Option<String>> {
@@ -79,7 +85,8 @@ pub fn prepare_temp_directory(path: &str) -> Result<()> {
     if !path.is_absolute() {
         bail!(crate::i18n::tr("settings-temp-absolute"));
     }
-    std::fs::create_dir_all(path)?;
+    std::fs::create_dir_all(&path)
+        .with_context(|| format!("Cannot create temporary directory {}", path.display()))?;
     Ok(())
 }
 

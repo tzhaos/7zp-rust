@@ -29,8 +29,6 @@ pub(super) enum Command {
     SelectAll,
     DeselectAll,
     InvertSelection,
-    SelectByType,
-    DeselectByType,
     Sort(usize),
     Up,
     Refresh,
@@ -69,8 +67,6 @@ impl Workspace {
             Command::SelectAll
             | Command::DeselectAll
             | Command::InvertSelection
-            | Command::SelectByType
-            | Command::DeselectByType
             | Command::Sort(_)
             | Command::Refresh => true,
             Command::Open
@@ -153,14 +149,6 @@ impl Workspace {
             }
             Command::InvertSelection => {
                 self.browser.invert_selection();
-                cx.notify();
-            }
-            Command::SelectByType => {
-                self.browser.select_by_type(false);
-                cx.notify();
-            }
-            Command::DeselectByType => {
-                self.browser.select_by_type(true);
                 cx.notify();
             }
             Command::Sort(column) => {

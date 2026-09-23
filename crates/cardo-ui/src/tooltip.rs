@@ -43,19 +43,38 @@ pub fn bubble_tooltip<E: InteractiveElement + ParentElement + Styled>(
     element: E,
     text: impl Into<SharedString>,
 ) -> E {
-    let text = text.into();
+    attach_tooltip(element, text.into(), false)
+}
+
+pub(crate) fn text_tooltip<E: InteractiveElement + ParentElement + Styled>(
+    element: E,
+    text: SharedString,
+) -> E {
+    attach_tooltip(element, text, true)
+}
+
+fn attach_tooltip<E: InteractiveElement + ParentElement + Styled>(
+    element: E,
+    text: SharedString,
+    hoverable: bool,
+) -> E {
     let trigger = Rc::new(Cell::new(Bounds::default()));
     let measured = trigger.clone();
     let mut element = element
         .relative()
         .on_prepaint(move |bounds, _, _| measured.set(bounds));
-    element.interactivity().hoverable_tooltip(move |_, cx| {
+    let builder = move |_: &mut Window, cx: &mut App| {
         cx.new(|_| BubbleTooltip {
             text: text.clone(),
             trigger: trigger.clone(),
         })
         .into()
-    });
+    };
+    if hoverable {
+        element.interactivity().hoverable_tooltip(builder);
+    } else {
+        element.interactivity().tooltip(builder);
+    }
     element
         .interactivity()
         .tooltip_show_delay(Duration::from_millis(700));

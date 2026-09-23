@@ -8,6 +8,7 @@ pub use instance::instance;
 pub use maintenance::close_application;
 pub use registry::{DEFAULT_APPS_URI, configure, register, unregister};
 mod open;
+use anyhow::Context;
 pub use open::{open_directory, open_file};
 use std::sync::mpsc::Receiver;
 
@@ -30,9 +31,13 @@ pub fn read_shell_request(path: &std::path::Path) -> anyhow::Result<Vec<String>>
     {
         anyhow::bail!(cardo_7zp_core::i18n::tr("shell-request-invalid"));
     }
-    let bytes = std::fs::read(path);
-    let _ = std::fs::remove_file(path);
-    let request: cardo_7zp_commands::Request = serde_json::from_slice(&bytes?)?;
+    let bytes = std::fs::read(path)
+        .with_context(|| format!("Cannot read Explorer request {}", path.display()))?;
+    let request = serde_json::from_slice::<cardo_7zp_commands::Request>(&bytes)
+        .with_context(|| format!("Invalid Explorer request JSON in {}", path.display()));
+    std::fs::remove_file(path)
+        .with_context(|| format!("Cannot remove Explorer request {}", path.display()))?;
+    let request = request?;
     let mut args = vec![request.action.argument().into()];
     args.extend(
         request

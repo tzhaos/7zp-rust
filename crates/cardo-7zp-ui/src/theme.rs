@@ -1,20 +1,12 @@
 pub(super) mod metrics;
 
-use anyhow::{Context, Result};
+use anyhow::Result;
 use cardo_7zp_core::i18n::{tf, tr};
+pub use cardo_7zp_core::settings::ThemeId;
 use cardo_ui::fonts::{FontError, FontStack};
 pub use cardo_ui::theme::Palette;
 use cardo_ui::theme::ThemeStyle;
 use gpui_kit::{component::ThemeMode, *};
-use serde::{Deserialize, Serialize};
-
-#[derive(Clone, Copy, Default, PartialEq, Eq, Serialize, Deserialize)]
-#[serde(rename_all = "kebab-case")]
-pub enum ThemeId {
-    #[default]
-    Light,
-    OneDark,
-}
 
 pub const THEMES: [ThemeId; 2] = [ThemeId::Light, ThemeId::OneDark];
 
@@ -25,59 +17,56 @@ struct ThemeState {
 }
 impl Global for ThemeState {}
 
-impl ThemeId {
-    pub fn label(self) -> &'static str {
-        tr(match self {
-            Self::Light => "theme-light",
-            Self::OneDark => "theme-one-dark",
-        })
-    }
+pub fn label(id: ThemeId) -> &'static str {
+    tr(match id {
+        ThemeId::Light => "theme-light",
+        ThemeId::OneDark => "theme-one-dark",
+    })
+}
 
-    fn mode(self) -> ThemeMode {
-        match self {
-            Self::Light => ThemeMode::Light,
-            Self::OneDark => ThemeMode::Dark,
-        }
-    }
-
-    fn palette(self) -> Palette {
-        match self {
-            Self::Light => Palette {
-                surface: 0xffffff,
-                panel: 0xf0f1f3,
-                title: 0xf5f6f8,
-                text: 0x202123,
-                muted: 0x777777,
-                border: 0xe9e9e9,
-                hover: 0xf3f3f3,
-                selected: 0xe4edf9,
-                selected_hover: 0xd7e5f7,
-                accent: 0x3399ff,
-                accent_hover: 0x2585e6,
-                on_accent: 0xffffff,
-                success: 0x267052,
-                danger: 0xb42318,
-            },
-            Self::OneDark => Palette {
-                surface: 0x1f1f1f,
-                panel: 0x141414,
-                title: 0x141414,
-                text: 0xe8eaeb,
-                muted: 0xa6abad,
-                border: 0x393c3e,
-                hover: 0x2a2a2a,
-                selected: 0x2c2e30,
-                selected_hover: 0x393c3e,
-                accent: 0x79aff0,
-                accent_hover: 0x95bff3,
-                on_accent: 0x141414,
-                success: 0x7dc9a1,
-                danger: 0xf38d91,
-            },
-        }
+fn mode(id: ThemeId) -> ThemeMode {
+    match id {
+        ThemeId::Light => ThemeMode::Light,
+        ThemeId::OneDark => ThemeMode::Dark,
     }
 }
 
+fn palette_for(id: ThemeId) -> Palette {
+    match id {
+        ThemeId::Light => Palette {
+            surface: 0xffffff,
+            panel: 0xf0f1f3,
+            title: 0xf5f6f8,
+            text: 0x202123,
+            muted: 0x777777,
+            border: 0xe9e9e9,
+            hover: 0xf3f3f3,
+            selected: 0xe4edf9,
+            selected_hover: 0xd7e5f7,
+            accent: 0x3399ff,
+            accent_hover: 0x2585e6,
+            on_accent: 0xffffff,
+            success: 0x267052,
+            danger: 0xb42318,
+        },
+        ThemeId::OneDark => Palette {
+            surface: 0x1f1f1f,
+            panel: 0x141414,
+            title: 0x141414,
+            text: 0xe8eaeb,
+            muted: 0xa6abad,
+            border: 0x393c3e,
+            hover: 0x2a2a2a,
+            selected: 0x2c2e30,
+            selected_hover: 0x393c3e,
+            accent: 0x79aff0,
+            accent_hover: 0x95bff3,
+            on_accent: 0x141414,
+            success: 0x7dc9a1,
+            danger: 0xf38d91,
+        },
+    }
+}
 pub fn current(cx: &App) -> ThemeId {
     cx.global::<ThemeState>().id
 }
@@ -91,7 +80,7 @@ pub fn ui_font_size(cx: &App) -> Pixels {
 }
 
 pub fn palette(cx: &App) -> Palette {
-    cx.global::<ThemeState>().id.palette()
+    palette_for(cx.global::<ThemeState>().id)
 }
 
 pub fn interface_font(cx: &App) -> Font {
@@ -111,14 +100,11 @@ pub(crate) fn resolve_font(requested: &str, cx: &App) -> Result<FontStack> {
 }
 
 pub fn load() -> Result<ThemeId> {
-    match cardo_7zp_core::settings::read_theme()? {
-        Some(bytes) => Ok(serde_json::from_slice(&bytes).context(tr("theme-settings-invalid"))?),
-        None => Ok(ThemeId::default()),
-    }
+    cardo_7zp_core::settings::load_theme()
 }
 
 pub fn save(id: ThemeId) -> Result<()> {
-    cardo_7zp_core::settings::write_theme(&serde_json::to_vec(&id)?)
+    cardo_7zp_core::settings::save_theme(id)
 }
 
 pub fn apply(
@@ -135,8 +121,8 @@ pub fn apply(
         font,
     });
     ThemeStyle {
-        mode: id.mode(),
-        palette: id.palette(),
+        mode: mode(id),
+        palette: palette_for(id),
         font_family: primary,
         // List text at 12px corresponds to the component library's 16px rem base.
         font_size: px(appearance.font_size * (16. / 12.)),

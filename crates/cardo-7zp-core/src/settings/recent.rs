@@ -24,27 +24,7 @@ pub struct Entry {
 pub fn apply(change: Change, kind: Kind) -> Result<Vec<Entry>> {
     let store = super::store()?;
     let file = "history.json";
-    let saved: Option<Vec<Entry>> = store.read_json(file)?;
-    let migrated = saved.is_none();
-    let mut entries = match saved {
-        Some(entries) => entries,
-        None => {
-            // Old lists have no timestamps; preserve each list's existing order on import.
-            let mut entries = Vec::new();
-            for (file, kind) in [
-                ("recent-archives.json", Kind::Archives),
-                ("recent-folders.json", Kind::Folders),
-            ] {
-                let paths: Vec<PathBuf> = store.read_json(file)?.unwrap_or_default();
-                for path in paths {
-                    if !entries.iter().any(|entry: &Entry| entry.path == path) {
-                        entries.push(Entry { path, kind });
-                    }
-                }
-            }
-            entries
-        }
-    };
+    let mut entries: Vec<Entry> = store.read_json(file)?.unwrap_or_default();
     let previous = entries.clone();
     match change {
         Change::Load => {}
@@ -57,7 +37,7 @@ pub fn apply(change: Change, kind: Kind) -> Result<Vec<Entry>> {
     }
     entries.retain(|entry| !matches!(std::fs::metadata(&entry.path), Err(error) if error.kind() == std::io::ErrorKind::NotFound));
     entries.truncate(20);
-    if migrated || entries != previous {
+    if entries != previous {
         store.write_json(file, &entries)?;
     }
     Ok(entries)

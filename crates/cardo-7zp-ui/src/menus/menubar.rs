@@ -6,7 +6,6 @@ use gpui_kit::component::{button::ButtonVariants, h_flex};
 #[derive(Clone, Copy)]
 pub(crate) enum MenuGroup {
     File,
-    Selection,
 }
 
 impl Workspace {
@@ -84,14 +83,6 @@ pub(crate) fn menu_items(group: MenuGroup) -> &'static [(&'static str, &'static 
             ),
             ("menu-exit", "Alt+F4", Exit),
         ],
-        MenuGroup::Selection => &[
-            ("select-all", "Ctrl+A", SelectAll),
-            ("select-none", "", DeselectAll),
-            ("select-invert", "", InvertSelection),
-            ("", "", Open),
-            ("select-by-type", "", SelectByType),
-            ("deselect-by-type", "", DeselectByType),
-        ],
     }
 }
 
@@ -119,7 +110,6 @@ pub(crate) fn build_menu(owner: &WeakEntity<Workspace>, group: MenuGroup, cx: &m
                     SelectAll => !view.rows.is_empty() && view.selected.len() < view.rows.len(),
                     DeselectAll => !view.selected.is_empty(),
                     InvertSelection | Sort(_) => !view.rows.is_empty(),
-                    SelectByType | DeselectByType => this.current_item().is_some(),
                     QuickExtractSelection => !view.selected.is_empty(),
                     _ => true,
                 };
