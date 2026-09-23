@@ -1,7 +1,7 @@
 <p align="center">
-  <img src="assets/brand/logo.svg" width="112" alt="7zplus">
+  <img src="assets/brand/logo.svg" width="112" alt="Plus7z">
 </p>
-<h1 align="center">7zplus</h1>
+<h1 align="center">Plus7z</h1>
 <p align="center">使用 Rust 与 GPUI Kit 构建的原生 Windows 压缩包管理器。</p>
 <p align="center">
   <a href="https://github.com/tzhaos/7zp-rust/releases/latest">下载</a> ·
@@ -17,8 +17,8 @@
 
 | 文件 | 用途 |
 | --- | --- |
-| `7zplus-amd64-installer.exe` | 当前用户安装，提供资源管理器集成 |
-| `7zplus-amd64-portable.zip` | 完整解压文件夹后运行 `7zplus.exe` |
+| `p7z-amd64-installer.exe` | 当前用户安装，提供资源管理器集成 |
+| `p7z-amd64-portable.zip` | 完整解压文件夹后运行 `p7z.exe` |
 
 发行包附带 `SHA256SUMS.txt`。两种版本均可在**关于**页检查更新，设置与历史保存在 `%LOCALAPPDATA%\7zplus-rust`。
 
@@ -41,12 +41,12 @@ Windows x64 · Visual Studio C++ Build Tools + Windows SDK · PowerShell · Rust
 git clone --recurse-submodules https://github.com/tzhaos/7zp-rust.git
 cd 7zp-rust
 ./tools/build.ps1 -ReleaseRepository tzhaos/7zp-rust -Package All
-./bin/7zplus.exe
+./bin/p7z.exe
 ```
 
 已有工作区执行 `git submodule update --init --recursive`。`-Package Run` 只构建可运行目录；`All` 还会在 `dist/` 生成安装包与绿色 ZIP。
 
-产品代码使用 `zip-*` crate，共用的 `cardo-runtime` 和 `cardo-ui` 来自固定提交的 [Cardo](https://github.com/tzhaos/cardo-rust) 子模块。[架构、快捷键与发布流程 →](docs/reference.zh.md)
+应用包名为 `p7z`，配套 crate 使用 `zip-*`；共用的 `cardo-runtime` 和 `cardo-ui` 来自固定提交的 [Cardo](https://github.com/tzhaos/cardo-rust) 子模块。[架构、快捷键与发布流程 →](docs/reference.zh.md)
 
 ## 许可
 

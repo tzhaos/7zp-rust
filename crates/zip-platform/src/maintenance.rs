@@ -55,7 +55,7 @@ unsafe extern "system" fn find_window(window: HWND, state: LPARAM) -> BOOL {
 
 pub fn close_application(directory: &Path) -> Result<()> {
     let mut state = ApplicationWindows {
-        executable: directory.join("7zplus.exe").to_string_lossy().into_owned(),
+        executable: directory.join("p7z.exe").to_string_lossy().into_owned(),
         windows: Vec::new(),
     };
     if unsafe { EnumWindows(Some(find_window), &mut state as *mut _ as LPARAM) } == 0 {

@@ -10,7 +10,7 @@ Push-Location $projectRoot
 try {
     $metadata = & cargo metadata --no-deps --format-version 1 | ConvertFrom-Json
     if ($LASTEXITCODE -ne 0) { throw 'Cannot read package version' }
-    $current = ($metadata.packages | Where-Object name -eq 'zip-app').version
+    $current = ($metadata.packages | Where-Object name -eq 'p7z').version
     if ($Part -eq 'Show') { return $current }
     $version = [version]$current
     $next = switch ($Part) {

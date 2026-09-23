@@ -111,7 +111,7 @@ impl Workspace {
         let mut body = settings_frame()
             .child(settings_group(
                 [
-                    ("name", "7zplus"),
+                    ("name", "Plus7z"),
                     ("about-version", zip_requests::update::VERSION),
                     ("about-engine", "7-Zip 26.03"),
                 ]

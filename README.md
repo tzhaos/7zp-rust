@@ -1,7 +1,7 @@
 <p align="center">
-  <img src="assets/brand/logo.svg" width="112" alt="7zplus">
+  <img src="assets/brand/logo.svg" width="112" alt="Plus7z">
 </p>
-<h1 align="center">7zplus</h1>
+<h1 align="center">Plus7z</h1>
 <p align="center">A native Windows archive manager, built with Rust and GPUI Kit.</p>
 <p align="center">
   <a href="https://github.com/tzhaos/7zp-rust/releases/latest">Download</a> ·
@@ -17,8 +17,8 @@ Choose an **[installer or portable ZIP](https://github.com/tzhaos/7zp-rust/relea
 
 | Package | Use it for |
 | --- | --- |
-| `7zplus-amd64-installer.exe` | Per-user installation with Explorer integration |
-| `7zplus-amd64-portable.zip` | Extract the whole folder and run `7zplus.exe` |
+| `p7z-amd64-installer.exe` | Per-user installation with Explorer integration |
+| `p7z-amd64-portable.zip` | Extract the whole folder and run `p7z.exe` |
 
 Releases include `SHA256SUMS.txt`. Installed and portable copies can check for updates in **About**. Settings and history live in `%LOCALAPPDATA%\7zplus-rust`.
 
@@ -41,12 +41,12 @@ Windows x64 · Visual Studio C++ Build Tools + Windows SDK · PowerShell · Rust
 git clone --recurse-submodules https://github.com/tzhaos/7zp-rust.git
 cd 7zp-rust
 ./tools/build.ps1 -ReleaseRepository tzhaos/7zp-rust -Package All
-./bin/7zplus.exe
+./bin/p7z.exe
 ```
 
 For an existing checkout, run `git submodule update --init --recursive`. `-Package Run` builds the runnable folder; `All` also produces the installer and portable ZIP in `dist/`.
 
-The product uses `zip-*` crates. Shared `cardo-runtime` and `cardo-ui` infrastructure comes from the pinned [Cardo](https://github.com/tzhaos/cardo-rust) submodule. [Architecture, shortcuts and release workflow →](docs/reference.md)
+The application package is `p7z`; supporting crates use `zip-*`. Shared `cardo-runtime` and `cardo-ui` infrastructure comes from the pinned [Cardo](https://github.com/tzhaos/cardo-rust) submodule. [Architecture, shortcuts and release workflow →](docs/reference.md)
 
 ## License
 

@@ -1,4 +1,4 @@
-# 7zplus reference
+# Plus7z reference
 
 [Project home](../README.md) · [简体中文](reference.zh.md)
 
@@ -37,16 +37,16 @@ Clone with `git clone --recurse-submodules`, or run `git submodule update --init
 
 ```powershell
 ./tools/build.ps1 -ReleaseRepository tzhaos/7zp-rust -Package All
-./bin/7zplus.exe
+./bin/p7z.exe
 ```
 
 `-Package Run` builds the runnable directory; `Portable` adds the ZIP, `Installer` adds the installer, and `All` produces both packages. Outputs are in `bin/` and `dist/`. Keep `runtime/7zip/` beside the executable.
 
 ## Updates and Releases
 
-Portable v0.2.2 needs a manual extraction upgrade to v0.2.3: its fixed package file list rejects the new MIT license files. v0.2.3 includes these files in update validation and rollback. The installed update path is unchanged.
+Version 0.2.4 renames 7zplus to **Plus7z**, with the application package and executable named `p7z`. Download this release manually: older updaters look for the previous package names. Close and uninstall the old installed copy before installing Plus7z, or extract the portable ZIP into a new directory. Plus7z has its own per-user installation, Explorer identity and shortcuts; the repository URL is unchanged.
 
-About checks the latest stable GitHub release; startup checks are optional. **Download and install** detects whether the running copy is registered as an installation, then downloads the matching installer or portable ZIP. The download is cancellable. 7zplus verifies its SHA-256 against the release manifest, prepares the update, exits, applies it with a separate helper process, and restarts. The helper backs up the files it replaces and restores them if installation fails; an interrupted update is recovered on the next launch. A portable copy needs write access to its directory. Builds without a release repository can still run, but cannot check for updates.
+About checks the latest stable GitHub release; startup checks are optional. **Download and install** detects whether the running copy is registered as an installation, then downloads the matching installer or portable ZIP. The download is cancellable. Plus7z verifies its SHA-256 against the release manifest, prepares the update, exits, applies it with a separate helper process, and restarts. The helper backs up the files it replaces and restores them if installation fails; an interrupted update is recovered on the next launch. A portable copy needs write access to its directory. Builds without a release repository can still run, but cannot check for updates.
 
 Use `./tools/version.ps1 -Part Patch` (or `Minor` / `Major`) to advance the workspace version and synchronize Cargo.lock. Commit both files before creating and pushing a matching `vX.Y.Z` tag.
 
@@ -62,7 +62,7 @@ Logs in the `logs/` subdirectory rotate daily in UTC and retain up to 14 files. 
 
 | Crate | Responsibility |
 | --- | --- |
-| `zip-app` | Startup and packaging |
+| `p7z` | Startup and packaging |
 | `zip-ui` | Workspace, settings, dialogs and command dispatch |
 | `zip-core` | Preferences, localization, history and shortcut definitions |
 | `zip-engine` | 7-Zip adapter, operations and progress |
@@ -93,4 +93,4 @@ The target is the official 7-Zip 26.03 File Manager's user-facing functionality.
 
 Local builds and selected engine operations have been verified, including v0.2.1's input-list fix for 7z/ZIP creation, updates, deletion and checksum generation. This does not establish full GUI, installation/upgrade, cancellation, accessibility, DPI or multi-monitor coverage. Some native-window lifecycle/accessibility diagnostics remain unresolved.
 
-The v0.2.3 split has passed standalone Cardo and full 7zplus release builds. The logo was rendered at 48px on light and dark backgrounds. The updated extraction notifications have not been observed in a live GUI session.
+The v0.2.3 split has passed standalone Cardo and full Plus7z release builds. The logo was rendered at 48px on light and dark backgrounds. The updated extraction notifications have not been observed in a live GUI session.

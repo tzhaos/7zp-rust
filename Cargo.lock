@@ -4852,6 +4852,21 @@ dependencies = [
 ]
 
 [[package]]
+name = "p7z"
+version = "0.2.3"
+dependencies = [
+ "anyhow",
+ "cardo-runtime",
+ "embed-resource",
+ "gpui-kit",
+ "rfd",
+ "tracing",
+ "zip-core",
+ "zip-platform",
+ "zip-ui",
+]
+
+[[package]]
 name = "parking"
 version = "2.2.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -9155,21 +9170,6 @@ dependencies = [
  "memchr",
  "thiserror 2.0.20",
  "zopfli",
-]
-
-[[package]]
-name = "zip-app"
-version = "0.2.3"
-dependencies = [
- "anyhow",
- "cardo-runtime",
- "embed-resource",
- "gpui-kit",
- "rfd",
- "tracing",
- "zip-core",
- "zip-platform",
- "zip-ui",
 ]
 
 [[package]]

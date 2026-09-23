@@ -4,7 +4,7 @@ version.workspace = true
 edition.workspace = true
 publish.workspace = true
 license.workspace = true
-description = "Folder state and background requests for 7zplus. This is not the executable."
+description = "Folder state and background requests for Plus7z. This is not the executable."
 
 [dependencies]
 zip-core.workspace = true

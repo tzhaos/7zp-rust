@@ -48,7 +48,7 @@ pub fn check() -> Result<Status> {
         return Ok(Status::Unconfigured);
     };
     let client = Client::builder()
-        .user_agent(concat!("7zplus/", env!("CARGO_PKG_VERSION")))
+        .user_agent(concat!("p7z/", env!("CARGO_PKG_VERSION")))
         .connect_timeout(Duration::from_secs(10))
         .timeout(Duration::from_secs(25))
         .build()?;
@@ -94,8 +94,8 @@ pub fn check() -> Result<Status> {
         }
         Ok(expected.into())
     };
-    let download = download_asset("7zplus-amd64-installer.exe")?;
-    let portable = download_asset("7zplus-amd64-portable.zip")?;
+    let download = download_asset("p7z-amd64-installer.exe")?;
+    let portable = download_asset("p7z-amd64-portable.zip")?;
     let checksums = download_asset("SHA256SUMS.txt")?;
     let size = |name: &str| {
         release
@@ -105,8 +105,8 @@ pub fn check() -> Result<Status> {
             .map(|asset| asset.size)
             .unwrap_or(0)
     };
-    let installer_size = size("7zplus-amd64-installer.exe");
-    let portable_size = size("7zplus-amd64-portable.zip");
+    let installer_size = size("p7z-amd64-installer.exe");
+    let portable_size = size("p7z-amd64-portable.zip");
     let mut page = reqwest::Url::parse(&format!("{base}tag/"))?;
     page.path_segments_mut()
         .map_err(|_| anyhow::anyhow!(tr("update-url-invalid")))?

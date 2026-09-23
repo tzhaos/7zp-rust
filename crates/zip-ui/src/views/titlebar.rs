@@ -123,13 +123,13 @@ impl Workspace {
             .map(|catalog| &catalog.path)
             .or_else(|| view.directory.as_ref().map(|directory| &directory.path));
         let Some(path) = path else {
-            return "7zplus".to_owned();
+            return "Plus7z".to_owned();
         };
         let name = path
             .file_name()
             .filter(|name| !name.is_empty())
             .map(|name| name.to_string_lossy().into_owned())
             .unwrap_or_else(|| path.display().to_string());
-        format!("{name} - 7zplus")
+        format!("{name} - Plus7z")
     }
 }

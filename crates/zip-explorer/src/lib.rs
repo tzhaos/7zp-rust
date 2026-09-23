@@ -189,7 +189,7 @@ impl ArchiveCommand {
 impl IExplorerCommand_Impl for ArchiveCommand_Impl {
     fn GetTitle(&self, items: Ref<'_, IShellItemArray>) -> Result<PWSTR> {
         let index = match self.node {
-            Node::Root => return shell_string("7zplus"),
+            Node::Root => return shell_string("Plus7z"),
             Node::Hashes => return shell_string("CRC SHA"),
             Node::OpenTypes => return shell_string(&self.config.open_types_title),
             Node::Email => return shell_string(&self.config.email_title),

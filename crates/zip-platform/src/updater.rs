@@ -23,7 +23,7 @@ use windows_sys::Win32::{
 };
 
 const FILES: &[&str] = &[
-    "7-zip-plus.dll",
+    "p7z-explorer.dll",
     "vcruntime140.dll",
     "Fluent-LICENSE.txt",
     "LICENSE.txt",
@@ -36,7 +36,7 @@ const FILES: &[&str] = &[
     "runtime/7zip/readme.txt",
     "runtime/7zip/History.txt",
     "runtime/7zip/7-zip.chm",
-    "7zplus.exe",
+    "p7z.exe",
 ];
 
 pub struct Target {
@@ -131,7 +131,7 @@ pub fn prepare(
         tr("update-hash-mismatch")
     );
     let stage = tempfile::Builder::new()
-        .prefix(".7zplus-update-")
+        .prefix(".p7z-update-")
         .tempdir_in(&target.directory)
         .with_context(|| format!("Cannot stage update in {}", target.directory.display()))?;
     if !target.installed() {
@@ -171,7 +171,7 @@ fn unpack(package: &Path, destination: &Path, cancel: &AtomicBool) -> Result<()>
             tr("update-package-invalid")
         );
         let relative = enclosed
-            .strip_prefix("7zplus")
+            .strip_prefix("p7z")
             .context(tr("update-package-invalid"))?;
         if entry.is_dir() {
             continue;
@@ -299,13 +299,13 @@ fn validate_plan(plan: &Plan) -> Result<()> {
             && plan
                 .stage
                 .file_name()
-                .is_some_and(|n| n.to_string_lossy().starts_with(".7zplus-update-")),
+                .is_some_and(|n| n.to_string_lossy().starts_with(".p7z-update-")),
         tr("update-package-invalid")
     );
     ensure!(
         matches!(
             plan.package.as_str(),
-            "7zplus-amd64-installer.exe" | "7zplus-amd64-portable.zip"
+            "p7z-amd64-installer.exe" | "p7z-amd64-portable.zip"
         ),
         tr("update-package-invalid")
     );
@@ -467,7 +467,7 @@ pub fn apply() -> Result<()> {
         helper.parent() == Some(job.as_path()),
         tr("update-package-invalid")
     );
-    let parent = process(plan.parent_pid, &plan.target.join("7zplus.exe"))?
+    let parent = process(plan.parent_pid, &plan.target.join("p7z.exe"))?
         .context(tr("update-helper-failed"))?;
     plan.helper_pid = std::process::id();
     store.write_json("update-pending.json", &Some(&plan))?;
@@ -513,7 +513,7 @@ pub fn apply() -> Result<()> {
     if let Err(error) = fs::remove_dir_all(&plan.stage) {
         tracing::warn!(error = %error, "Cannot clean update staging directory");
     }
-    Command::new(plan.target.join("7zplus.exe"))
+    Command::new(plan.target.join("p7z.exe"))
         .current_dir(&plan.target)
         .spawn()
         .context(tr("update-restart-failed"))?;
@@ -539,7 +539,7 @@ pub fn recover() -> Result<Option<String>> {
             bail!(tr("update-running"));
         }
         if plan.helper_pid == 0
-            && process(plan.parent_pid, &plan.target.join("7zplus.exe"))?.is_some()
+            && process(plan.parent_pid, &plan.target.join("p7z.exe"))?.is_some()
         {
             bail!(tr("update-running"));
         }

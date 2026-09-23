@@ -1,6 +1,6 @@
 [workspace]
 members = [
-    "crates/zip-app",
+    "crates/p7z",
     "crates/zip-core",
     "crates/zip-engine",
     "crates/zip-requests",

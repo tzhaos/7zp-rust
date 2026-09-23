@@ -1,10 +1,10 @@
 use serde::{Deserialize, Serialize};
 use std::path::{Path, PathBuf};
 
-pub const CLSID: &str = "{DA175BDC-43B0-4BDC-A6BA-D470C3374A71}";
-pub const CLSID_VALUE: u128 = 0xda175bdc_43b0_4bdc_a6ba_d470c3374a71;
-pub const SHELL_KEY: &str = r"Software\7zplus.Rust\Shell";
-pub const REQUEST_PREFIX: &str = "7zplus-shell-";
+pub const CLSID: &str = "{50727386-A1B4-4CFA-B327-C510F503714D}";
+pub const CLSID_VALUE: u128 = 0x50727386_a1b4_4cfa_b327_c510f503714d;
+pub const SHELL_KEY: &str = r"Software\Plus7z\Shell";
+pub const REQUEST_PREFIX: &str = "p7z-shell-";
 pub const EXTENSIONS: &[&str] = &[
     ".001",
     ".7z",

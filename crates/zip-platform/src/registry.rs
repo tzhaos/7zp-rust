@@ -6,11 +6,11 @@ use std::path::Path;
 use windows_sys::Win32::UI::Shell::{SHCNE_ASSOCCHANGED, SHCNF_IDLIST, SHChangeNotify};
 use winreg::{RegKey, enums::HKEY_CURRENT_USER};
 
-const PROGID: &str = "Cardo.7zplus.Rust.Archive";
-const APPLICATION: &str = "7zplus.Rust";
-const CAPABILITIES: &str = r"Software\7zplus.Rust\Capabilities";
+const PROGID: &str = "Cardo.Plus7z.Archive";
+const APPLICATION: &str = "Plus7z";
+const CAPABILITIES: &str = r"Software\Plus7z\Capabilities";
 pub const DEFAULT_APPS_URI: &str = "ms-settings:defaultapps";
-const MENU_KEY: &str = r"AllFilesystemObjects\shell\7zplus.Rust";
+const MENU_KEY: &str = r"AllFilesystemObjects\shell\Plus7z";
 
 #[derive(Clone, serde::Serialize, serde::Deserialize)]
 pub(crate) struct UpdateRegistration {
@@ -20,7 +20,7 @@ pub(crate) struct UpdateRegistration {
 
 pub(crate) fn update_registration(directory: &Path) -> Result<Option<UpdateRegistration>> {
     let user = RegKey::predef(HKEY_CURRENT_USER);
-    let Some(registered) = string(&user, r"Software\7zplus.Rust", "InstallDir")? else {
+    let Some(registered) = string(&user, r"Software\Plus7z", "InstallDir")? else {
         return Ok(None);
     };
     let installed = match std::fs::canonicalize(&registered) {
@@ -35,7 +35,7 @@ pub(crate) fn update_registration(directory: &Path) -> Result<Option<UpdateRegis
     }
     let executable =
         string(&user, SHELL_KEY, "Executable")?.context(tr("update-ownership-error"))?;
-    if std::fs::canonicalize(executable)? != std::fs::canonicalize(directory.join("7zplus.exe"))? {
+    if std::fs::canonicalize(executable)? != std::fs::canonicalize(directory.join("p7z.exe"))? {
         bail!(tr("update-ownership-error"));
     }
     let dll = string(
@@ -52,7 +52,7 @@ pub(crate) fn update_registration(directory: &Path) -> Result<Option<UpdateRegis
         dll,
         version: string(
             &user,
-            r"Software\Microsoft\Windows\CurrentVersion\Uninstall\7zplus.Rust",
+            r"Software\Microsoft\Windows\CurrentVersion\Uninstall\Plus7z",
             "DisplayVersion",
         )?,
     }))
@@ -63,7 +63,7 @@ pub(crate) fn restore_update_registration(
     previous: &UpdateRegistration,
 ) -> Result<()> {
     let user = RegKey::predef(HKEY_CURRENT_USER);
-    let installed = string(&user, r"Software\7zplus.Rust", "InstallDir")?
+    let installed = string(&user, r"Software\Plus7z", "InstallDir")?
         .context(tr("update-ownership-error"))?;
     let directory = std::fs::canonicalize(directory)?;
     if std::fs::canonicalize(installed)? != directory {
@@ -71,7 +71,7 @@ pub(crate) fn restore_update_registration(
     }
     if let Some(executable) = string(&user, SHELL_KEY, "Executable")? {
         if std::fs::canonicalize(executable)?
-            != std::fs::canonicalize(directory.join("7zplus.exe"))?
+            != std::fs::canonicalize(directory.join("p7z.exe"))?
         {
             bail!(tr("update-ownership-error"));
         }
@@ -87,8 +87,8 @@ pub(crate) fn restore_update_registration(
             bail!(tr("update-ownership-error"));
         }
     }
-    register(&directory.join("7zplus.exe"), &previous.dll)?;
-    let key = r"Software\Microsoft\Windows\CurrentVersion\Uninstall\7zplus.Rust";
+    register(&directory.join("p7z.exe"), &previous.dll)?;
+    let key = r"Software\Microsoft\Windows\CurrentVersion\Uninstall\Plus7z";
     if let Some(version) = &previous.version {
         user.open_subkey_with_flags(key, winreg::enums::KEY_SET_VALUE)?
             .set_value("DisplayVersion", version)?;
@@ -196,7 +196,7 @@ fn write_configuration(
         .0
         .set_value("", &format!("\"{exe}\" --open \"%1\""))?;
     let capabilities = user.create_subkey(CAPABILITIES)?.0;
-    capabilities.set_value("ApplicationName", &"7zplus")?;
+    capabilities.set_value("ApplicationName", &"Plus7z")?;
     capabilities.set_value("ApplicationDescription", &tr("association-description"))?;
     capabilities.set_value("ApplicationIcon", &format!("\"{exe}\",0"))?;
     remove_key(&capabilities, "FileAssociations")?;
@@ -227,7 +227,7 @@ fn write_configuration(
         .set_value(APPLICATION, &CAPABILITIES)?;
     if preferences.shell_menu {
         let menu = classes.create_subkey(MENU_KEY)?.0;
-        menu.set_value("MUIVerb", &"7zplus")?;
+        menu.set_value("MUIVerb", &"Plus7z")?;
         menu.set_value("Icon", &format!("\"{exe}\",0"))?;
         menu.set_value("ExplorerCommandHandler", &CLSID)?;
         menu.set_value("MultiSelectModel", &"Player")?;

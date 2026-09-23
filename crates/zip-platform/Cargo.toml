@@ -4,7 +4,7 @@ version.workspace = true
 edition.workspace = true
 publish.workspace = true
 license.workspace = true
-description = "Windows integration for 7zplus"
+description = "Windows integration for Plus7z"
 
 [dependencies]
 cardo-runtime.workspace = true

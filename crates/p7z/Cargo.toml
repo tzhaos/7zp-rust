@@ -1,5 +1,5 @@
 [package]
-name = "zip-app"
+name = "p7z"
 version.workspace = true
 edition.workspace = true
 publish.workspace = true
@@ -7,7 +7,7 @@ license.workspace = true
 description = "Native Windows archive manager built with GPUI Kit"
 
 [[bin]]
-name = "7zplus"
+name = "p7z"
 path = "src/main.rs"
 
 [dependencies]

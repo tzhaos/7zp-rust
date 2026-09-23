@@ -3,17 +3,17 @@ Unicode true
 !include "LogicLib.nsh"
 !include "x64.nsh"
 !include "FileFunc.nsh"
-Name "7zplus"
-OutFile "${PROJECT_ROOT}\dist\7zplus-amd64-installer.exe"
-InstallDir "$LOCALAPPDATA\Programs\7zplus"
-InstallDirRegKey HKCU "Software\7zplus.Rust" "InstallDir"
+Name "Plus7z"
+OutFile "${PROJECT_ROOT}\dist\p7z-amd64-installer.exe"
+InstallDir "$LOCALAPPDATA\Programs\Plus7z"
+InstallDirRegKey HKCU "Software\Plus7z" "InstallDir"
 RequestExecutionLevel user
 SetCompressor /SOLID lzma
 VIProductVersion "${APP_VERSION}.0"
-VIAddVersionKey /LANG=1033 "ProductName" "7zplus"
-VIAddVersionKey /LANG=1033 "FileDescription" "7zplus Setup"
+VIAddVersionKey /LANG=1033 "ProductName" "Plus7z"
+VIAddVersionKey /LANG=1033 "FileDescription" "Plus7z Setup"
 VIAddVersionKey /LANG=1033 "FileVersion" "${APP_VERSION}"
-VIAddVersionKey /LANG=1033 "LegalCopyright" "7zplus contributors"
+VIAddVersionKey /LANG=1033 "LegalCopyright" "Plus7z contributors"
 !define MUI_ICON "${PROJECT_ROOT}\assets\brand\app.ico"
 !define MUI_UNICON "${PROJECT_ROOT}\assets\brand\app.ico"
 !insertmacro MUI_PAGE_WELCOME
@@ -32,9 +32,9 @@ VIAddVersionKey /LANG=1033 "LegalCopyright" "7zplus contributors"
 LangString OpenDefaultApps ${LANG_ENGLISH} "Choose default archive apps in Windows Settings"
 LangString OpenDefaultApps ${LANG_SIMPCHINESE} "在 Windows 设置中选择压缩包默认打开应用"
 LangString OpenDefaultApps ${LANG_TRADCHINESE} "在 Windows 設定中選擇壓縮檔預設開啟應用程式"
-LangString ClosingApp ${LANG_ENGLISH} "Closing 7zplus..."
-LangString ClosingApp ${LANG_SIMPCHINESE} "正在关闭 7zplus…"
-LangString ClosingApp ${LANG_TRADCHINESE} "正在關閉 7zplus…"
+LangString ClosingApp ${LANG_ENGLISH} "Closing Plus7z..."
+LangString ClosingApp ${LANG_SIMPCHINESE} "正在关闭 Plus7z…"
+LangString ClosingApp ${LANG_TRADCHINESE} "正在關閉 Plus7z…"
 LangString CleanupDeferred ${LANG_ENGLISH} "Loaded menu modules will be removed automatically at your next sign-in."
 LangString CleanupDeferred ${LANG_SIMPCHINESE} "已加载的菜单模块将在下次登录时自动清理。"
 LangString CleanupDeferred ${LANG_TRADCHINESE} "已載入的選單模組將於下次登入時自動清理。"
@@ -63,9 +63,9 @@ Function ${Prefix}RetireShell
     StrCmp $ShellFile "." retire_version_continue
     StrCmp $ShellFile ".." retire_version_continue
     StrCmp $ShellFile $ShellKeep retire_version_continue
-    StrCpy $ShellPath "$INSTDIR\shell\$ShellFile\7-zip-plus.dll"
+    StrCpy $ShellPath "$INSTDIR\shell\$ShellFile\p7z-explorer.dll"
     IfFileExists "$ShellPath" 0 retire_version_continue
-    StrCpy $ShellName "7-zip-plus.dll"
+    StrCpy $ShellName "p7z-explorer.dll"
     Call ${Prefix}RetireShellFile
     RMDir "$INSTDIR\shell\$ShellFile"
     retire_version_continue:
@@ -83,8 +83,8 @@ Function ${Prefix}RetireShellFile
     IfErrors 0 retire_file_done
     ClearErrors
     ; One same-volume directory per module keeps identical DLL names separate.
-    CreateDirectory "$INSTDIR\.7zplus-retired"
-    GetTempFileName $RetiredDir "$INSTDIR\.7zplus-retired"
+    CreateDirectory "$INSTDIR\.p7z-retired"
+    GetTempFileName $RetiredDir "$INSTDIR\.p7z-retired"
     IfErrors retire_failed
     Delete "$RetiredDir"
     CreateDirectory "$RetiredDir"
@@ -94,7 +94,7 @@ Function ${Prefix}RetireShellFile
         CopyFiles /SILENT "$INSTDIR\Uninstall.exe" "$RetiredDir\cleanup.exe"
     !endif
     StrCpy $RetiredId $RetiredDir
-    WriteRegStr HKCU "Software\Microsoft\Windows\CurrentVersion\RunOnce" "7zplus.Cleanup.$RetiredId" '$\"$RetiredDir\cleanup.exe$\" /S /CLEANUP'
+    WriteRegStr HKCU "Software\Microsoft\Windows\CurrentVersion\RunOnce" "Plus7z.Cleanup.$RetiredId" '$\"$RetiredDir\cleanup.exe$\" /S /CLEANUP'
     IfErrors retire_failed
     ClearErrors
     Rename "$ShellPath" "$RetiredDir\$ShellName"
@@ -115,12 +115,12 @@ FunctionEnd
 Function un.CleanupRetired
     SetOutPath "$TEMP"
     ClearErrors
-    Delete "$INSTDIR\7-zip-plus.dll"
+    Delete "$INSTDIR\p7z-explorer.dll"
     ${If} ${Errors}
-        WriteRegStr HKCU "Software\Microsoft\Windows\CurrentVersion\RunOnce" "7zplus.Cleanup.$RetiredId" '$\"$INSTDIR\cleanup.exe$\" /S /CLEANUP'
+        WriteRegStr HKCU "Software\Microsoft\Windows\CurrentVersion\RunOnce" "Plus7z.Cleanup.$RetiredId" '$\"$INSTDIR\cleanup.exe$\" /S /CLEANUP'
         Return
     ${EndIf}
-    DeleteRegValue HKCU "Software\Microsoft\Windows\CurrentVersion\RunOnce" "7zplus.Cleanup.$RetiredId"
+    DeleteRegValue HKCU "Software\Microsoft\Windows\CurrentVersion\RunOnce" "Plus7z.Cleanup.$RetiredId"
     Delete "$INSTDIR\cleanup.exe"
     RMDir "$INSTDIR"
     ${GetParent} "$INSTDIR" $0
@@ -163,11 +163,11 @@ FunctionEnd
 Section
     InitPluginsDir
     SetOutPath "$PLUGINSDIR"
-    File /oname=7zplus-maintenance.exe "${PROJECT_ROOT}\bin\7zplus.exe"
+    File /oname=p7z-maintenance.exe "${PROJECT_ROOT}\bin\p7z.exe"
     File "${PROJECT_ROOT}\bin\vcruntime140.dll"
     DetailPrint "$(ClosingApp)"
     ClearErrors
-    ExecWait '"$PLUGINSDIR\7zplus-maintenance.exe" --lang $AppLanguage --prepare-install "$INSTDIR"' $0
+    ExecWait '"$PLUGINSDIR\p7z-maintenance.exe" --lang $AppLanguage --prepare-install "$INSTDIR"' $0
     ${If} ${Errors}
     ${OrIf} $0 != 0
         SetErrorLevel 1
@@ -175,12 +175,12 @@ Section
     ${EndIf}
     SetOutPath "$INSTDIR"
     ClearErrors
-    File "${PROJECT_ROOT}\bin\7zplus.exe"
+    File "${PROJECT_ROOT}\bin\p7z.exe"
     File "${PROJECT_ROOT}\bin\vcruntime140.dll"
     ; Explorer can keep earlier modules loaded; identical content needs no overwrite.
     SetOutPath "$INSTDIR\shell\${SHELL_HASH}"
     SetOverwrite off
-    File "${PROJECT_ROOT}\bin\7-zip-plus.dll"
+    File "${PROJECT_ROOT}\bin\p7z-explorer.dll"
     SetOverwrite on
     SetOutPath "$INSTDIR"
     File /oname=Fluent-LICENSE.txt "${PROJECT_ROOT}\assets\fluent\LICENSE"
@@ -193,7 +193,7 @@ Section
         Abort
     ${EndIf}
     SetOutPath "$INSTDIR"
-    ExecWait '"$INSTDIR\7zplus.exe" --lang $AppLanguage --register "$INSTDIR\shell\${SHELL_HASH}\7-zip-plus.dll"' $0
+    ExecWait '"$INSTDIR\p7z.exe" --lang $AppLanguage --register "$INSTDIR\shell\${SHELL_HASH}\p7z-explorer.dll"' $0
     ${If} $0 != 0
         SetErrorLevel 1
         Abort
@@ -201,8 +201,8 @@ Section
     StrCpy $ShellKeep "${SHELL_HASH}"
     ${If} $Updating == 0
         Call RetireShell
-        CreateShortcut "$DESKTOP\7zplus.lnk" "$INSTDIR\7zplus.exe"
-        CreateShortcut "$SMPROGRAMS\7zplus.lnk" "$INSTDIR\7zplus.exe"
+        CreateShortcut "$DESKTOP\Plus7z.lnk" "$INSTDIR\p7z.exe"
+        CreateShortcut "$SMPROGRAMS\Plus7z.lnk" "$INSTDIR\p7z.exe"
     ${EndIf}
     ClearErrors
     WriteUninstaller "$INSTDIR\Uninstall.exe"
@@ -211,15 +211,15 @@ Section
         Abort
     ${EndIf}
     ClearErrors
-    WriteRegStr HKCU "Software\7zplus.Rust" "InstallDir" "$INSTDIR"
-    WriteRegDWORD HKCU "Software\7zplus.Rust" "Language" $LANGUAGE
-    WriteRegStr HKCU "Software\Microsoft\Windows\CurrentVersion\Uninstall\7zplus.Rust" "DisplayName" "7zplus"
-    WriteRegStr HKCU "Software\Microsoft\Windows\CurrentVersion\Uninstall\7zplus.Rust" "DisplayIcon" '"$INSTDIR\7zplus.exe",0'
-    WriteRegStr HKCU "Software\Microsoft\Windows\CurrentVersion\Uninstall\7zplus.Rust" "DisplayVersion" "${APP_VERSION}"
-    WriteRegStr HKCU "Software\Microsoft\Windows\CurrentVersion\Uninstall\7zplus.Rust" "UninstallString" '"$INSTDIR\Uninstall.exe"'
-    WriteRegStr HKCU "Software\Microsoft\Windows\CurrentVersion\Uninstall\7zplus.Rust" "InstallLocation" "$INSTDIR"
-    WriteRegDWORD HKCU "Software\Microsoft\Windows\CurrentVersion\Uninstall\7zplus.Rust" "NoModify" 1
-    WriteRegDWORD HKCU "Software\Microsoft\Windows\CurrentVersion\Uninstall\7zplus.Rust" "NoRepair" 1
+    WriteRegStr HKCU "Software\Plus7z" "InstallDir" "$INSTDIR"
+    WriteRegDWORD HKCU "Software\Plus7z" "Language" $LANGUAGE
+    WriteRegStr HKCU "Software\Microsoft\Windows\CurrentVersion\Uninstall\Plus7z" "DisplayName" "Plus7z"
+    WriteRegStr HKCU "Software\Microsoft\Windows\CurrentVersion\Uninstall\Plus7z" "DisplayIcon" '"$INSTDIR\p7z.exe",0'
+    WriteRegStr HKCU "Software\Microsoft\Windows\CurrentVersion\Uninstall\Plus7z" "DisplayVersion" "${APP_VERSION}"
+    WriteRegStr HKCU "Software\Microsoft\Windows\CurrentVersion\Uninstall\Plus7z" "UninstallString" '"$INSTDIR\Uninstall.exe"'
+    WriteRegStr HKCU "Software\Microsoft\Windows\CurrentVersion\Uninstall\Plus7z" "InstallLocation" "$INSTDIR"
+    WriteRegDWORD HKCU "Software\Microsoft\Windows\CurrentVersion\Uninstall\Plus7z" "NoModify" 1
+    WriteRegDWORD HKCU "Software\Microsoft\Windows\CurrentVersion\Uninstall\Plus7z" "NoRepair" 1
     ${If} ${Errors}
         SetErrorLevel 1
         Abort
@@ -235,14 +235,14 @@ Function un.onInit
     ${IfNot} ${Errors}
         ${GetParent} "$INSTDIR" $0
         ${GetFileName} "$0" $1
-        ${If} $1 != ".7zplus-retired"
+        ${If} $1 != ".p7z-retired"
             Abort
         ${EndIf}
         StrCpy $RetiredId $INSTDIR
         StrCpy $CleanupOnly 1
         Return
     ${EndIf}
-    ReadRegDWORD $LANGUAGE HKCU "Software\7zplus.Rust" "Language"
+    ReadRegDWORD $LANGUAGE HKCU "Software\Plus7z" "Language"
 FunctionEnd
 
 Section "Uninstall"
@@ -252,25 +252,25 @@ Section "Uninstall"
     ${EndIf}
     DetailPrint "$(ClosingApp)"
     ClearErrors
-    ExecWait '"$INSTDIR\7zplus.exe" --prepare-install "$INSTDIR"' $0
+    ExecWait '"$INSTDIR\p7z.exe" --prepare-install "$INSTDIR"' $0
     ${If} ${Errors}
     ${OrIf} $0 != 0
         SetErrorLevel 1
         Abort
     ${EndIf}
-    ExecWait '"$INSTDIR\7zplus.exe" --unregister' $0
+    ExecWait '"$INSTDIR\p7z.exe" --unregister' $0
     ${If} $0 != 0
         Abort
     ${EndIf}
     StrCpy $ShellKeep ""
     Call un.RetireShell
     SetOutPath "$TEMP"
-    ReadRegStr $1 HKCU "Software\7zplus.Rust" "InstallDir"
+    ReadRegStr $1 HKCU "Software\Plus7z" "InstallDir"
     ${If} $1 == $INSTDIR
-        Delete "$DESKTOP\7zplus.lnk"
-        Delete "$SMPROGRAMS\7zplus.lnk"
+        Delete "$DESKTOP\Plus7z.lnk"
+        Delete "$SMPROGRAMS\Plus7z.lnk"
     ${EndIf}
-    Delete "$INSTDIR\7zplus.exe"
+    Delete "$INSTDIR\p7z.exe"
     Delete "$INSTDIR\vcruntime140.dll"
     Delete "$INSTDIR\Fluent-LICENSE.txt"
     Delete "$INSTDIR\LICENSE.txt"
@@ -289,9 +289,9 @@ Section "Uninstall"
     Delete "$INSTDIR\Uninstall.exe"
     RMDir "$INSTDIR"
     ${If} $1 == $INSTDIR
-        DeleteRegKey HKCU "Software\Microsoft\Windows\CurrentVersion\Uninstall\7zplus.Rust"
-        DeleteRegValue HKCU "Software\7zplus.Rust" "InstallDir"
-        DeleteRegValue HKCU "Software\7zplus.Rust" "Language"
-        DeleteRegKey /ifempty HKCU "Software\7zplus.Rust"
+        DeleteRegKey HKCU "Software\Microsoft\Windows\CurrentVersion\Uninstall\Plus7z"
+        DeleteRegValue HKCU "Software\Plus7z" "InstallDir"
+        DeleteRegValue HKCU "Software\Plus7z" "Language"
+        DeleteRegKey /ifempty HKCU "Software\Plus7z"
     ${EndIf}
 SectionEnd

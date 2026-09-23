@@ -85,9 +85,9 @@ async fn download(release: &Status, progress: &Progress) -> Result<updater::Prep
     };
     let target = updater::Target::current()?;
     let (url, name, size) = if target.installed() {
-        (download, "7zplus-amd64-installer.exe", *installer_size)
+        (download, "p7z-amd64-installer.exe", *installer_size)
     } else {
-        (portable, "7zplus-amd64-portable.zip", *portable_size)
+        (portable, "p7z-amd64-portable.zip", *portable_size)
     };
     ensure!(
         size > 0 && size <= 512 * 1024 * 1024,
@@ -95,7 +95,7 @@ async fn download(release: &Status, progress: &Progress) -> Result<updater::Prep
     );
     progress.total.store(size, Ordering::Relaxed);
     let client = reqwest::Client::builder()
-        .user_agent(concat!("7zplus/", env!("CARGO_PKG_VERSION")))
+        .user_agent(concat!("p7z/", env!("CARGO_PKG_VERSION")))
         .https_only(true)
         .connect_timeout(Duration::from_secs(10))
         .read_timeout(Duration::from_secs(30))

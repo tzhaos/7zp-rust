@@ -10,7 +10,7 @@ fn report(error: impl std::fmt::Display) {
     let details = format!("{error:#}");
     tracing::error!(error = %details, "Application error");
     rfd::MessageDialog::new()
-        .set_title("7zplus")
+        .set_title("Plus7z")
         .set_description(details)
         .set_level(rfd::MessageLevel::Error)
         .show();
@@ -18,7 +18,7 @@ fn report(error: impl std::fmt::Display) {
 
 fn main() {
     let log_guard = match zip_core::settings::directory()
-        .and_then(|directory| cardo_runtime::diagnostics::init(&directory.join("logs"), "7zplus"))
+        .and_then(|directory| cardo_runtime::diagnostics::init(&directory.join("logs"), "Plus7z"))
     {
         Ok(guard) => guard,
         Err(error) => {
@@ -58,7 +58,7 @@ fn main() {
                     let dll = args
                         .get(1)
                         .map(std::path::PathBuf::from)
-                        .unwrap_or_else(|| path.with_file_name("7-zip-plus.dll"));
+                        .unwrap_or_else(|| path.with_file_name("p7z-explorer.dll"));
                     platform::register(&path, &dll)
                 })
         } else if args[0] == "--prepare-install" {
@@ -136,7 +136,7 @@ fn main() {
                     window_min_size: Some(size(px(800.), px(460.))),
                     inactive_frame_interval: None,
                     titlebar: Some(TitlebarOptions {
-                        title: Some("7zplus".into()),
+                        title: Some("Plus7z".into()),
                         appears_transparent: true,
                         ..Default::default()
                     }),

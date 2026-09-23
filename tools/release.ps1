@@ -6,7 +6,7 @@ param(
 
 $ErrorActionPreference = 'Stop'
 $projectRoot = Split-Path -Parent $PSScriptRoot
-$names = @('7zplus-amd64-installer.exe', '7zplus-amd64-portable.zip')
+$names = @('p7z-amd64-installer.exe', 'p7z-amd64-portable.zip')
 
 function Confirm-ReleaseAssets([string]$Directory) {
     $checksums = @(Get-Content -LiteralPath (Join-Path $Directory 'SHA256SUMS.txt'))
@@ -22,7 +22,7 @@ function Confirm-RemoteAssets([switch]$MatchLocal) {
     $download = Join-Path $cacheRoot ([guid]::NewGuid().ToString('N'))
     New-Item -ItemType Directory -Force -Path $download | Out-Null
     try {
-        & gh release download $Tag --dir $download --pattern '7zplus-amd64-installer.exe' --pattern '7zplus-amd64-portable.zip' --pattern 'SHA256SUMS.txt'
+        & gh release download $Tag --dir $download --pattern 'p7z-amd64-installer.exe' --pattern 'p7z-amd64-portable.zip' --pattern 'SHA256SUMS.txt'
         if ($LASTEXITCODE -ne 0) { throw 'Cannot download release assets for verification' }
         Confirm-ReleaseAssets $download
         if ($MatchLocal -and (Get-FileHash -LiteralPath (Join-Path $download 'SHA256SUMS.txt')).Hash -ne (Get-FileHash -LiteralPath 'dist/SHA256SUMS.txt').Hash) {
@@ -69,7 +69,7 @@ try {
     else {
         $notes = Join-Path $projectRoot ".github/release-notes/$Tag.md"
         $noteArgs = if (Test-Path -LiteralPath $notes) { @('--notes-file', $notes) } else { @('--generate-notes') }
-        & gh release create $Tag --verify-tag --draft --title "7zplus $Tag" @noteArgs
+        & gh release create $Tag --verify-tag --draft --title "Plus7z $Tag" @noteArgs
         if ($LASTEXITCODE -ne 0) { throw 'Cannot create draft release' }
     }
     & gh release upload $Tag @assets --clobber

@@ -20,7 +20,7 @@ use windows_sys::Win32::{
 
 pub fn instance(args: &[String]) -> Result<Option<System>> {
     let user = std::env::var("USERNAME").context(tr("windows-user-unavailable"))?;
-    let name = format!(r"\\.\pipe\7zplus-rust-{user}");
+    let name = format!(r"\\.\pipe\p7z-{user}");
     let wide: Vec<u16> = name.encode_utf16().chain(Some(0)).collect();
     // The first pipe instance owns the application session; subsequent launches forward arguments.
     let handle = unsafe {

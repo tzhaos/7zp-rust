@@ -425,7 +425,7 @@ fn open_entry(
         PathBuf::from(&preferences.temp_directory)
     };
     let directory = tempfile::Builder::new()
-        .prefix("7zplus-open-")
+        .prefix("p7z-open-")
         .tempdir_in(root)?;
     let extension = Path::new(path)
         .extension()
