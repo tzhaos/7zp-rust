@@ -202,7 +202,13 @@ Section
         CreateShortcut "$DESKTOP\7zplus.lnk" "$INSTDIR\7zplus.exe"
         CreateShortcut "$SMPROGRAMS\7zplus.lnk" "$INSTDIR\7zplus.exe"
     ${EndIf}
+    ClearErrors
     WriteUninstaller "$INSTDIR\Uninstall.exe"
+    ${If} ${Errors}
+        SetErrorLevel 1
+        Abort
+    ${EndIf}
+    ClearErrors
     WriteRegStr HKCU "Software\7zplus.Rust" "InstallDir" "$INSTDIR"
     WriteRegDWORD HKCU "Software\7zplus.Rust" "Language" $LANGUAGE
     WriteRegStr HKCU "Software\Microsoft\Windows\CurrentVersion\Uninstall\7zplus.Rust" "DisplayName" "7zplus"

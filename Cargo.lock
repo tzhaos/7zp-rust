@@ -826,7 +826,7 @@ dependencies = [
 
 [[package]]
 name = "cardo-7zp-app"
-version = "0.2.1"
+version = "0.2.2"
 dependencies = [
  "anyhow",
  "cardo-7zp-core",
@@ -841,14 +841,14 @@ dependencies = [
 
 [[package]]
 name = "cardo-7zp-commands"
-version = "0.2.1"
+version = "0.2.2"
 dependencies = [
  "serde",
 ]
 
 [[package]]
 name = "cardo-7zp-core"
-version = "0.2.1"
+version = "0.2.2"
 dependencies = [
  "anyhow",
  "cardo-runtime",
@@ -859,7 +859,7 @@ dependencies = [
 
 [[package]]
 name = "cardo-7zp-engine"
-version = "0.2.1"
+version = "0.2.2"
 dependencies = [
  "anyhow",
  "cardo-7zp-commands",
@@ -871,7 +871,7 @@ dependencies = [
 
 [[package]]
 name = "cardo-7zp-explorer"
-version = "0.2.1"
+version = "0.2.2"
 dependencies = [
  "cardo-7zp-commands",
  "serde_json",
@@ -883,7 +883,7 @@ dependencies = [
 
 [[package]]
 name = "cardo-7zp-platform"
-version = "0.2.1"
+version = "0.2.2"
 dependencies = [
  "anyhow",
  "cardo-7zp-commands",
@@ -901,7 +901,7 @@ dependencies = [
 
 [[package]]
 name = "cardo-7zp-requests"
-version = "0.2.1"
+version = "0.2.2"
 dependencies = [
  "anyhow",
  "cardo-7zp-commands",
@@ -919,7 +919,7 @@ dependencies = [
 
 [[package]]
 name = "cardo-7zp-ui"
-version = "0.2.1"
+version = "0.2.2"
 dependencies = [
  "anyhow",
  "cardo-7zp-commands",
@@ -941,7 +941,7 @@ dependencies = [
 
 [[package]]
 name = "cardo-runtime"
-version = "0.2.1"
+version = "0.2.2"
 dependencies = [
  "anyhow",
  "dirs 6.0.0",
@@ -959,7 +959,7 @@ dependencies = [
 
 [[package]]
 name = "cardo-ui"
-version = "0.2.1"
+version = "0.2.2"
 dependencies = [
  "gpui-kit",
  "tracing",
