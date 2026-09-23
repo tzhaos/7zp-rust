@@ -26,6 +26,8 @@ const FILES: &[&str] = &[
     "7-zip-plus.dll",
     "vcruntime140.dll",
     "Fluent-LICENSE.txt",
+    "LICENSE.txt",
+    "Cardo-LICENSE.txt",
     "runtime/7zip/7z.dll",
     "runtime/7zip/7z.exe",
     "runtime/7zip/7z.sfx",

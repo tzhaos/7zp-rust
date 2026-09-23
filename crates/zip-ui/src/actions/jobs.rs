@@ -98,15 +98,15 @@ impl Workspace {
                             } else if close_archive {
                                 this.pending_close_archive = true;
                             }
-                            this.completion = Some((
-                                if warning {
-                                    tr("extract-warning").into()
-                                } else {
-                                    tr("extract-finished").into()
-                                },
-                                path,
-                            ));
-                            if let Some(message) = open_error { this.notify_message(message); } else { this.message = None; }
+                            if warning || open_error.is_some() {
+                                this.completion = Some((
+                                    tr(if warning { "extract-warning" } else { "extract-finished" }).into(),
+                                    path,
+                                ));
+                                if let Some(message) = open_error { this.notify_message(message); } else { this.message = None; }
+                            } else {
+                                this.notify_message(tr("extract-finished").into());
+                            }
                         }
                     }
                     Ok(Outcome::Message(message)) => this.notify_message(message),

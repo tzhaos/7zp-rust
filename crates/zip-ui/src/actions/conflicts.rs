@@ -52,11 +52,8 @@ impl Workspace {
         } else {
             self.tasks.set_close_after(false);
             self.tasks.set_close_archive(false);
-            self.show_dialog(
-                tr("extract-options"),
-                Modal::ExtractionResult(tr("extract-conflict-skipped").into()),
-                cx,
-            );
+            self.notify_message(tr("extract-conflict-skipped").into());
+            cx.notify();
         }
     }
 }

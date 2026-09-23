@@ -283,6 +283,7 @@ impl Render for Workspace {
                     )
                     )
                     .when_some(self.settings_page, |panel, page| panel.child(self.settings_view(page, cx)))
+                    .when_some(self.notification_stack(cx), |panel, stack| panel.child(stack))
                     .children(modal),
             )
             .when(self.dragging, |el| {
@@ -302,7 +303,6 @@ impl Render for Workspace {
                         .child(tr("drop-prompt")),
                 )
             })
-            .when_some(self.notification_stack(cx), |el, stack| el.child(stack))
             .children(self.history_dropdown(window, cx))
             .child(self.menu_host.clone())
             .children(Root::render_dialog_layer(window, cx))
@@ -323,12 +323,10 @@ impl Workspace {
         Some(
             v_flex()
                 .absolute()
-                .top_0()
-                .bottom_0()
+                .bottom(px(12.))
                 .left(px(12.))
                 .right(px(12.))
                 .items_center()
-                .justify_center()
                 .child(
                     notification(
                         "message-notification",
