@@ -20,7 +20,7 @@
 | `p7z-amd64-installer.exe` | 当前用户安装，提供资源管理器集成 |
 | `p7z-amd64-portable.zip` | 完整解压文件夹后运行 `p7z.exe` |
 
-发行包附带 `SHA256SUMS.txt`。两种版本均可在**关于**页检查更新，数据保存在 `%LOCALAPPDATA%\p7z`：TOML 保存偏好，SQLite 保存历史与运行状态。详见[存储约定](cardo/docs/storage.md)。
+发行包附带 `SHA256SUMS.txt`。两种版本均可在**关于**页检查更新，数据保存在 `%LOCALAPPDATA%\p7z`：TOML 保存偏好，SQLite 保存历史与运行状态。详见[设置与诊断](docs/reference.zh.md#设置与诊断)。
 
 ## 功能
 

@@ -20,7 +20,7 @@ Choose an **[installer or portable ZIP](https://github.com/tzhaos/7zp-rust/relea
 | `p7z-amd64-installer.exe` | Per-user installation with Explorer integration |
 | `p7z-amd64-portable.zip` | Extract the whole folder and run `p7z.exe` |
 
-Releases include `SHA256SUMS.txt`. Installed and portable copies can check for updates in **About**. Configuration and runtime data live in `%LOCALAPPDATA%\p7z`: TOML for preferences, SQLite for history and runtime state. See [storage contracts](cardo/docs/storage.md).
+Releases include `SHA256SUMS.txt`. Installed and portable copies can check for updates in **About**. Configuration and runtime data live in `%LOCALAPPDATA%\p7z`: TOML for preferences, SQLite for history and runtime state. See [settings and diagnostics](docs/reference.md#settings-and-diagnostics).
 
 ## Features
 
