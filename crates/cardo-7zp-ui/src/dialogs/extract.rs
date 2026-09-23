@@ -53,7 +53,7 @@ impl Workspace {
         selected: &bool,
         destination: &usize,
         open_after: &bool,
-        _window: &mut Window,
+        window: &mut Window,
         cx: &mut Context<Self>,
     ) -> AnyElement {
         let name = self
@@ -110,8 +110,16 @@ impl Workspace {
             .child(
                 panel_body("extract-options-body")
                     .child(
-                        panel_notice("FolderZip", name, crate::theme::palette(cx).accent)
-                            .font_weight(FontWeight::SEMIBOLD),
+                        gpui_kit::component::h_flex()
+                            .min_w_0()
+                            .gap(px(12.))
+                            .child(artwork(ToolIcon::Browser, window, cx))
+                            .child(
+                                body_text(name)
+                                    .flex_1()
+                                    .text_size(px(16.))
+                                    .font_weight(FontWeight::SEMIBOLD),
+                            ),
                     )
                     .child(settings_group(
                         [

@@ -8,10 +8,11 @@ pub use cardo_ui::theme::Palette;
 use cardo_ui::theme::ThemeStyle;
 use gpui_kit::{component::ThemeMode, *};
 
-pub const THEMES: [ThemeId; 2] = [ThemeId::Light, ThemeId::OneDark];
+pub const THEMES: [ThemeId; 3] = [ThemeId::System, ThemeId::Light, ThemeId::OneDark];
 
 struct ThemeState {
     id: ThemeId,
+    resolved: ThemeMode,
     appearance: cardo_7zp_core::settings::Appearance,
     font: FontStack,
 }
@@ -19,21 +20,26 @@ impl Global for ThemeState {}
 
 pub fn label(id: ThemeId) -> &'static str {
     tr(match id {
+        ThemeId::System => "theme-system",
         ThemeId::Light => "theme-light",
         ThemeId::OneDark => "theme-one-dark",
     })
 }
 
-fn mode(id: ThemeId) -> ThemeMode {
+fn mode(id: ThemeId, cx: &App) -> ThemeMode {
     match id {
+        ThemeId::System => match cx.window_appearance() {
+            WindowAppearance::Dark | WindowAppearance::VibrantDark => ThemeMode::Dark,
+            _ => ThemeMode::Light,
+        },
         ThemeId::Light => ThemeMode::Light,
         ThemeId::OneDark => ThemeMode::Dark,
     }
 }
 
-fn palette_for(id: ThemeId) -> Palette {
+fn palette_for(id: ThemeMode) -> Palette {
     match id {
-        ThemeId::Light => Palette {
+        ThemeMode::Light => Palette {
             surface: 0xffffff,
             panel: 0xf0f1f3,
             title: 0xf5f6f8,
@@ -49,7 +55,7 @@ fn palette_for(id: ThemeId) -> Palette {
             success: 0x267052,
             danger: 0xb42318,
         },
-        ThemeId::OneDark => Palette {
+        ThemeMode::Dark => Palette {
             surface: 0x1f1f1f,
             panel: 0x141414,
             title: 0x141414,
@@ -80,7 +86,7 @@ pub fn ui_font_size(cx: &App) -> Pixels {
 }
 
 pub fn palette(cx: &App) -> Palette {
-    palette_for(cx.global::<ThemeState>().id)
+    palette_for(cx.global::<ThemeState>().resolved)
 }
 
 pub fn interface_font(cx: &App) -> Font {
@@ -115,14 +121,16 @@ pub fn apply(
 ) -> Result<()> {
     let font = resolve_font(&appearance.font_family, cx)?;
     let primary = font.family();
+    let resolved = mode(id, cx);
     cx.set_global(ThemeState {
         id,
+        resolved,
         appearance: appearance.clone(),
         font,
     });
     ThemeStyle {
-        mode: mode(id),
-        palette: palette_for(id),
+        mode: resolved,
+        palette: palette_for(resolved),
         font_family: primary,
         // List text at 12px corresponds to the component library's 16px rem base.
         font_size: px(appearance.font_size * (16. / 12.)),

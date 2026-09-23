@@ -23,11 +23,20 @@ impl Workspace {
 
     pub(super) fn confirm_delete_view(&self, count: usize, cx: &mut Context<Self>) -> AnyElement {
         panel_layout(cx)
-            .child(panel_body("confirm-delete-body").child(panel_notice(
-                "Delete",
-                tf("archive-delete-confirm", &[("count", count.into())]),
-                crate::theme::palette(cx).danger,
-            )))
+            .child(
+                panel_body("confirm-delete-body")
+                    .justify_center()
+                    .items_center()
+                    .gap(px(20.))
+                    .child(icon("Delete", 48.).text_color(rgb(crate::theme::palette(cx).danger)))
+                    .child(
+                        body_text(tf("archive-delete-confirm", &[("count", count.into())]))
+                            .max_w(px(480.))
+                            .text_center()
+                            .text_size(px(18.))
+                            .font_weight(FontWeight::SEMIBOLD),
+                    ),
+            )
             .child(
                 panel_actions(cx)
                     .child(

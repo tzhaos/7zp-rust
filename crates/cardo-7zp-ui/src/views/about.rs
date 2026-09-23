@@ -76,7 +76,7 @@ impl Workspace {
             settings_detail(tr("settings-update-status"), &description, actions, cx)
                 .into_any_element(),
         ];
-        let mut body = settings_content("about-body")
+        let mut body = settings_frame()
             .child(settings_group(
                 [
                     ("name", "7zplus"),
@@ -104,6 +104,8 @@ impl Workspace {
                 cx,
             ));
         }
-        settings_page(cx).child(body).into_any_element()
+        settings_page(cx)
+            .child(settings_content("about-body", body))
+            .into_any_element()
     }
 }

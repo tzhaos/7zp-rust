@@ -333,6 +333,7 @@ impl RenderOnce for SettingsSwitch {
                     .disabled(self.disabled)
                     .w(px(40.))
                     .h(px(24.))
+                    .relative()
                     .p(px(2.))
                     .rounded(px(12.))
                     .bg(if self.disabled {
@@ -342,9 +343,11 @@ impl RenderOnce for SettingsSwitch {
                     })
                     .child(
                         SwitchThumb::new(self.checked)
+                            .absolute()
+                            .top(px(2.))
                             .size(px(20.))
                             .rounded(px(10.))
-                            .left(offset)
+                            .left(px(2.) + offset)
                             .bg(cx.theme().switch_thumb),
                     ),
             )

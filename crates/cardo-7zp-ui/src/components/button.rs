@@ -16,6 +16,13 @@ pub fn subtle_variant(cx: &App) -> ButtonCustomVariant {
         .active(rgb(p.selected).into())
 }
 
+pub fn header_variant(cx: &App) -> ButtonCustomVariant {
+    let p = crate::theme::palette(cx);
+    ButtonCustomVariant::new(cx)
+        .hover(rgb(p.border).into())
+        .active(rgb(p.selected).into())
+}
+
 pub fn tool(
     id: impl Into<ElementId>,
     name: ToolIcon,

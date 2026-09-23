@@ -45,11 +45,11 @@ impl Render for Workspace {
                     cx.notify();
                 }),
             )
-            .on_mouse_move(cx.listener(|this, event: &MouseMoveEvent, _, cx| {
+            .on_mouse_move(cx.listener(|this, event: &MouseMoveEvent, window, cx| {
                 if let Some((start, offset)) = this.notification_drag {
                     if event.pressed_button == Some(MouseButton::Left) {
                         let bounds = this.notification_bounds.get();
-                        let panel = this.content_bounds.get();
+                        let panel = Bounds::new(Point::default(), window.viewport_size());
                         let base = bounds.origin - this.notification_offset;
                         let next = offset + event.position - start;
                         this.notification_offset = point(
@@ -263,7 +263,6 @@ impl Render for Workspace {
                     )
                     )
                     .when_some(self.settings_page, |panel, page| panel.child(self.settings_view(page, cx)))
-                    .when_some(self.notification_stack(cx), |el, stack| el.child(stack))
                     .children(modal),
             )
             .when(self.dragging, |el| {
@@ -283,6 +282,7 @@ impl Render for Workspace {
                         .child(tr("drop-prompt")),
                 )
             })
+            .when_some(self.notification_stack(cx), |el, stack| el.child(stack))
             .children(self.history_dropdown(window, cx))
             .child(self.menu_host.clone())
             .children(Root::render_dialog_layer(window, cx))
@@ -303,10 +303,12 @@ impl Workspace {
         Some(
             v_flex()
                 .absolute()
-                .bottom(px(16.))
+                .top_0()
+                .bottom_0()
                 .left(px(12.))
                 .right(px(12.))
                 .items_center()
+                .justify_center()
                 .child(
                     notification(
                         "message-notification",

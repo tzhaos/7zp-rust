@@ -17,7 +17,10 @@ pub(crate) use state::{DialogState, Modal};
 
 use crate::*;
 use cardo_7zp_core::i18n::tr;
-use gpui_kit::{component::Disableable, prelude::FluentBuilder};
+use gpui_kit::{
+    component::{Disableable, button::ButtonVariants},
+    prelude::FluentBuilder,
+};
 
 impl Workspace {
     pub(crate) fn show_dialog(
@@ -47,6 +50,7 @@ impl Workspace {
         panel_header(self.dialogs.title().to_owned(), drag, cx).when(dismissible, |el| {
             el.child(
                 icon_button(id, "Dismiss", tr("dialog-close"), false, cx)
+                    .custom(header_variant(cx))
                     .on_click(cx.listener(|this, _, _, cx| this.close_modal(cx))),
             )
         })

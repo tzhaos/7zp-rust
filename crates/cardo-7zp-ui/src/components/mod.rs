@@ -10,7 +10,7 @@ mod settings;
 mod tooltip;
 
 pub(super) use button::{
-    checkbox, command, icon_button, primary, subtle_variant, text_input, tool,
+    checkbox, command, header_variant, icon_button, primary, subtle_variant, text_input, tool,
 };
 pub(super) use cardo_ui::settings::{
     SettingsSwitch, action as settings_action, choice as settings_choice, input as settings_input,
@@ -30,7 +30,7 @@ pub(super) use panel::{
     panel_primary, panel_property, panel_surface, popup_surface, window_grip,
 };
 pub(super) use settings::{
-    settings_content, settings_detail, settings_group, settings_page, settings_row,
+    settings_content, settings_detail, settings_frame, settings_group, settings_page, settings_row,
     settings_section,
 };
 pub(super) use tooltip::bubble_tooltip;

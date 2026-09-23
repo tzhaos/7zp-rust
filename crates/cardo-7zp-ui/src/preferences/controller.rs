@@ -85,10 +85,11 @@ impl PreferencesForm {
                             let _ = handle.update(cx, |_, window, cx| {
                                 let _ = owner.update(cx, |owner, cx| {
                                     owner.apply_preferences(value, cx);
+                                    let appearance_changed = owner.appearance != appearance;
                                     owner.appearance = appearance;
                                     if theme != crate::theme::current(cx) {
                                         owner.change_theme(theme, window, cx);
-                                    } else {
+                                    } else if appearance_changed {
                                         if let Err(error) = crate::theme::apply(
                                             crate::theme::current(cx),
                                             &owner.appearance,

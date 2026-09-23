@@ -13,10 +13,21 @@ pub fn settings_page(cx: &App) -> Div {
         .line_height(relative(1.5))
 }
 
-pub fn settings_content(id: &'static str) -> Scrollable<Stateful<Div>> {
-    super::panel_body(id)
-        .p(px(metrics::CONTENT_PADDING))
+pub fn settings_frame() -> Div {
+    v_flex()
+        .w_full()
+        .min_w(px(metrics::CONTENT_MIN_WIDTH))
+        .max_w(px(metrics::CONTENT_MAX_WIDTH))
+        .mx_auto()
+        .flex_shrink_0()
         .gap(px(metrics::SECTION_GAP))
+}
+
+pub fn settings_content(id: &'static str, content: Div) -> Scrollable<Stateful<Div>> {
+    super::panel_body(id)
+        .py(px(metrics::CONTENT_PADDING))
+        .px(px(metrics::OUTER_PADDING))
+        .child(content)
 }
 
 pub fn settings_row(label: &str, control: impl IntoElement, cx: &App) -> Div {

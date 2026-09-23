@@ -78,16 +78,19 @@ impl Workspace {
         };
         v_flex()
             .size_full()
-            .pl(px(metrics::NAV_GUTTER))
             .min_h_0()
             .min_w_0()
             .child(
                 div()
                     .flex_shrink_0()
-                    .px(px(metrics::CONTENT_PADDING))
+                    .px(px(metrics::OUTER_PADDING))
                     .pt(px(20.))
                     .child(
                         h_flex()
+                            .w_full()
+                            .min_w(px(metrics::CONTENT_MIN_WIDTH))
+                            .max_w(px(metrics::CONTENT_MAX_WIDTH))
+                            .mx_auto()
                             .relative()
                             .min_h(px(ICON_BUTTON_SIZE))
                             .child(

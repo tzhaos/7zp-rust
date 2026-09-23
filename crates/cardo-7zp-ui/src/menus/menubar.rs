@@ -38,7 +38,7 @@ impl Workspace {
                     command(label, tr(label))
                         .h(px(28.))
                         .px(px(8.))
-                        .custom(subtle_variant(cx))
+                        .custom(header_variant(cx))
                         .border_0()
                         .on_prepaint(move |rect, _, _| measured.set(rect))
                         .on_click({
@@ -67,6 +67,7 @@ pub(crate) fn menu_items(group: MenuGroup) -> &'static [(&'static str, &'static 
             ("browser-open", "Enter", OpenItem),
             ("file-open-inside", "Ctrl+PgDn", OpenInside),
             ("file-open-outside", "Shift+Enter", OpenOutside),
+            ("file-properties", "Alt+Enter", Properties),
             ("", "", Open),
             ("archive-close", "", Close),
             ("", "", Open),
@@ -83,10 +84,7 @@ pub(crate) fn menu_items(group: MenuGroup) -> &'static [(&'static str, &'static 
             ("archive-move", "F6", MoveTo),
             ("archive-delete", "Del", Delete),
         ],
-        MenuGroup::View => &[
-            ("menu-refresh", "F5", Refresh),
-            ("properties", "Alt+Enter", Properties),
-        ],
+        MenuGroup::View => &[("menu-refresh", "F5", Refresh)],
         MenuGroup::Archive => &[
             ("archive-add", "Alt+A", Add),
             ("archive-add-folder", "", AddFolder),

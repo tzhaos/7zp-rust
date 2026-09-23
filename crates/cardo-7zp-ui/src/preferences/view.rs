@@ -31,10 +31,11 @@ impl Render for PreferencesForm {
         }
         settings_page(cx)
             .child(
-                settings_content("preferences-content")
-                    .id(("settings-content", self.tab.order() as usize))
-                    .child(content)
-                    .children(error),
+                settings_content(
+                    "preferences-content",
+                    settings_frame().child(content).children(error),
+                )
+                .id(("settings-content", self.tab.order() as usize)),
             )
             .children(self.association_dropdown(window, cx))
     }

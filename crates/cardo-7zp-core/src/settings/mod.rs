@@ -56,6 +56,7 @@ pub fn save_preferences(preferences: &Preferences) -> Result<()> {
 #[derive(Clone, Copy, Default, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(rename_all = "kebab-case")]
 pub enum ThemeId {
+    System,
     #[default]
     Light,
     OneDark,
@@ -90,7 +91,7 @@ pub fn prepare_temp_directory(path: &str) -> Result<()> {
     Ok(())
 }
 
-#[derive(Clone, Serialize, Deserialize)]
+#[derive(Clone, PartialEq, Serialize, Deserialize)]
 #[serde(default)]
 pub struct Appearance {
     pub font_family: String,

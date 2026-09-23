@@ -109,6 +109,7 @@ pub struct Workspace {
     _search_subscription: Subscription,
     _address_subscription: Subscription,
     _activation_subscription: Subscription,
+    _appearance_subscription: Subscription,
 }
 
 impl Workspace {
@@ -168,6 +169,15 @@ impl Workspace {
                 this.reload_history(cx);
             }
         });
+        let appearance_subscription = cx.observe_window_appearance(window, |this, window, cx| {
+            if theme::current(cx) == theme::ThemeId::System {
+                if let Err(error) = theme::apply(theme::ThemeId::System, &this.appearance, Some(window), cx) {
+                    tracing::error!(error = %format!("{error:#}"), "Cannot apply system appearance");
+                    this.notify_message(error.to_string());
+                }
+                cx.refresh_windows();
+            }
+        });
         let mut workspace = Self {
             menu_host: cardo_ui::menu::MenuHost::install(window, cx, || tr("menu-more").into()),
             main_window: window.window_handle(),
@@ -217,6 +227,7 @@ impl Workspace {
             _search_subscription: subscription,
             _address_subscription: address_subscription,
             _activation_subscription: activation_subscription,
+            _appearance_subscription: appearance_subscription,
         };
         let check_updates = startup.preferences.check_updates;
         workspace.apply_preferences(startup.preferences, cx);
