@@ -8,7 +8,7 @@ async function main() {
   const React = fromPrototype('react');
   const { renderToStaticMarkup } = fromPrototype('react-dom/server');
   const icons = fromPrototype('@fluentui/react-icons');
-  const assets = path.resolve(__dirname, '../assets/glyphs');
+  const assets = path.resolve(__dirname, '../assets/fluent');
   const sizes = {
     FolderOpen: 24,
     ArrowDownload: 24,

@@ -6,15 +6,15 @@ The application bundles the official 7-Zip 26.03 Windows binaries, pinned in `to
 
 Upstream: https://github.com/ip7z/7zip
 
-## Small UI glyphs
+## Microsoft Fluent UI icons
 
-The SVG icons in `assets/glyphs` come from `@fluentui/react-icons` 2.0.339, copyright Microsoft Corporation, under the MIT license. Regular exports were extracted from the original application prototype through React static rendering with their paths and view boxes preserved. The asset set also includes Filled variants imported by `tools/import-filled-icons.cjs`. Small UI glyphs receive their colors from the theme; file listings load Windows system icons. `HomeRegular.svg` uses the same package's `lib/atoms/svg/home.js` export.
+The SVG icons in `assets/fluent` come from `@fluentui/react-icons` 2.0.339, copyright Microsoft Corporation, under the MIT license. Regular exports were extracted from the original application prototype through React static rendering with their paths and view boxes preserved. The asset set also includes Filled variants imported by `tools/import-filled-icons.cjs`. Small UI glyphs receive their colors from the theme; file listings load Windows system icons. `HomeRegular.svg` uses the same package's `lib/atoms/svg/home.js` export.
 
-The license is retained in `assets/glyphs/LICENSE` and installed as `Glyphs-LICENSE.txt`.
+The license is retained in `assets/fluent/LICENSE` and installed as `Fluent-LICENSE.txt`.
 
 Upstream: https://github.com/microsoft/fluentui-system-icons
 
-`assets/glyphs/ArrowClockwiseRegular.svg` was imported on 2026-09-23 from the same MIT-licensed upstream repository, `assets/Arrow Clockwise/SVG/ic_fluent_arrow_clockwise_20_regular.svg`, to restore the path-bar refresh glyph.
+`assets/fluent/ArrowClockwiseRegular.svg` was imported on 2026-09-23 from the same MIT-licensed upstream repository, `assets/Arrow Clockwise/SVG/ic_fluent_arrow_clockwise_20_regular.svg`, to restore the path-bar refresh glyph.
 
 ## Project Artwork
 

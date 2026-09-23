@@ -3,8 +3,8 @@ use rust_embed::RustEmbed;
 use std::borrow::Cow;
 
 #[derive(RustEmbed)]
-#[folder = "../../assets/glyphs"]
-struct GlyphAssets;
+#[folder = "../../assets/fluent"]
+struct FluentAssets;
 
 #[derive(RustEmbed)]
 #[folder = "../../assets/brand"]
@@ -23,8 +23,8 @@ impl AssetSource for AppAssets {
         if let Some(name) = path.strip_prefix("brand/") {
             return Ok(BrandAssets::get(name).map(|file| file.data));
         }
-        if let Some(name) = path.strip_prefix("glyphs/") {
-            return Ok(GlyphAssets::get(name).map(|file| file.data));
+        if let Some(name) = path.strip_prefix("fluent/") {
+            return Ok(FluentAssets::get(name).map(|file| file.data));
         }
         Assets.load(path)
     }
@@ -39,9 +39,9 @@ impl AssetSource for AppAssets {
                 .map(|name| format!("brand/{name}").into())
                 .collect());
         }
-        if path.starts_with("glyphs") {
-            return Ok(GlyphAssets::iter()
-                .map(|name| format!("glyphs/{name}").into())
+        if path.starts_with("fluent") {
+            return Ok(FluentAssets::iter()
+                .map(|name| format!("fluent/{name}").into())
                 .collect());
         }
         Assets.list(path)

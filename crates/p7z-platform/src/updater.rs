@@ -25,7 +25,7 @@ use windows_sys::Win32::{
 const FILES: &[&str] = &[
     "p7z-explorer.dll",
     "vcruntime140.dll",
-    "Glyphs-LICENSE.txt",
+    "Fluent-LICENSE.txt",
     "LICENSE.txt",
     "Cardo-LICENSE.txt",
     "SQLite-binding-LICENSE.txt",

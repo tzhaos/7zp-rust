@@ -183,7 +183,7 @@ Section
     File "${PROJECT_ROOT}\bin\p7z-explorer.dll"
     SetOverwrite on
     SetOutPath "$INSTDIR"
-    File /oname=Glyphs-LICENSE.txt "${PROJECT_ROOT}\assets\glyphs\LICENSE"
+    File /oname=Fluent-LICENSE.txt "${PROJECT_ROOT}\assets\fluent\LICENSE"
     File /oname=LICENSE.txt "${PROJECT_ROOT}\LICENSE"
     File /oname=Cardo-LICENSE.txt "${PROJECT_ROOT}\cardo\LICENSE"
     File /oname=SQLite-binding-LICENSE.txt "${PROJECT_ROOT}\cardo\licenses\rusqlite.txt"
@@ -273,7 +273,7 @@ Section "Uninstall"
     ${EndIf}
     Delete "$INSTDIR\p7z.exe"
     Delete "$INSTDIR\vcruntime140.dll"
-    Delete "$INSTDIR\Glyphs-LICENSE.txt"
+    Delete "$INSTDIR\Fluent-LICENSE.txt"
     Delete "$INSTDIR\LICENSE.txt"
     Delete "$INSTDIR\Cardo-LICENSE.txt"
     Delete "$INSTDIR\SQLite-binding-LICENSE.txt"

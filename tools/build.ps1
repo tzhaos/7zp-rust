@@ -27,7 +27,7 @@ try {
     if ($LASTEXITCODE -ne 0) { throw "Cargo build failed: $LASTEXITCODE" }
     Copy-Item -LiteralPath 'target/x86_64-pc-windows-msvc/release/p7z.exe' -Destination 'bin/p7z.exe' -Force
     Copy-Item -LiteralPath 'target/x86_64-pc-windows-msvc/release/p7z_explorer.dll' -Destination 'bin/p7z-explorer.dll' -Force
-    Copy-Item -LiteralPath 'assets/glyphs/LICENSE' -Destination 'bin/Glyphs-LICENSE.txt' -Force
+    Copy-Item -LiteralPath 'assets/fluent/LICENSE' -Destination 'bin/Fluent-LICENSE.txt' -Force
     Copy-Item -LiteralPath 'LICENSE' -Destination 'bin/LICENSE.txt' -Force
     Copy-Item -LiteralPath 'cardo/LICENSE' -Destination 'bin/Cardo-LICENSE.txt' -Force
     Copy-Item -LiteralPath 'cardo/licenses/rusqlite.txt' -Destination 'bin/SQLite-binding-LICENSE.txt' -Force
@@ -41,7 +41,7 @@ try {
         $portableRoot = Join-Path $staging 'p7z'
         New-Item -ItemType Directory -Force -Path (Join-Path $portableRoot 'runtime/7zip') | Out-Null
         try {
-            foreach ($name in @('p7z.exe', 'p7z-explorer.dll', 'vcruntime140.dll', 'LICENSE.txt', 'Cardo-LICENSE.txt', 'Glyphs-LICENSE.txt', 'SQLite-binding-LICENSE.txt')) {
+            foreach ($name in @('p7z.exe', 'p7z-explorer.dll', 'vcruntime140.dll', 'LICENSE.txt', 'Cardo-LICENSE.txt', 'Fluent-LICENSE.txt', 'SQLite-binding-LICENSE.txt')) {
                 Copy-Item -LiteralPath (Join-Path 'bin' $name) -Destination (Join-Path $portableRoot $name)
             }
             $engine = Get-Content -LiteralPath (Join-Path $PSScriptRoot 'engine.lock.json') -Raw | ConvertFrom-Json

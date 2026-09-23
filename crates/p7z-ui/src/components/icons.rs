@@ -6,7 +6,7 @@ const SUPERSAMPLE: u32 = 2;
 
 pub fn icon(name: &str, size: f32) -> Icon {
     Icon::default()
-        .path(format!("glyphs/{name}Regular.svg"))
+        .path(format!("fluent/{name}Regular.svg"))
         .size(px(size))
         .flex_shrink_0()
         .min_w(px(size))
