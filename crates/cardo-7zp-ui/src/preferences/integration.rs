@@ -36,7 +36,6 @@ impl PreferencesForm {
                             tr("settings-associations-note"),
                             settings_choice("association-picker", &summary, cx)
                                 .disabled(busy)
-                                .measure_anchor(bounds)
                                 .on_click(cx.listener(|this, _, window, cx| {
                                     this.association_popup.update(cx, |state, cx| {
                                         if state.is_open() {
@@ -49,7 +48,8 @@ impl PreferencesForm {
                                         this.association_search
                                             .update(cx, |input, cx| input.focus(window, cx));
                                     }
-                                })),
+                                }))
+                                .measure_anchor(bounds),
                             cx,
                         )
                         .into_any_element(),

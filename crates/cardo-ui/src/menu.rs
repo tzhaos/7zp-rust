@@ -1,9 +1,7 @@
 use gpui_kit::base::{Align, Placement, Positioner};
 use gpui_kit::{
     component::{
-        ActiveTheme, Icon, Side,
-        button::Button,
-        h_flex,
+        ActiveTheme, Icon, Side, h_flex,
         menu::{PopupMenu, PopupMenuItem},
         native_menu::NativeMenu,
         v_flex,
@@ -11,7 +9,10 @@ use gpui_kit::{
     prelude::FluentBuilder,
     *,
 };
-use std::{cell::Cell, collections::HashMap, rc::Rc};
+use std::{collections::HashMap, rc::Rc};
+
+mod trigger;
+pub use trigger::{MenuAnchor, MenuTrigger};
 
 type Handler = Rc<dyn Fn(&mut Window, &mut App)>;
 
@@ -462,45 +463,5 @@ impl Menu {
             }
             popup
         })
-    }
-}
-
-pub trait MenuTrigger {
-    fn measure_anchor(self, bounds: Rc<Cell<Bounds<Pixels>>>) -> Self;
-    fn popup_menu(self, build: impl Fn(&mut Window, &mut App) -> Menu + 'static) -> Self;
-    fn choice_menu(self, build: impl Fn(&mut Window, &mut App) -> Menu + 'static) -> Self;
-}
-
-impl MenuTrigger for Button {
-    fn measure_anchor(self, bounds: Rc<Cell<Bounds<Pixels>>>) -> Self {
-        // Button children live inside its padded label; pin measurement to the outer frame.
-        self.relative().child(
-            canvas(move |value, _, _| bounds.set(value), |_, _, _, _| {})
-                .absolute()
-                .inset_0(),
-        )
-    }
-
-    fn choice_menu(self, build: impl Fn(&mut Window, &mut App) -> Menu + 'static) -> Self {
-        let bounds = Rc::new(Cell::new(Bounds::<Pixels>::default()));
-        let measured = bounds.clone();
-        self.measure_anchor(measured)
-            .on_click(move |_, window, cx| {
-                let anchor = bounds.get();
-                let mut menu = build(window, cx);
-                menu.width = Some((anchor.size.width + px(40.)).max(px(240.)));
-                menu.align_end = true;
-                menu.show_at(anchor, window, cx);
-            })
-    }
-
-    fn popup_menu(self, build: impl Fn(&mut Window, &mut App) -> Menu + 'static) -> Self {
-        let bounds = Rc::new(Cell::new(Bounds::<Pixels>::default()));
-        let measured = bounds.clone();
-        self.measure_anchor(measured)
-            .on_click(move |_, window, cx| {
-                let anchor = bounds.get();
-                build(window, cx).show_native(point(anchor.left(), anchor.bottom()), window, cx)
-            })
     }
 }
