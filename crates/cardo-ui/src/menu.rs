@@ -149,6 +149,13 @@ impl Render for MenuHost {
         }
         div()
             .absolute()
+            .when(self.menu.is_some(), |layer| {
+                // The popup occludes this layer; background scrolling still reaches
+                // its original scroll owner after dismissing the stale anchor.
+                layer
+                    .inset_0()
+                    .on_scroll_wheel(cx.listener(|this, _, window, cx| this.close(window, cx)))
+            })
             .whitespace_nowrap()
             .text_ellipsis()
             .children(self.menu.as_ref().map(|menu| {

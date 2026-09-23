@@ -169,16 +169,26 @@ impl PreferencesForm {
             )
             .focus_trap("association-focus", &focus);
         Some(
-            deferred(
-                Positioner::side(bounds)
-                    .placement(Placement::Bottom)
-                    .align(Align::End)
-                    .offset(px(6.))
-                    .margin(px(8.))
-                    .child(content),
-            )
-            .with_priority(gpui_kit::base::POPUP_PRIORITY)
-            .into_any_element(),
+            div()
+                .absolute()
+                .inset_0()
+                // The occluding picker keeps its own scrolling; only the page
+                // behind it dismisses the popover, without consuming the wheel.
+                .on_scroll_wheel(cx.listener(|this, _, window, cx| {
+                    this.dismiss_associations(window, cx);
+                }))
+                .child(
+                    deferred(
+                        Positioner::side(bounds)
+                            .placement(Placement::Bottom)
+                            .align(Align::End)
+                            .offset(px(6.))
+                            .margin(px(8.))
+                            .child(content),
+                    )
+                    .with_priority(gpui_kit::base::POPUP_PRIORITY),
+                )
+                .into_any_element(),
         )
     }
 }
