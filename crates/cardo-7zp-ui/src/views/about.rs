@@ -68,7 +68,10 @@ impl Workspace {
         } else {
             actions = actions.child(
                 settings_action("update-retry", tr("update-check"), cx)
-                    .disabled(self.settings_busy(cx) || matches!(status, Some(Status::Checking)))
+                    .disabled(
+                        self.settings_controls_disabled(cx)
+                            || matches!(status, Some(Status::Checking)),
+                    )
                     .on_click(cx.listener(|this, _, _, cx| this.check_update(cx))),
             );
         }

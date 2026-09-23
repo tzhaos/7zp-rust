@@ -42,7 +42,7 @@ impl Workspace {
                 id,
                 icon,
                 tr(label),
-                !self.command_available(action, cx),
+                !self.command_enabled(action, cx),
                 show_labels,
                 window,
                 cx,
@@ -78,7 +78,9 @@ impl Workspace {
                     id,
                     icon,
                     label,
-                    self.tasks.is_busy() || self.dialogs.is_open() || self.settings_busy(cx),
+                    self.tasks.is_busy()
+                        || self.dialogs.is_open()
+                        || self.settings_controls_disabled(cx),
                     true,
                     window,
                     cx,

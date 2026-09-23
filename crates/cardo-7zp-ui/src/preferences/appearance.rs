@@ -3,7 +3,7 @@ use super::*;
 impl PreferencesForm {
     pub(super) fn appearance_page(&self, cx: &mut Context<Self>) -> Div {
         let p = crate::theme::palette(cx);
-        let busy = self.is_busy();
+        let busy = self.controls_disabled();
         let minimum_size = cardo_7zp_core::settings::Appearance::MIN_FONT_SIZE;
         let maximum_size = cardo_7zp_core::settings::Appearance::MAX_FONT_SIZE;
         let size_step = cardo_7zp_core::settings::Appearance::FONT_SIZE_STEP;

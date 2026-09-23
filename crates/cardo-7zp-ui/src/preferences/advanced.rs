@@ -2,7 +2,7 @@ use super::*;
 
 impl PreferencesForm {
     pub(super) fn advanced_page(&self, cx: &mut Context<Self>) -> Div {
-        let busy = self.is_busy();
+        let busy = self.controls_disabled();
         let path = self.temporary.read(cx).value();
         let custom_path = !path.is_empty();
         let path_label = if custom_path {

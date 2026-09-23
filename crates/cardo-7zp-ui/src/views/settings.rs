@@ -109,7 +109,7 @@ impl Workspace {
                                             true,
                                             cx,
                                         )
-                                        .disabled(self.settings_busy(cx))
+                                        .disabled(self.settings_controls_disabled(cx))
                                         .on_click(
                                             cx.listener(|this, _, window, cx| {
                                                 this.show_browser(window, cx)

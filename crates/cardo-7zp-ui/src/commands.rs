@@ -37,7 +37,14 @@ pub(super) enum Command {
 
 impl Workspace {
     pub(crate) fn command_available(&self, command: Command, cx: &App) -> bool {
-        if self.tasks.is_busy() || self.settings_busy(cx) || self.dialogs.is_open() {
+        if self.settings_busy(cx) {
+            return false;
+        }
+        self.command_enabled(command, cx)
+    }
+
+    pub(crate) fn command_enabled(&self, command: Command, cx: &App) -> bool {
+        if self.tasks.is_busy() || self.settings_controls_disabled(cx) || self.dialogs.is_open() {
             return false;
         }
         let view = self.browser.view();

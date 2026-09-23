@@ -74,10 +74,12 @@ impl PreferencesForm {
             cardo_7zp_core::settings::save_appearance(&appearance)?;
             Ok::<_, anyhow::Error>((value, appearance))
         });
+        self.saving = true;
         self.task = Some(cx.spawn(async move |view, cx| {
             let result = job.await;
             let _ = view.update(cx, |this, cx| {
                 this.task = None;
+                this.saving = false;
                 match result {
                     Ok((value, appearance)) => {
                         tracing::info!("Preferences saved");

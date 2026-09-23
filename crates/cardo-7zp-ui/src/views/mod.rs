@@ -38,6 +38,19 @@ impl Render for Workspace {
             .text_size(px(appearance.font_size))
             .whitespace_normal()
             .on_key_down(cx.listener(Self::keyboard))
+            // Autosave blocks new input without flashing every control's disabled colors.
+            .capture_any_mouse_down(cx.listener(|this, _, window, cx| {
+                if this.settings_saving(cx) { window.prevent_default(); cx.stop_propagation(); }
+            }))
+            .capture_any_mouse_up(cx.listener(|this, _, window, cx| {
+                if this.settings_saving(cx) { window.prevent_default(); cx.stop_propagation(); }
+            }))
+            .capture_key_down(cx.listener(|this, _, window, cx| {
+                if this.settings_saving(cx) { window.prevent_default(); cx.stop_propagation(); }
+            }))
+            .capture_key_up(cx.listener(|this, _, window, cx| {
+                if this.settings_saving(cx) { window.prevent_default(); cx.stop_propagation(); }
+            }))
             .on_mouse_down(
                 MouseButton::Left,
                 cx.listener(|this, event: &MouseDownEvent, _, cx| {

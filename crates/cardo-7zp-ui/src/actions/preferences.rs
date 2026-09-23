@@ -123,6 +123,18 @@ impl Workspace {
             .is_some_and(|form| form.read(cx).is_busy())
     }
 
+    pub(crate) fn settings_saving(&self, cx: &App) -> bool {
+        self.settings_form
+            .as_ref()
+            .is_some_and(|form| form.read(cx).is_saving())
+    }
+
+    pub(crate) fn settings_controls_disabled(&self, cx: &App) -> bool {
+        self.settings_form
+            .as_ref()
+            .is_some_and(|form| form.read(cx).controls_disabled())
+    }
+
     pub(crate) fn preferences_category(
         &mut self,
         tab: Tab,

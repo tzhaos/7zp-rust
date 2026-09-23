@@ -2,7 +2,7 @@ use super::*;
 
 impl PreferencesForm {
     pub(super) fn application_page(&self, cx: &mut Context<Self>) -> Div {
-        let busy = self.is_busy();
+        let busy = self.controls_disabled();
         let languages = cx.entity().downgrade();
         let selected_language = self.language;
         v_flex()

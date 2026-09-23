@@ -3,7 +3,7 @@ use gpui_kit::base::{Align, FocusTrapElement, Placement, Positioner};
 
 impl PreferencesForm {
     pub(super) fn integration_page(&self, cx: &mut Context<Self>) -> Div {
-        let busy = self.is_busy();
+        let busy = self.controls_disabled();
         let bounds = self.association_bounds.clone();
         let summary = tf(
             "association-selected-count",

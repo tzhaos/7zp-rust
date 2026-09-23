@@ -82,6 +82,7 @@ pub(super) struct PreferencesForm {
     system_temporary: SharedString,
     patterns: Entity<TextareaState>,
     task: Option<Task<()>>,
+    saving: bool,
     error: Option<String>,
     font_error: Option<String>,
     _watch: Vec<Subscription>,
@@ -96,6 +97,14 @@ impl PreferencesForm {
 
     pub fn is_busy(&self) -> bool {
         self.task.is_some()
+    }
+
+    pub fn controls_disabled(&self) -> bool {
+        self.is_busy() && !self.saving
+    }
+
+    pub fn is_saving(&self) -> bool {
+        self.saving
     }
     pub fn new(
         owner: WeakEntity<Workspace>,
@@ -161,6 +170,7 @@ impl PreferencesForm {
             system_temporary,
             patterns,
             task: None,
+            saving: false,
             error: None,
             font_error: None,
             _watch: watch,
@@ -177,8 +187,11 @@ impl PreferencesForm {
         settings_detail(
             toggle.title(),
             tr(id),
-            SettingsSwitch::new(id, toggle.title(), checked, self.is_busy()).on_click(cx.listener(
-                move |this, checked: &bool, window, cx| {
+            SettingsSwitch::new(id, toggle.title(), checked, self.controls_disabled()).on_click(
+                cx.listener(move |this, checked: &bool, window, cx| {
+                    if this.is_busy() {
+                        return;
+                    }
                     match toggle {
                         Toggle::History => this.value.remember_recent = *checked,
                         Toggle::OpenAfter => this.value.open_after = *checked,
@@ -191,8 +204,8 @@ impl PreferencesForm {
                     }
                     this.save(window, cx);
                     cx.notify();
-                },
-            )),
+                }),
+            ),
             cx,
         )
     }
