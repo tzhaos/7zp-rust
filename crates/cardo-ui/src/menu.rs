@@ -1,4 +1,4 @@
-use gpui_kit::base::{Align, ElementExt as _, Placement, Positioner};
+use gpui_kit::base::{Align, Placement, Positioner};
 use gpui_kit::{
     component::{
         ActiveTheme, Icon, Side,
@@ -466,15 +466,25 @@ impl Menu {
 }
 
 pub trait MenuTrigger {
+    fn measure_anchor(self, bounds: Rc<Cell<Bounds<Pixels>>>) -> Self;
     fn popup_menu(self, build: impl Fn(&mut Window, &mut App) -> Menu + 'static) -> Self;
     fn choice_menu(self, build: impl Fn(&mut Window, &mut App) -> Menu + 'static) -> Self;
 }
 
 impl MenuTrigger for Button {
+    fn measure_anchor(self, bounds: Rc<Cell<Bounds<Pixels>>>) -> Self {
+        // Button children live inside its padded label; pin measurement to the outer frame.
+        self.relative().child(
+            canvas(move |value, _, _| bounds.set(value), |_, _, _, _| {})
+                .absolute()
+                .inset_0(),
+        )
+    }
+
     fn choice_menu(self, build: impl Fn(&mut Window, &mut App) -> Menu + 'static) -> Self {
         let bounds = Rc::new(Cell::new(Bounds::<Pixels>::default()));
         let measured = bounds.clone();
-        self.on_prepaint(move |value, _, _| measured.set(value))
+        self.measure_anchor(measured)
             .on_click(move |_, window, cx| {
                 let anchor = bounds.get();
                 let mut menu = build(window, cx);
@@ -487,7 +497,7 @@ impl MenuTrigger for Button {
     fn popup_menu(self, build: impl Fn(&mut Window, &mut App) -> Menu + 'static) -> Self {
         let bounds = Rc::new(Cell::new(Bounds::<Pixels>::default()));
         let measured = bounds.clone();
-        self.on_prepaint(move |value, _, _| measured.set(value))
+        self.measure_anchor(measured)
             .on_click(move |_, window, cx| {
                 let anchor = bounds.get();
                 build(window, cx).show_native(point(anchor.left(), anchor.bottom()), window, cx)
