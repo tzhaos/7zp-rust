@@ -362,7 +362,6 @@ settings-priority = 以較低 CPU 優先順序執行壓縮與解壓縮工作
 settings-close-after = 一鍵解壓縮成功後結束
 settings-close-archive = 快速解壓縮完成後關閉壓縮檔
 settings-temp = 暫存解壓縮目錄
-settings-temp-default = 系統暫存目錄
 settings-temp-absolute = 請輸入暫存目錄的絕對路徑。
 settings-extract-all = 開啟前解壓縮全部內容的檔案類型
 settings-reset = 還原本頁預設值

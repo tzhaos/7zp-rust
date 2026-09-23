@@ -1,4 +1,4 @@
-use super::{ToolIcon, artwork, body_text, bubble_tooltip, icon};
+use super::{ToolIcon, artwork, body_text, bubble_tooltip, compact_text, icon};
 use crate::theme::metrics::*;
 use gpui_kit::component::{
     Disableable, Sizable,
@@ -65,17 +65,15 @@ pub fn tool(
                             .flex_shrink_0()
                             .justify_center()
                             .child(
-                                div()
+                                compact_text("tool-label", label.to_owned())
                                     .w_full()
-                                    .min_w_0()
                                     .text_size(px(11.))
                                     .line_height(px(13.))
                                     .text_center()
                                     .whitespace_normal()
                                     .line_clamp(2)
                                     .text_ellipsis()
-                                    .text_color(rgb(if disabled { p.muted } else { p.text }))
-                                    .child(label.to_owned()),
+                                    .text_color(rgb(if disabled { p.muted } else { p.text })),
                             ),
                     )
                 }),
@@ -92,7 +90,8 @@ pub fn command(id: impl Into<ElementId>, label: &str) -> Button {
     Button::new(id)
         .secondary()
         .xsmall()
-        .label(label.to_owned())
+        .accessibility_label(label.to_owned())
+        .child(compact_text("command-label", label.to_owned()).line_height(relative(1.)))
         .min_w_0()
         .max_w_full()
         .h(px(CONTROL_HEIGHT))

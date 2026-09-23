@@ -79,6 +79,7 @@ pub(super) struct PreferencesForm {
     association_bounds: std::rc::Rc<std::cell::Cell<Bounds<Pixels>>>,
     association_search: Entity<InputState>,
     temporary: Entity<InputState>,
+    system_temporary: SharedString,
     patterns: Entity<TextareaState>,
     task: Option<Task<()>>,
     error: Option<String>,
@@ -104,10 +105,11 @@ impl PreferencesForm {
         window: &mut Window,
         cx: &mut Context<Self>,
     ) -> Self {
+        let system_temporary: SharedString = std::env::temp_dir().display().to_string().into();
         let temporary = cx.new(|cx| {
             InputState::new(window, cx)
                 .default_value(value.temp_directory.clone())
-                .placeholder(tr("settings-temp-default"))
+                .placeholder(system_temporary.clone())
         });
         let patterns = cx.new(|cx| {
             TextareaState::new(window, cx).default_value(value.extract_all.replace(';', "\n"))
@@ -156,6 +158,7 @@ impl PreferencesForm {
             association_bounds: std::rc::Rc::new(std::cell::Cell::new(Bounds::default())),
             association_search,
             temporary,
+            system_temporary,
             patterns,
             task: None,
             error: None,

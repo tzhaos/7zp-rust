@@ -8,7 +8,7 @@ impl PreferencesForm {
         let path_label = if custom_path {
             path.to_string()
         } else {
-            tr("settings-temp-default").to_owned()
+            self.system_temporary.to_string()
         };
         v_flex()
             .gap(px(crate::theme::metrics::settings::SECTION_GAP))

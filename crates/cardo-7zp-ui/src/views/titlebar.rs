@@ -55,13 +55,7 @@ impl Workspace {
                     .map(|(id, name, label)| {
                         let disabled =
                             id == "close" && (self.tasks.is_busy() || self.settings_busy(cx));
-                        let button = gpui_kit::component::button::Button::new(id);
-                        let button = if self.allow_hint(!disabled) {
-                            bubble_tooltip(button, label.to_owned())
-                        } else {
-                            button
-                        };
-                        button
+                        gpui_kit::component::button::Button::new(id)
                             .group("window-control")
                             .custom(if id == "close" {
                                 subtle_variant(cx)

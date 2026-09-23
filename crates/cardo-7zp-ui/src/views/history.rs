@@ -125,25 +125,19 @@ impl Workspace {
                     let target = entry.clone();
                     let path = entry.path.display().to_string();
                     let directory = entry.kind == recent::Kind::Folders;
-                    bubble_tooltip(
-                        list_row(("history-location", index), cursor == index, false, cx)
-                            .h(px(row_height))
-                            .px(px(8.))
-                            .gap(px(8.))
-                            .child(icon(if directory { "Folder" } else { "Archive" }, 18.))
-                            .child(
-                                div()
-                                    .flex_1()
-                                    .min_w_0()
-                                    .truncate()
-                                    .text_ellipsis_middle()
-                                    .child(path.clone()),
-                            )
-                            .on_click(cx.listener(move |this, _, window, cx| {
-                                this.visit_history(target.clone(), window, cx)
-                            })),
-                        path,
-                    )
+                    list_row(("history-location", index), cursor == index, false, cx)
+                        .h(px(row_height))
+                        .px(px(8.))
+                        .gap(px(8.))
+                        .child(icon(if directory { "Folder" } else { "Archive" }, 18.))
+                        .child(
+                            compact_text("history-path", path)
+                                .flex_1()
+                                .text_ellipsis_middle(),
+                        )
+                        .on_click(cx.listener(move |this, _, window, cx| {
+                            this.visit_history(target.clone(), window, cx)
+                        }))
                 },
             ))
             .when(self.history.len() > count, |el| {

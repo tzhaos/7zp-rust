@@ -50,6 +50,23 @@ impl MenuHost {
             .is_some_and(|host| host.read(cx).menu.is_some())
     }
 
+    fn close_at(anchor: Bounds<Pixels>, window: &mut Window, cx: &mut App) -> bool {
+        let host = cx
+            .try_global::<MenuHosts>()
+            .and_then(|hosts| hosts.0.get(&window.window_handle().window_id()))
+            .and_then(WeakEntity::upgrade);
+        host.is_some_and(|host| {
+            host.update(cx, |host, cx| {
+                if host.menu.is_some() && host.anchor == anchor {
+                    host.close(window, cx);
+                    true
+                } else {
+                    false
+                }
+            })
+        })
+    }
+
     pub fn install(
         window: &mut Window,
         cx: &mut App,
@@ -404,48 +421,44 @@ impl Menu {
                     Entry::Item(item) => {
                         let label = item.label;
                         let description = item.description;
-                        let tooltip: SharedString = description
-                            .as_ref()
-                            .map(|description| format!("{label}\n{description}").into())
-                            .unwrap_or_else(|| label.clone());
                         let shortcut = item.shortcut;
                         let disabled = item.disabled || item.handler.is_none();
                         let mut row = PopupMenuItem::element(move |_, cx| {
-                            crate::tooltip::bubble_tooltip(
-                                h_flex()
-                                    .id("menu-label")
-                                    .w(width - px(if icons { 72. } else { 48. }))
-                                    .h(row_height)
-                                    .min_w_0()
-                                    .gap(px(12.))
-                                    .aria_label(label.clone())
-                                    .child(
-                                        v_flex()
-                                            .flex_1()
-                                            .min_w_0()
-                                            .gap(px(2.))
-                                            .child(div().min_w_0().truncate().child(label.clone()))
-                                            .when_some(description.clone(), |el, description| {
-                                                el.child(
-                                                    div()
-                                                        .min_w_0()
-                                                        .truncate()
-                                                        .text_size(font_size * 0.9)
-                                                        .text_color(cx.theme().muted_foreground)
-                                                        .child(description),
+                            h_flex()
+                                .id("menu-label")
+                                .w(width - px(if icons { 72. } else { 48. }))
+                                .h(row_height)
+                                .min_w_0()
+                                .gap(px(12.))
+                                .aria_label(label.clone())
+                                .child(
+                                    v_flex()
+                                        .flex_1()
+                                        .min_w_0()
+                                        .gap(px(2.))
+                                        .child(crate::text::compact_text(
+                                            "menu-title",
+                                            label.clone(),
+                                        ))
+                                        .when_some(description.clone(), |el, description| {
+                                            el.child(
+                                                crate::text::compact_text(
+                                                    "menu-description",
+                                                    description,
                                                 )
-                                            }),
+                                                .text_size(font_size * 0.9)
+                                                .text_color(cx.theme().muted_foreground),
+                                            )
+                                        }),
+                                )
+                                .when_some(shortcut, |row, shortcut| {
+                                    row.child(
+                                        div()
+                                            .flex_shrink_0()
+                                            .text_color(cx.theme().muted_foreground)
+                                            .child(shortcut),
                                     )
-                                    .when_some(shortcut, |row, shortcut| {
-                                        row.child(
-                                            div()
-                                                .flex_shrink_0()
-                                                .text_color(cx.theme().muted_foreground)
-                                                .child(shortcut),
-                                        )
-                                    }),
-                                tooltip.clone(),
-                            )
+                                })
                         })
                         .disabled(disabled)
                         .checked(item.checked);

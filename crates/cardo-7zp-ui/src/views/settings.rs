@@ -1,4 +1,5 @@
 use crate::preferences::Tab;
+use crate::theme::metrics::{ICON_BUTTON_SIZE, settings as metrics};
 use crate::*;
 use gpui_kit::component::{Disableable, h_flex, v_flex};
 
@@ -77,28 +78,50 @@ impl Workspace {
         };
         v_flex()
             .size_full()
-            .max_w(px(crate::theme::metrics::settings::CONTENT_MAX_WIDTH))
+            .max_w(px(metrics::CONTENT_MAX_WIDTH + 2. * metrics::NAV_GUTTER))
+            .px(px(metrics::NAV_GUTTER))
             .mx_auto()
             .min_h_0()
             .min_w_0()
             .child(
-                h_flex()
+                div()
                     .flex_shrink_0()
-                    .gap(px(12.))
-                    .px(px(crate::theme::metrics::settings::CONTENT_PADDING))
+                    .px(px(metrics::CONTENT_PADDING))
                     .pt(px(20.))
                     .child(
-                        icon_button("settings-back", "ArrowLeft", tr("back"), true, cx)
-                            .disabled(self.settings_busy(cx))
-                            .on_click(
-                                cx.listener(|this, _, window, cx| this.show_browser(window, cx)),
+                        h_flex()
+                            .relative()
+                            .min_h(px(ICON_BUTTON_SIZE))
+                            .child(
+                                div()
+                                    .absolute()
+                                    .left(px(-ICON_BUTTON_SIZE - metrics::BACK_BUTTON_GAP))
+                                    .top_0()
+                                    .h_full()
+                                    .flex()
+                                    .items_center()
+                                    .child(
+                                        icon_button(
+                                            "settings-back",
+                                            "ArrowLeft",
+                                            tr("back"),
+                                            true,
+                                            cx,
+                                        )
+                                        .disabled(self.settings_busy(cx))
+                                        .on_click(
+                                            cx.listener(|this, _, window, cx| {
+                                                this.show_browser(window, cx)
+                                            }),
+                                        ),
+                                    ),
+                            )
+                            .child(
+                                compact_text("settings-heading", page.title())
+                                    .flex_1()
+                                    .text_size(px(metrics::TITLE_SIZE))
+                                    .font_weight(FontWeight::MEDIUM),
                             ),
-                    )
-                    .child(
-                        compact_text("settings-heading", page.title())
-                            .flex_1()
-                            .text_size(px(crate::theme::metrics::settings::TITLE_SIZE))
-                            .font_weight(FontWeight::MEDIUM),
                     ),
             )
             .child(

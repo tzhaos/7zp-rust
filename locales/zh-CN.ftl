@@ -362,7 +362,6 @@ settings-priority = 以较低 CPU 优先级运行压缩和解压任务
 settings-close-after = 一键解压成功后退出
 settings-close-archive = 快速解压完成后关闭压缩包
 settings-temp = 临时解压目录
-settings-temp-default = 系统临时目录
 settings-temp-absolute = 请输入临时目录的绝对路径。
 settings-extract-all = 打开前解压全部内容的文件类型
 settings-reset = 恢复本页默认值

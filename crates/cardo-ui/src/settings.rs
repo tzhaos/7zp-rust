@@ -96,8 +96,10 @@ pub fn row(
 pub fn action(id: impl Into<ElementId>, label: &str, _cx: &App) -> Button {
     Button::new(id)
         .small()
-        .label(label.to_owned())
         .accessibility_label(label.to_owned())
+        .child(
+            crate::text::compact_text("action-label", label.to_owned()).line_height(relative(1.)),
+        )
         .secondary()
         .h(px(metrics::CONTROL_HEIGHT))
         .min_w_0()
@@ -139,7 +141,7 @@ pub fn path_value(
     id: impl Into<ElementId>,
     value: impl Into<SharedString>,
     cx: &App,
-) -> Stateful<Div> {
+) -> crate::text::CompactText {
     crate::text::compact_text(id, value)
         .text_ellipsis_middle()
         .text_color(cx.theme().muted_foreground)

@@ -1,4 +1,4 @@
-use super::Menu;
+use super::{Menu, MenuHost};
 use gpui_kit::{component::button::Button, *};
 use std::{cell::Cell, rc::Rc};
 
@@ -82,8 +82,19 @@ impl MenuTrigger for Button {
     fn choice_menu(self, build: impl Fn(&mut Window, &mut App) -> Menu + 'static) -> MenuAnchor {
         let bounds = Rc::new(Cell::new(Bounds::<Pixels>::default()));
         let measured = bounds.clone();
-        self.on_click(move |_, window, cx| {
+        let pressed = bounds.clone();
+        self.capture_any_mouse_down(move |event, window, cx| {
+            // Close before PopupMenu's outside-press handler. Consuming this
+            // press prevents Button from generating a click that reopens it.
+            if event.button == MouseButton::Left && MenuHost::close_at(pressed.get(), window, cx) {
+                cx.stop_propagation();
+            }
+        })
+        .on_click(move |_, window, cx| {
             let anchor = bounds.get();
+            if MenuHost::close_at(anchor, window, cx) {
+                return;
+            }
             let mut menu = build(window, cx);
             menu.width = Some((anchor.size.width + px(40.)).max(px(240.)));
             menu.align_end = true;

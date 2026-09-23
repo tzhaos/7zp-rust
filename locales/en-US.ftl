@@ -368,7 +368,6 @@ settings-priority = Run archive tasks at lower CPU priority
 settings-close-after = Exit after successful one-click extraction
 settings-close-archive = Close the archive after quick extraction
 settings-temp = Temporary extraction folder
-settings-temp-default = System temporary folder
 settings-temp-absolute = Enter an absolute path for the temporary folder.
 settings-extract-all = File types that require full extraction before opening
 settings-reset = Restore page defaults
