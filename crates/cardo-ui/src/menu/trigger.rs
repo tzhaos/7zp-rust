@@ -83,14 +83,23 @@ impl MenuTrigger for Button {
         let bounds = Rc::new(Cell::new(Bounds::<Pixels>::default()));
         let measured = bounds.clone();
         let pressed = bounds.clone();
+        let suppress_click = Rc::new(Cell::new(false));
+        let click_suppression = suppress_click.clone();
         self.capture_any_mouse_down(move |event, window, cx| {
-            // Close before PopupMenu's outside-press handler. Consuming this
-            // press prevents Button from generating a click that reopens it.
-            if event.button == MouseButton::Left && MenuHost::close_at(pressed.get(), window, cx) {
-                cx.stop_propagation();
+            if event.button == MouseButton::Left {
+                click_suppression.set(false);
+                // The button still receives this press and emits on_click, so
+                // remember that this click dismissed the open menu.
+                if MenuHost::close_at(pressed.get(), window, cx) {
+                    click_suppression.set(true);
+                    cx.stop_propagation();
+                }
             }
         })
         .on_click(move |_, window, cx| {
+            if suppress_click.replace(false) {
+                return;
+            }
             let anchor = bounds.get();
             if MenuHost::close_at(anchor, window, cx) {
                 return;

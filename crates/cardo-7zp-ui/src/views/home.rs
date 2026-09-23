@@ -53,6 +53,9 @@ impl Workspace {
                             .flex_1()
                             .min_h_0()
                             .min_w_0()
+                            .w_full()
+                            .max_w(px(metrics::HISTORY_MAX_WIDTH))
+                            .mx_auto()
                             .gap(px(metrics::HISTORY_GAP))
                             .child(
                                 body_text(tr("recent-title"))

@@ -6,6 +6,10 @@ use gpui_kit::component::{button::ButtonVariants, h_flex};
 #[derive(Clone, Copy)]
 pub(crate) enum MenuGroup {
     File,
+    Edit,
+    View,
+    Archive,
+    Tools,
 }
 
 impl Workspace {
@@ -19,30 +23,36 @@ impl Workspace {
             .gap(px(2.))
             .on_mouse_down(MouseButton::Left, |_, _, cx| cx.stop_propagation())
             .children(
-                [(MenuGroup::File, "menu-file")]
-                    .into_iter()
-                    .map(|(group, label)| {
-                        let bounds =
-                            std::rc::Rc::new(std::cell::Cell::new(Bounds::<Pixels>::default()));
-                        let measured = bounds.clone();
-                        command(label, tr(label))
-                            .h(px(28.))
-                            .px(px(8.))
-                            .custom(subtle_variant(cx))
-                            .border_0()
-                            .on_prepaint(move |rect, _, _| measured.set(rect))
-                            .on_click({
-                                let owner = cx.entity().downgrade();
-                                move |_, window, cx| {
-                                    let anchor = bounds.get();
-                                    build_menu(&owner, group, cx).show_native(
-                                        point(anchor.left(), anchor.bottom()),
-                                        window,
-                                        cx,
-                                    );
-                                }
-                            })
-                    }),
+                [
+                    (MenuGroup::File, "menu-file"),
+                    (MenuGroup::Edit, "menu-edit"),
+                    (MenuGroup::View, "menu-view"),
+                    (MenuGroup::Archive, "menu-archive"),
+                    (MenuGroup::Tools, "menu-tools"),
+                ]
+                .into_iter()
+                .map(|(group, label)| {
+                    let bounds =
+                        std::rc::Rc::new(std::cell::Cell::new(Bounds::<Pixels>::default()));
+                    let measured = bounds.clone();
+                    command(label, tr(label))
+                        .h(px(28.))
+                        .px(px(8.))
+                        .custom(subtle_variant(cx))
+                        .border_0()
+                        .on_prepaint(move |rect, _, _| measured.set(rect))
+                        .on_click({
+                            let owner = cx.entity().downgrade();
+                            move |_, window, cx| {
+                                let anchor = bounds.get();
+                                build_menu(&owner, group, cx).show_native(
+                                    point(anchor.left(), anchor.bottom()),
+                                    window,
+                                    cx,
+                                );
+                            }
+                        })
+                }),
             )
     }
 }
@@ -58,23 +68,7 @@ pub(crate) fn menu_items(group: MenuGroup) -> &'static [(&'static str, &'static 
             ("file-open-inside", "Ctrl+PgDn", OpenInside),
             ("file-open-outside", "Shift+Enter", OpenOutside),
             ("", "", Open),
-            ("archive-add", "Alt+A", Add),
-            ("archive-add-folder", "", AddFolder),
-            ("archive-rename", "F2", Rename),
-            ("archive-copy", "F5", CopyTo),
-            ("archive-move", "F6", MoveTo),
-            ("archive-delete", "Del", Delete),
-            ("", "", Open),
-            ("properties", "Alt+Enter", Properties),
-            ("archive-comment", "Ctrl+Z", Comment),
-            ("archive-save-as", "Ctrl+Shift+S", Save),
-            ("archive-info", "", ArchiveInfo),
             ("archive-close", "", Close),
-            ("", "", Open),
-            ("extract-options", "Alt+E", Extract),
-            ("extract-all-quick", "", QuickExtract),
-            ("extract-selected", "", QuickExtractSelection),
-            ("archive-check", "Alt+T", Check),
             ("", "", Open),
             (
                 "settings-title",
@@ -82,6 +76,32 @@ pub(crate) fn menu_items(group: MenuGroup) -> &'static [(&'static str, &'static 
                 Settings(preferences::Tab::Application),
             ),
             ("menu-exit", "Alt+F4", Exit),
+        ],
+        MenuGroup::Edit => &[
+            ("archive-rename", "F2", Rename),
+            ("archive-copy", "F5", CopyTo),
+            ("archive-move", "F6", MoveTo),
+            ("archive-delete", "Del", Delete),
+        ],
+        MenuGroup::View => &[
+            ("menu-refresh", "F5", Refresh),
+            ("properties", "Alt+Enter", Properties),
+        ],
+        MenuGroup::Archive => &[
+            ("archive-add", "Alt+A", Add),
+            ("archive-add-folder", "", AddFolder),
+            ("", "", Add),
+            ("archive-comment", "Ctrl+Z", Comment),
+            ("archive-save-as", "Ctrl+Shift+S", Save),
+            ("", "", Save),
+            ("archive-info", "", ArchiveInfo),
+        ],
+        MenuGroup::Tools => &[
+            ("extract-options", "Alt+E", Extract),
+            ("extract-all-quick", "", QuickExtract),
+            ("extract-selected", "", QuickExtractSelection),
+            ("", "", Extract),
+            ("archive-check", "Alt+T", Check),
         ],
     }
 }
@@ -141,12 +161,14 @@ pub(crate) fn build_menu(owner: &WeakEntity<Workspace>, group: MenuGroup, cx: &m
                     });
                 }),
         );
-        if matches!(group, MenuGroup::File) {
-            if matches!(action, OpenInside) {
+        match (group, action) {
+            (MenuGroup::Archive, ArchiveInfo) => {
                 menu = menus::archive::open_as_menu(owner, menu, cx);
-            } else if matches!(action, Check) {
+            }
+            (MenuGroup::Tools, Check) => {
                 menu = menus::archive::checksum_menu(owner, menu, cx);
             }
+            _ => {}
         }
     }
     menu

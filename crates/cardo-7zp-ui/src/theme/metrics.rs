@@ -52,6 +52,7 @@ pub mod home {
     pub const ACTION_ICON_SIZE: f32 = 17.;
     pub const HISTORY_GAP: f32 = 8.;
     pub const HISTORY_LIMIT: usize = 8;
+    pub const HISTORY_MAX_WIDTH: f32 = 600.;
     pub const HISTORY_ROW_HEIGHT: f32 = 40.;
     pub const HISTORY_ROW_PADDING: f32 = 8.;
     pub const HISTORY_REMOVE_WIDTH: f32 = 38.;
@@ -59,7 +60,7 @@ pub mod home {
 
 pub mod titlebar {
     pub const HEIGHT: f32 = 36.;
-    pub const MENU_MAX_WIDTH: f32 = 160.;
+    pub const MENU_MAX_WIDTH: f32 = 320.;
     pub const CONTROL_WIDTH: f32 = 42.;
     pub const GRIP_WIDTH: f32 = 28.;
     pub const GRIP_DOT_SIZE: f32 = 2.;
