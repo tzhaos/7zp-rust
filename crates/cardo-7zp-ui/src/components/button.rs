@@ -32,7 +32,7 @@ pub fn tool(
         TOOL_ICON_HEIGHT
     };
     let button = Button::new(id)
-        .custom(subtle_variant(cx))
+        .secondary()
         .disabled(disabled)
         .accessibility_label(label.to_owned())
         .w(px(TOOL_MAX_WIDTH))
@@ -90,6 +90,7 @@ pub fn tool(
 pub fn command(id: impl Into<ElementId>, label: &str) -> Button {
     // Button sizes control the inner label; an outer text_size is overridden.
     Button::new(id)
+        .secondary()
         .xsmall()
         .label(label.to_owned())
         .min_w_0()
@@ -120,7 +121,6 @@ pub fn primary(id: impl Into<ElementId>, label: &str) -> Button {
 pub fn menu_choice(id: impl Into<ElementId>, label: &str, cx: &App) -> Button {
     let p = crate::theme::palette(cx);
     command(id, label)
-        .custom(subtle_variant(cx).color(rgb(p.surface).into()))
         .border_color(rgb(p.border))
         .dropdown_caret(true)
 }
@@ -130,10 +130,10 @@ pub fn icon_button(
     name: &str,
     title: &str,
     hint: bool,
-    cx: &App,
+    _cx: &App,
 ) -> Button {
     let button = Button::new(id)
-        .custom(subtle_variant(cx))
+        .secondary()
         .compact()
         .icon(icon(name, 16.))
         .accessibility_label(title.to_owned())

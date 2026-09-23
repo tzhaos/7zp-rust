@@ -2,7 +2,11 @@ use crate::commands::Command;
 use crate::theme::metrics::*;
 use crate::views::SettingsPage;
 use crate::*;
-use gpui_kit::{base::ElementExt, component::h_flex, prelude::FluentBuilder};
+use gpui_kit::{
+    base::ElementExt,
+    component::{button::ButtonVariants, h_flex},
+    prelude::FluentBuilder,
+};
 
 impl Workspace {
     pub(crate) fn toolbar(
@@ -83,6 +87,11 @@ impl Workspace {
                     window,
                     cx,
                 )
+                .custom(subtle_variant(cx).color(if self.settings_page == page {
+                    rgb(crate::theme::palette(cx).hover).into()
+                } else {
+                    rgba(0x00000000).into()
+                }))
                 .when(self.settings_page == page, |button| {
                     button.on_prepaint(move |bounds, _, cx| {
                         let mut state = indicator.get();

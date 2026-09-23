@@ -206,44 +206,41 @@ impl PreferencesForm {
                 ),
             )
             .child(
-                v_flex()
-                    .id("association-options")
-                    .h((px(36. * extensions.len().max(1) as f32))
-                        .min((height - px(100.)).max(px(34.))))
-                    .min_h_0()
-                    .flex_shrink_0()
-                    .overflow_y_scrollbar()
-                    .gap(px(2.))
-                    .children(extensions.into_iter().map(|extension| {
-                        let selected = self
-                            .value
-                            .associations
-                            .iter()
-                            .any(|value| value == extension);
-                        cardo_ui::settings::picker_option(
-                            SharedString::from(format!("association:{extension}")),
-                            extension.trim_start_matches('.'),
-                            cx,
-                        )
-                        .checked(selected)
-                        .disabled(busy)
-                        .on_click(cx.listener(
-                            move |this, checked: &bool, window, cx| {
-                                this.value.associations.retain(|value| value != extension);
-                                if *checked {
-                                    this.value.associations.push(extension.into());
-                                }
-                                this.save(window, cx);
-                            },
-                        ))
-                    }))
-                    .when(empty, |el| {
-                        el.child(
-                            body_text(tr("association-no-matches"))
-                                .p(px(12.))
-                                .text_color(rgb(crate::theme::palette(cx).muted)),
-                        )
-                    }),
+                cardo_ui::settings::picker_list(
+                    "association-options",
+                    (px(36. * extensions.len().max(1) as f32))
+                        .min((height - px(100.)).max(px(34.))),
+                )
+                .children(extensions.into_iter().map(|extension| {
+                    let selected = self
+                        .value
+                        .associations
+                        .iter()
+                        .any(|value| value == extension);
+                    cardo_ui::settings::picker_option(
+                        SharedString::from(format!("association:{extension}")),
+                        extension.trim_start_matches('.'),
+                        cx,
+                    )
+                    .checked(selected)
+                    .disabled(busy)
+                    .on_click(cx.listener(
+                        move |this, checked: &bool, window, cx| {
+                            this.value.associations.retain(|value| value != extension);
+                            if *checked {
+                                this.value.associations.push(extension.into());
+                            }
+                            this.save(window, cx);
+                        },
+                    ))
+                }))
+                .when(empty, |el| {
+                    el.child(
+                        body_text(tr("association-no-matches"))
+                            .p(px(12.))
+                            .text_color(rgb(crate::theme::palette(cx).muted)),
+                    )
+                }),
             )
             .focus_trap("association-focus", &focus);
         Some(

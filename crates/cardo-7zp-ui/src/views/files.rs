@@ -196,7 +196,6 @@ impl Workspace {
                                                 self.allow_hint(!self.tasks.is_busy()),
                                                 cx,
                                             )
-                                            .custom(subtle_variant(cx))
                                             .border_0()
                                             .disabled(self.tasks.is_busy())
                                             .on_click(

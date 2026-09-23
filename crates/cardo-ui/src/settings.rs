@@ -8,6 +8,7 @@ use gpui_kit::{
         checkbox::Checkbox,
         h_flex,
         input::{Input, InputState, Textarea, TextareaState},
+        scroll::{Scrollable, ScrollableElement},
         v_flex,
     },
     prelude::FluentBuilder,
@@ -22,6 +23,7 @@ pub mod metrics {
     pub const CONTROL_HEIGHT: f32 = 32.;
     pub const CONTROL_RADIUS: f32 = 10.;
     pub const INPUT_WIDTH: f32 = 260.;
+    pub const PICKER_SCROLLBAR_GUTTER: f32 = 20.;
 }
 
 pub fn frame(cx: &App) -> Div {
@@ -91,18 +93,12 @@ pub fn row(
         )
 }
 
-pub fn action(id: impl Into<ElementId>, label: &str, cx: &App) -> Button {
+pub fn action(id: impl Into<ElementId>, label: &str, _cx: &App) -> Button {
     Button::new(id)
         .small()
         .label(label.to_owned())
         .accessibility_label(label.to_owned())
-        .custom(
-            ButtonCustomVariant::new(cx)
-                .color(cx.theme().secondary)
-                .foreground(cx.theme().foreground)
-                .hover(cx.theme().secondary_hover)
-                .active(cx.theme().secondary_active),
-        )
+        .secondary()
         .h(px(metrics::CONTROL_HEIGHT))
         .min_w_0()
         .max_w_full()
@@ -124,13 +120,6 @@ pub fn primary_action(id: impl Into<ElementId>, label: &str, cx: &App) -> Button
 
 pub fn choice(id: impl Into<ElementId>, label: &str, cx: &App) -> Button {
     action(id, label, cx)
-        .custom(
-            ButtonCustomVariant::new(cx)
-                .color(cx.theme().background)
-                .foreground(cx.theme().foreground)
-                .hover(cx.theme().secondary)
-                .active(cx.theme().secondary_hover),
-        )
         .max_w(px(200.))
         .border_1()
         .border_color(cx.theme().input)
@@ -271,6 +260,19 @@ pub fn picker_option(id: impl Into<ElementId>, label: &str, cx: &App) -> Checkbo
         .items_center()
         .hover(|style| style.bg(cx.theme().secondary))
         .child(body_text(label.to_owned()).flex_1())
+}
+
+pub fn picker_list(id: &'static str, height: Pixels) -> Scrollable<Stateful<Div>> {
+    v_flex()
+        .id(id)
+        .h(height)
+        .min_h_0()
+        .flex_shrink_0()
+        // The pinned scrollbar overlays a 16px track; keep rows outside it.
+        .pr(px(metrics::PICKER_SCROLLBAR_GUTTER))
+        .gap(px(2.))
+        .overflow_y_scrollbar()
+        .id(id)
 }
 
 #[derive(IntoElement)]

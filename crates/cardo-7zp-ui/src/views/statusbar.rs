@@ -1,7 +1,7 @@
 use crate::*;
 use cardo_7zp_core::i18n::{tf, tr};
 use gpui_kit::{
-    component::{Disableable, button::ButtonVariants, h_flex},
+    component::{Disableable, h_flex},
     prelude::FluentBuilder,
 };
 
@@ -82,7 +82,6 @@ impl Workspace {
                             self.allow_hint(true),
                             cx,
                         )
-                        .custom(subtle_variant(cx))
                         .border_0()
                         .w(px(24.))
                         .h(px(24.))
@@ -96,7 +95,6 @@ impl Workspace {
             .when(self.tasks.is_busy(), |el| {
                 el.child(
                     command("cancel", tr("cancel"))
-                        .custom(subtle_variant(cx))
                         .border_0()
                         .h(px(24.))
                         .flex_shrink_0()

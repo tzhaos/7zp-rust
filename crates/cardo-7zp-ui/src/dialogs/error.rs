@@ -1,5 +1,5 @@
 use crate::*;
-use gpui_kit::{component::button::ButtonVariants, prelude::FluentBuilder};
+use gpui_kit::prelude::FluentBuilder;
 
 pub(crate) struct ErrorDialog {
     pub(crate) summary: String,
@@ -37,7 +37,6 @@ impl Workspace {
                                 "error-show-details"
                             }),
                         )
-                        .custom(subtle_variant(cx))
                         .border_0()
                         .self_start()
                         .icon(icon(
