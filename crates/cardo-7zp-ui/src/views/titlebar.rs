@@ -39,8 +39,14 @@ impl Workspace {
             .child(
                 h_flex().flex_shrink_0().gap_0().children(
                     [
-                        ("minimize", "Subtract", tr("window-minimize")),
                         (
+                            WindowControlArea::Min,
+                            "minimize",
+                            "Subtract",
+                            tr("window-minimize"),
+                        ),
+                        (
+                            WindowControlArea::Max,
                             "maximize",
                             if window.is_maximized() {
                                 "SquareMultiple"
@@ -49,15 +55,20 @@ impl Workspace {
                             },
                             tr("window-maximize"),
                         ),
-                        ("close", "Dismiss", tr("window-close")),
+                        (
+                            WindowControlArea::Close,
+                            "close",
+                            "Dismiss",
+                            tr("window-close"),
+                        ),
                     ]
                     .into_iter()
-                    .map(|(id, name, label)| {
-                        let disabled =
-                            id == "close" && (self.tasks.is_busy() || self.settings_busy(cx));
+                    .map(|(area, id, name, label)| {
+                        let disabled = area == WindowControlArea::Close
+                            && (self.tasks.is_busy() || self.settings_busy(cx));
                         gpui_kit::component::button::Button::new(id)
                             .group("window-control")
-                            .custom(if id == "close" {
+                            .custom(if area == WindowControlArea::Close {
                                 subtle_variant(cx)
                                     .hover(rgb(0xe81123).into())
                                     .active(rgb(0xc50f1f).into())
@@ -67,7 +78,7 @@ impl Workspace {
                             .accessibility_label(label)
                             .child(
                                 div()
-                                    .when(id == "close" && !disabled, |el| {
+                                    .when(area == WindowControlArea::Close && !disabled, |el| {
                                         el.group_hover("window-control", |el| {
                                             el.text_color(rgb(0xffffff))
                                         })
@@ -79,11 +90,24 @@ impl Workspace {
                             .h(px(metrics::HEIGHT))
                             .rounded(px(0.))
                             .disabled(disabled)
-                            .on_mouse_down(MouseButton::Left, |_, _, cx| cx.stop_propagation())
-                            .on_click(move |_, window, _| match id {
-                                "minimize" => window.minimize_window(),
-                                "maximize" => window.zoom_window(),
-                                _ => window.remove_window(),
+                            // The pinned Windows backend's zoom() only maximizes;
+                            // native Max hit testing handles both maximize and restore.
+                            .when(area == WindowControlArea::Max, |button| {
+                                button.window_control_area(area)
+                            })
+                            .when(area == WindowControlArea::Min, |button| {
+                                button
+                                    .on_mouse_down(MouseButton::Left, |_, _, cx| {
+                                        cx.stop_propagation()
+                                    })
+                                    .on_click(|_, window, _| window.minimize_window())
+                            })
+                            .when(area == WindowControlArea::Close, |button| {
+                                button
+                                    .on_mouse_down(MouseButton::Left, |_, _, cx| {
+                                        cx.stop_propagation()
+                                    })
+                                    .on_click(|_, window, _| window.remove_window())
                             })
                     }),
                 ),

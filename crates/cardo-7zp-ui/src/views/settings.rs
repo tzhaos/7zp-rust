@@ -78,9 +78,7 @@ impl Workspace {
         };
         v_flex()
             .size_full()
-            .max_w(px(metrics::CONTENT_MAX_WIDTH + 2. * metrics::NAV_GUTTER))
-            .px(px(metrics::NAV_GUTTER))
-            .mx_auto()
+            .pl(px(metrics::NAV_GUTTER))
             .min_h_0()
             .min_w_0()
             .child(

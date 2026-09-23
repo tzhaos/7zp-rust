@@ -21,7 +21,6 @@ pub mod file_table {
 }
 
 pub mod settings {
-    pub const CONTENT_MAX_WIDTH: f32 = 680.;
     pub const CONTENT_PADDING: f32 = 24.;
     pub const BACK_BUTTON_GAP: f32 = 12.;
     pub const NAV_GUTTER: f32 = super::ICON_BUTTON_SIZE + BACK_BUTTON_GAP - CONTENT_PADDING;
