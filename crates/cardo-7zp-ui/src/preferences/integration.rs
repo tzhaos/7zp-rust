@@ -36,43 +36,46 @@ impl PreferencesForm {
             ))
             .child(settings_section(
                 tr("settings-associations"),
-                settings_frame(cx)
-                    .p(px(crate::theme::metrics::settings::GROUP_PADDING))
-                    .gap(px(16.))
-                    .child(
-                        div()
-                            .text_color(rgb(crate::theme::palette(cx).muted))
-                            .whitespace_normal()
-                            .child(tr("settings-associations-note")),
-                    )
-                    .child(settings_row(
-                        tr("association-formats"),
-                        menu_choice("association-picker", &summary, cx)
-                            .w(px(crate::theme::metrics::settings::SELECTOR_WIDTH))
-                            .disabled(busy)
-                            .on_prepaint(move |rect, _, _| bounds.set(rect))
-                            .on_click(cx.listener(|this, _, window, cx| {
-                                this.association_popup.update(cx, |state, cx| {
-                                    if state.is_open() {
-                                        state.dismiss(window, cx);
-                                    } else {
-                                        state.show(window, cx);
+                settings_group(
+                    [
+                        settings_detail(
+                            tr("association-formats"),
+                            tr("settings-associations-note"),
+                            settings_choice("association-picker", &summary, cx)
+                                .disabled(busy)
+                                .on_prepaint(move |rect, _, _| bounds.set(rect))
+                                .on_click(cx.listener(|this, _, window, cx| {
+                                    this.association_popup.update(cx, |state, cx| {
+                                        if state.is_open() {
+                                            state.dismiss(window, cx);
+                                        } else {
+                                            state.show(window, cx);
+                                        }
+                                    });
+                                    if this.association_popup.read(cx).is_open() {
+                                        this.association_search
+                                            .update(cx, |input, cx| input.focus(window, cx));
                                     }
-                                });
-                            })),
-                        cx,
-                    ))
-                    .child(
-                        h_flex().justify_end().child(
-                            command("association-defaults", tr("association-settings"))
+                                })),
+                            cx,
+                        )
+                        .into_any_element(),
+                        settings_detail(
+                            tr("settings-default-app-title"),
+                            tr("settings-default-app-description"),
+                            settings_action("association-defaults", tr("association-settings"), cx)
                                 .disabled(busy)
                                 .on_click(cx.listener(|this, _, _, cx| {
                                     let _ = this
                                         .owner
                                         .update(cx, |owner, cx| owner.open_default_apps(cx));
                                 })),
-                        ),
-                    ),
+                            cx,
+                        )
+                        .into_any_element(),
+                    ],
+                    cx,
+                ),
                 cx,
             ))
     }
@@ -96,15 +99,23 @@ impl PreferencesForm {
         let available =
             (window.viewport_size().height - bounds.bottom()).max(bounds.top()) - px(28.);
         let height = available.min(px(340.));
+        let query = self
+            .association_search
+            .read(cx)
+            .value()
+            .trim()
+            .to_ascii_lowercase();
         let mut extensions = cardo_7zp_commands::EXTENSIONS.to_vec();
         extensions.sort_unstable_by_key(|extension| {
             extension.trim_start_matches('.').to_ascii_lowercase()
         });
-        let content = popup_surface(cx)
+        extensions.retain(|extension| extension.contains(&query));
+        let empty = extensions.is_empty();
+        let content = cardo_ui::settings::picker_surface(cx)
             .id("association-dropdown")
             .role(Role::Dialog)
             .aria_label(tr("settings-associations"))
-            .w(bounds.size.width)
+            .w((bounds.size.width + px(40.)).max(px(280.)))
             .max_w(window.viewport_size().width - px(24.))
             .track_focus(&focus)
             .occlude()
@@ -120,7 +131,14 @@ impl PreferencesForm {
                 }
             }))
             .child(
-                h_flex().gap(px(4.)).pb(px(6.)).children(
+                div().p(px(4.)).child(
+                    settings_input(&self.association_search, tr("association-search"))
+                        .prefix(icon("Search", 14.))
+                        .bordered(false),
+                ),
+            )
+            .child(
+                h_flex().w_full().gap(px(4.)).pb(px(6.)).children(
                     [
                         ("association-all", "select-all", AssociationSelection::All),
                         (
@@ -136,32 +154,64 @@ impl PreferencesForm {
                     ]
                     .into_iter()
                     .map(|(id, label, mode)| {
-                        command(id, tr(label))
-                            .px(px(6.))
-                            .disabled(busy)
-                            .on_click(cx.listener(move |this, _, window, cx| {
+                        let filtered = !query.is_empty();
+                        settings_action(
+                            id,
+                            tr(if filtered {
+                                match mode {
+                                    AssociationSelection::All => "association-select-visible",
+                                    AssociationSelection::None => "association-clear-visible",
+                                    AssociationSelection::Invert => "select-invert",
+                                }
+                            } else {
+                                label
+                            }),
+                            cx,
+                        )
+                        .flex_1()
+                        .min_w_0()
+                        .px(px(4.))
+                        .disabled(busy || empty)
+                        .on_click(cx.listener(
+                            move |this, _, window, cx| {
+                                let query = this
+                                    .association_search
+                                    .read(cx)
+                                    .value()
+                                    .trim()
+                                    .to_ascii_lowercase();
                                 this.value.associations = cardo_7zp_commands::EXTENSIONS
                                     .iter()
-                                    .filter(|extension| match mode {
-                                        AssociationSelection::All => true,
-                                        AssociationSelection::None => false,
-                                        AssociationSelection::Invert => !this
+                                    .filter(|extension| {
+                                        let selected = this
                                             .value
                                             .associations
                                             .iter()
-                                            .any(|value| value == **extension),
+                                            .any(|value| value == **extension);
+                                        if !extension.contains(&query) {
+                                            return selected;
+                                        }
+                                        match mode {
+                                            AssociationSelection::All => true,
+                                            AssociationSelection::None => false,
+                                            AssociationSelection::Invert => !selected,
+                                        }
                                     })
                                     .map(|extension| (*extension).to_owned())
                                     .collect();
                                 this.save(window, cx);
-                            }))
+                            },
+                        ))
                     }),
                 ),
             )
             .child(
                 v_flex()
                     .id("association-options")
-                    .max_h((height - px(52.)).max(px(64.)))
+                    .h((px(36. * extensions.len().max(1) as f32))
+                        .min((height - px(100.)).max(px(34.))))
+                    .min_h_0()
+                    .flex_shrink_0()
                     .overflow_y_scrollbar()
                     .gap(px(2.))
                     .children(extensions.into_iter().map(|extension| {
@@ -170,15 +220,13 @@ impl PreferencesForm {
                             .associations
                             .iter()
                             .any(|value| value == extension);
-                        checkbox(
+                        cardo_ui::settings::picker_option(
                             SharedString::from(format!("association:{extension}")),
                             extension.trim_start_matches('.'),
+                            cx,
                         )
                         .checked(selected)
                         .disabled(busy)
-                        .w_full()
-                        .px(px(8.))
-                        .py(px(6.))
                         .on_click(cx.listener(
                             move |this, checked: &bool, window, cx| {
                                 this.value.associations.retain(|value| value != extension);
@@ -188,14 +236,21 @@ impl PreferencesForm {
                                 this.save(window, cx);
                             },
                         ))
-                    })),
+                    }))
+                    .when(empty, |el| {
+                        el.child(
+                            body_text(tr("association-no-matches"))
+                                .p(px(12.))
+                                .text_color(rgb(crate::theme::palette(cx).muted)),
+                        )
+                    }),
             )
             .focus_trap("association-focus", &focus);
         Some(
             deferred(
                 Positioner::side(bounds)
                     .placement(Placement::Bottom)
-                    .align(Align::Start)
+                    .align(Align::End)
                     .offset(px(6.))
                     .margin(px(8.))
                     .child(content),

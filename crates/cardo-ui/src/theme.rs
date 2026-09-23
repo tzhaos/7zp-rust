@@ -62,10 +62,10 @@ impl ThemeStyle {
         c.button_primary_hover = c.primary_hover;
         c.button_primary_active = c.primary_active;
         c.button_primary_foreground = c.primary_foreground;
-        c.secondary = c.muted;
+        c.secondary = rgb(p.hover).into();
         c.secondary_foreground = c.foreground;
-        c.secondary_hover = c.button_hover;
-        c.secondary_active = c.button_active;
+        c.secondary_hover = c.border;
+        c.secondary_active = c.border;
         c.ring = c.primary;
         c.caret = c.primary;
         c.list = c.background;
@@ -73,6 +73,8 @@ impl ThemeStyle {
         c.list_hover = c.button_hover;
         c.list_active = c.button_active;
         c.list_active_border = c.primary;
+        c.switch = c.border;
+        c.switch_thumb = rgb(0xffffff).into();
         c.selection = rgb(p.selected).into();
         c.scrollbar = rgba(0x00000000).into();
         c.scrollbar_thumb = rgba((p.muted << 8) | 0xb0).into();

@@ -21,8 +21,8 @@ pub(crate) fn notification(
         .bg(rgb(p.surface))
         .border_1()
         .border_color(rgb(p.border))
-        .rounded(px(crate::theme::metrics::popup::RADIUS))
-        .shadow_lg()
+        .rounded(px(14.))
+        .shadow_md()
         .child(
             div()
                 .flex_shrink_0()

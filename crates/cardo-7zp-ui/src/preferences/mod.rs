@@ -8,7 +8,7 @@ mod view;
 use super::*;
 use cardo_7zp_core::settings::Preferences;
 use gpui_kit::{
-    component::{Disableable, h_flex, switch::Switch, v_flex},
+    component::{Disableable, h_flex, v_flex},
     prelude::FluentBuilder,
 };
 
@@ -52,6 +52,21 @@ enum Toggle {
     ToolLabels,
 }
 
+impl Toggle {
+    fn title(self) -> &'static str {
+        tr(match self {
+            Self::History => "settings-history-title",
+            Self::OpenAfter => "settings-open-after-title",
+            Self::CloseAfter => "settings-close-after-title",
+            Self::CloseArchive => "settings-close-archive-title",
+            Self::Priority => "settings-priority-title",
+            Self::Updates => "settings-updates-title",
+            Self::Shell => "settings-shell-title",
+            Self::ToolLabels => "settings-tool-labels-title",
+        })
+    }
+}
+
 pub(super) struct PreferencesForm {
     owner: WeakEntity<Workspace>,
     value: Preferences,
@@ -62,8 +77,9 @@ pub(super) struct PreferencesForm {
     font_size: f32,
     association_popup: Entity<gpui_kit::base::PopoverState>,
     association_bounds: std::rc::Rc<std::cell::Cell<Bounds<Pixels>>>,
+    association_search: Entity<InputState>,
     temporary: Entity<InputState>,
-    patterns: Entity<InputState>,
+    patterns: Entity<TextareaState>,
     task: Option<Task<()>>,
     error: Option<String>,
     font_error: Option<String>,
@@ -93,14 +109,15 @@ impl PreferencesForm {
                 .default_value(value.temp_directory.clone())
                 .placeholder(tr("settings-temp-default"))
         });
-        let patterns =
-            cx.new(|cx| InputState::new(window, cx).default_value(value.extract_all.clone()));
+        let patterns = cx.new(|cx| {
+            TextareaState::new(window, cx).default_value(value.extract_all.replace(';', "\n"))
+        });
         let font_family = cx.new(|cx| {
             InputState::new(window, cx)
                 .default_value(appearance.font_family.clone())
                 .placeholder(cardo_7zp_core::settings::Appearance::default().font_family)
         });
-        let mut watch: Vec<Subscription> = [&font_family, &temporary, &patterns]
+        let mut watch: Vec<Subscription> = [&font_family]
             .into_iter()
             .map(|input| {
                 cx.subscribe_in(input, window, |this, _, event, window, cx| {
@@ -111,7 +128,17 @@ impl PreferencesForm {
             })
             .collect();
         let association_popup = cx.new(|cx| gpui_kit::base::PopoverState::new(false, cx));
+        let association_search =
+            cx.new(|cx| InputState::new(window, cx).placeholder(tr("association-search")));
+        watch.push(cx.subscribe(&association_search, |_, _, event, cx| {
+            if matches!(event, InputEvent::Change) {
+                cx.notify();
+            }
+        }));
         watch.push(cx.observe(&association_popup, |_, _, cx| cx.notify()));
+        watch.push(cx.observe_window_bounds(window, |this, window, cx| {
+            this.dismiss_associations(window, cx);
+        }));
         watch.push(cx.observe_window_activation(window, |this, window, cx| {
             if !window.is_window_active() {
                 this.dismiss_associations(window, cx);
@@ -127,6 +154,7 @@ impl PreferencesForm {
             font_size: cardo_7zp_core::settings::Appearance::clamp_font_size(appearance.font_size),
             association_popup,
             association_bounds: std::rc::Rc::new(std::cell::Cell::new(Bounds::default())),
+            association_search,
             temporary,
             patterns,
             task: None,
@@ -143,14 +171,11 @@ impl PreferencesForm {
         checked: bool,
         cx: &Context<Self>,
     ) -> impl IntoElement + use<> {
-        settings_row(
+        settings_detail(
+            toggle.title(),
             tr(id),
-            Switch::new(id)
-                .accessibility_label(tr(id))
-                .color(rgb(crate::theme::palette(cx).accent))
-                .checked(checked)
-                .disabled(self.task.is_some())
-                .on_click(cx.listener(move |this, checked: &bool, window, cx| {
+            SettingsSwitch::new(id, toggle.title(), checked, self.is_busy()).on_click(cx.listener(
+                move |this, checked: &bool, window, cx| {
                     match toggle {
                         Toggle::History => this.value.remember_recent = *checked,
                         Toggle::OpenAfter => this.value.open_after = *checked,
@@ -163,7 +188,8 @@ impl PreferencesForm {
                     }
                     this.save(window, cx);
                     cx.notify();
-                })),
+                },
+            )),
             cx,
         )
     }

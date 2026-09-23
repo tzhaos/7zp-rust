@@ -29,38 +29,31 @@ impl Workspace {
                 tf("update-failed", &[("error", error.as_str().into())]),
             ),
         };
-        let mut rows = vec![
-            div()
-                .py(px(crate::theme::metrics::settings::ROW_PADDING))
-                .child(panel_notice(name, description, color))
-                .into_any_element(),
-        ];
         let mut actions = h_flex()
-            .w_full()
+            .min_w_0()
             .flex_wrap()
             .justify_end()
             .gap(px(8.))
-            .py(px(crate::theme::metrics::settings::ROW_PADDING));
+            .child(
+                div()
+                    .flex_shrink_0()
+                    .text_color(rgb(color))
+                    .child(icon(name, 16.)),
+            );
         if let Some(Status::Available {
             download, release, ..
         }) = status
         {
             let download = download.clone();
             let release = release.clone();
-            rows.push(
-                div()
-                    .py(px(crate::theme::metrics::settings::ROW_PADDING))
-                    .text_color(rgb(p.muted))
-                    .whitespace_normal()
-                    .child(tr("update-package-note"))
-                    .into_any_element(),
-            );
             actions = actions
-                .child(command("update-notes", tr("update-notes")).on_click(
-                    cx.listener(move |this, _, _, cx| this.open_update_link(&release, cx)),
-                ))
                 .child(
-                    primary("update-download", tr("update-download"))
+                    settings_action("update-notes", tr("update-notes"), cx).on_click(
+                        cx.listener(move |this, _, _, cx| this.open_update_link(&release, cx)),
+                    ),
+                )
+                .child(
+                    settings_primary("update-download", tr("update-download"), cx)
                         .icon(icon("ArrowDownload", 16.))
                         .on_click(
                             cx.listener(move |this, _, _, cx| this.open_update_link(&download, cx)),
@@ -68,12 +61,15 @@ impl Workspace {
                 );
         } else {
             actions = actions.child(
-                command("update-retry", tr("update-check"))
+                settings_action("update-retry", tr("update-check"), cx)
                     .disabled(self.settings_busy(cx) || matches!(status, Some(Status::Checking)))
                     .on_click(cx.listener(|this, _, _, cx| this.check_update(cx))),
             );
         }
-        rows.push(actions.into_any_element());
+        let rows = [
+            settings_detail(tr("settings-update-status"), &description, actions, cx)
+                .into_any_element(),
+        ];
         let mut body = settings_content("about-body")
             .child(settings_group(
                 [
@@ -88,10 +84,18 @@ impl Workspace {
                 cx,
             ))
             .child(settings_section(
-                tr("settings-update-status"),
+                tr("settings-update-page"),
                 settings_group(rows, cx),
                 cx,
-            ));
+            ))
+            .child(
+                body_text(if matches!(status, Some(Status::Available { .. })) {
+                    tr("update-package-note")
+                } else {
+                    tr("settings-update-source")
+                })
+                .text_color(rgb(p.muted)),
+            );
         if let Some(form) = &self.settings_form {
             body = body.child(settings_section(
                 tr("settings-update-preferences"),

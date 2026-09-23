@@ -33,7 +33,7 @@ impl Workspace {
                                     }
                                     Command::Error(error) => {
                                         tracing::error!(error = %error, "Platform command failed");
-                                        this.message = Some(error);
+                                        this.notify_message(error);
                                     }
                                 }
                                 cx.notify();
@@ -54,11 +54,14 @@ impl Workspace {
                                 {
                                     this.message_since =
                                         Some((message.clone(), std::time::Instant::now()));
+                                    this.notification_offset = Point::default();
+                                    this.notification_drag = None;
                                 } else if this.message_since.as_ref().is_some_and(|(_, since)| {
-                                    since.elapsed() >= std::time::Duration::from_secs(6)
+                                    since.elapsed() >= std::time::Duration::from_secs(3)
                                 }) {
                                     this.message = None;
                                     this.message_since = None;
+                                    this.notification_drag = None;
                                     cx.notify();
                                 }
                             } else {
@@ -128,7 +131,7 @@ impl Workspace {
         };
         if argument == "--shell-request" {
             let Some(path) = paths.first().map(PathBuf::from) else {
-                self.message = Some(tr("shell-path-required").into());
+                self.notify_message(tr("shell-path-required").into());
                 cx.notify();
                 return;
             };
@@ -140,7 +143,7 @@ impl Workspace {
                 let _ = view.update(cx, |this, cx| {
                     match result {
                         Ok(args) => this.launches.push_front(args),
-                        Err(error) => this.message = Some(format!("{error:#}")),
+                        Err(error) => this.notify_message(format!("{error:#}")),
                     }
                     this.shell_read_task = None;
                     cx.notify();
@@ -151,13 +154,13 @@ impl Workspace {
         let action = match cardo_7zp_platform::parse_action(argument) {
             Ok(action) => action,
             Err(error) => {
-                self.message = Some(error.to_string());
+                self.notify_message(error.to_string());
                 cx.notify();
                 return;
             }
         };
         if paths.is_empty() {
-            self.message = Some(tr("shell-path-required").into());
+            self.notify_message(tr("shell-path-required").into());
             cx.notify();
             return;
         }

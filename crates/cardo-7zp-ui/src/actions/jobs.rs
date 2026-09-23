@@ -106,10 +106,10 @@ impl Workspace {
                                 },
                                 path,
                             ));
-                            this.message = open_error;
+                            if let Some(message) = open_error { this.notify_message(message); } else { this.message = None; }
                         }
                     }
-                    Ok(Outcome::Message(message)) => this.message = Some(message),
+                    Ok(Outcome::Message(message)) => this.notify_message(message),
                     Ok(Outcome::Report(title, text)) => {
                         this.show_dialog(title, Modal::Report(text), cx);
                     }
@@ -117,7 +117,7 @@ impl Workspace {
                     Ok(Outcome::Moved(catalog, password, path, open_error)) => {
                         this.activate(catalog, password, cx);
                         this.completion = Some((tr("archive-move-complete").into(), path));
-                        this.message = open_error;
+                        if let Some(message) = open_error { this.notify_message(message); } else { this.message = None; }
                     }
                     Ok(Outcome::Password(request)) => this.dialogs.request_password(request),
                     Ok(Outcome::Dispatch(request)) => dispatch = Some(request),
@@ -188,7 +188,7 @@ impl Workspace {
                 .any(|e| e.directory && e.path == folder || e.path.starts_with(&prefix))
             {
                 self.browser.cancel_navigation();
-                self.message = Some(tr("browser-path-missing").into());
+                self.notify_message(tr("browser-path-missing").into());
                 return;
             }
         }
@@ -211,7 +211,11 @@ impl Workspace {
             }
         }
         self.update_recent(recent::Change::Remember(catalog.path.clone()), cx);
-        self.message = catalog.warning.then(|| tr("open-warning").into());
+        if catalog.warning {
+            self.notify_message(tr("open-warning").into());
+        } else {
+            self.message = None;
+        }
         self.browser.show_archive(catalog, password, folder);
         self.clear_search = true;
         self.refresh(cx);

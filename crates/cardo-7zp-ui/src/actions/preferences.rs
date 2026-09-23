@@ -43,7 +43,7 @@ impl Workspace {
                         }
                         Err(error) => {
                             tracing::error!(error = %format!("{error:#}"), "Cannot save language");
-                            this.message = Some(tf(
+                            this.notify_message(tf(
                                 "language-save-error",
                                 &[("error", format!("{error:#}").into())],
                             ))
@@ -87,7 +87,7 @@ impl Workspace {
     ) {
         if let Err(error) = crate::theme::apply(id, &self.appearance, Some(window), cx) {
             tracing::error!(error = %error, "Cannot apply theme");
-            self.message = Some(error.to_string());
+            self.notify_message(error.to_string());
             cx.notify();
             return;
         }
@@ -104,7 +104,7 @@ impl Workspace {
             if let Err(error) = result {
                 tracing::error!(error = %format!("{error:#}"), "Cannot save theme");
                 let _ = view.update(cx, |this, cx| {
-                    this.message = Some(tf(
+                    this.notify_message(tf(
                         "theme-save-error",
                         &[("error", format!("{error:#}").into())],
                     ));
@@ -152,7 +152,7 @@ impl Workspace {
             }
             if let Ok(cardo_7zp_requests::update::Status::Available { version, .. }) = result {
                 let _ = view.update(cx, |this, cx| {
-                    this.message = Some(tf("update-available", &[("version", version.into())]));
+                    this.notify_message(tf("update-available", &[("version", version.into())]));
                     cx.notify();
                 });
             }

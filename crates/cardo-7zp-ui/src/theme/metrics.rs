@@ -22,16 +22,11 @@ pub mod file_table {
 
 pub mod settings {
     pub const CONTENT_MAX_WIDTH: f32 = 680.;
-    pub const SELECTOR_WIDTH: f32 = 280.;
     pub const CONTENT_PADDING: f32 = 24.;
-    pub const TITLE_SIZE: f32 = 20.;
+    pub const TITLE_SIZE: f32 = 24.;
     pub const SECTION_TITLE_SIZE: f32 = 14.;
-    pub const SECTION_GAP: f32 = 24.;
-    pub const HEADING_GAP: f32 = 12.;
-    pub const GROUP_RADIUS: f32 = 16.;
-    pub const GROUP_PADDING: f32 = 16.;
-    pub const ROW_HEIGHT: f32 = 56.;
-    pub const ROW_PADDING: f32 = 12.;
+    pub const SECTION_GAP: f32 = 32.;
+    pub const HEADING_GAP: f32 = 16.;
 }
 
 pub mod popup {
@@ -45,20 +40,13 @@ pub mod popup {
     pub const CARD_PADDING: f32 = 16.;
     pub const CARD_RADIUS: f32 = 6.;
     pub const FOOTER_PADDING: f32 = 12.;
-    pub const RADIUS: f32 = 8.;
     pub const BODY_TEXT: f32 = 13.;
     pub const LINE_HEIGHT: f32 = 20.;
 }
 
 pub mod home {
-    pub const MAX_WIDTH: f32 = 1040.;
-    pub const MAX_HEIGHT: f32 = 540.;
+    pub const MAX_WIDTH: f32 = 760.;
     pub const PADDING: f32 = 24.;
-    pub const COLUMN_GAP: f32 = 28.;
-    pub const BRAND_WIDTH: f32 = 280.;
-    pub const LOGO_SIZE: f32 = 144.;
-    pub const BRAND_GAP: f32 = 16.;
-    pub const BRAND_TEXT_SIZE: f32 = 20.;
     pub const ACTION_GAP: f32 = 12.;
     pub const ACTION_ICON_SIZE: f32 = 17.;
     pub const HISTORY_GAP: f32 = 8.;

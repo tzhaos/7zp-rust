@@ -80,24 +80,25 @@ pub fn tool(
                     )
                 }),
         );
-    bubble_tooltip(button, label.to_owned())
+    if show_label {
+        button
+    } else {
+        bubble_tooltip(button, label.to_owned())
+    }
 }
 
 pub fn command(id: impl Into<ElementId>, label: &str) -> Button {
     // Button sizes control the inner label; an outer text_size is overridden.
-    bubble_tooltip(
-        Button::new(id)
-            .xsmall()
-            .label(label.to_owned())
-            .min_w_0()
-            .max_w_full()
-            .h(px(CONTROL_HEIGHT))
-            .px(px(12.))
-            .rounded(px(CONTROL_RADIUS))
-            .border_1()
-            .shadow_none(),
-        label.to_owned(),
-    )
+    Button::new(id)
+        .xsmall()
+        .label(label.to_owned())
+        .min_w_0()
+        .max_w_full()
+        .h(px(CONTROL_HEIGHT))
+        .px(px(12.))
+        .rounded(px(CONTROL_RADIUS))
+        .border_1()
+        .shadow_none()
 }
 
 pub fn checkbox(id: impl Into<ElementId>, label: &str) -> Checkbox {

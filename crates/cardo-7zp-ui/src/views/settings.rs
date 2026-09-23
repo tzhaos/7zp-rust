@@ -98,7 +98,7 @@ impl Workspace {
                         compact_text("settings-heading", page.title())
                             .flex_1()
                             .text_size(px(crate::theme::metrics::settings::TITLE_SIZE))
-                            .font_weight(FontWeight::SEMIBOLD),
+                            .font_weight(FontWeight::MEDIUM),
                     ),
             )
             .child(

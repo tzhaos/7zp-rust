@@ -29,12 +29,10 @@ impl Workspace {
             let _ = view.update(cx, |this, cx| {
                 match result {
                     Ok(entries) => this.history = entries,
-                    Err(error) => {
-                        this.message = Some(tf(
-                            "recent-storage-error",
-                            &[("error", error.to_string().into())],
-                        ))
-                    }
+                    Err(error) => this.notify_message(tf(
+                        "recent-storage-error",
+                        &[("error", error.to_string().into())],
+                    )),
                 }
                 cx.notify();
             });

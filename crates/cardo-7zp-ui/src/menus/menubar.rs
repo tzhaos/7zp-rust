@@ -1,19 +1,16 @@
 use crate::commands::Command;
 use crate::*;
+use gpui_kit::base::ElementExt;
 use gpui_kit::component::{button::ButtonVariants, h_flex};
 
 #[derive(Clone, Copy)]
 pub(crate) enum MenuGroup {
     File,
     Selection,
-    Open,
-    Extract,
-    Check,
 }
 
 impl Workspace {
     pub(crate) fn menubar(&self, cx: &Context<Self>) -> impl IntoElement + use<> {
-        let owner = cx.entity().downgrade();
         h_flex()
             .id("titlebar-menus")
             .h(px(36.))
@@ -26,23 +23,38 @@ impl Workspace {
                 [(MenuGroup::File, "menu-file")]
                     .into_iter()
                     .map(|(group, label)| {
-                        let owner = owner.clone();
+                        let bounds =
+                            std::rc::Rc::new(std::cell::Cell::new(Bounds::<Pixels>::default()));
+                        let measured = bounds.clone();
                         command(label, tr(label))
                             .h(px(28.))
                             .px(px(8.))
                             .custom(subtle_variant(cx))
                             .border_0()
-                            .popup_menu(move |_, cx| build_menu(&owner, group, cx))
+                            .on_prepaint(move |rect, _, _| measured.set(rect))
+                            .on_click({
+                                let owner = cx.entity().downgrade();
+                                move |_, window, cx| {
+                                    let anchor = bounds.get();
+                                    build_menu(&owner, group, cx).show_native(
+                                        point(anchor.left(), anchor.bottom()),
+                                        window,
+                                        cx,
+                                    );
+                                }
+                            })
                     }),
             )
     }
 }
 
-pub(crate) fn build_menu(owner: &WeakEntity<Workspace>, group: MenuGroup, cx: &mut App) -> Menu {
+pub(crate) fn menu_items(group: MenuGroup) -> &'static [(&'static str, &'static str, Command)] {
     use Command::*;
-    let mut menu = Menu::new();
-    let items: &[(&str, &str, Command)] = match group {
+    match group {
         MenuGroup::File => &[
+            ("archive-open", "Ctrl+O", Open),
+            ("archive-create-command", "", Create),
+            ("", "", Open),
             ("browser-open", "Enter", OpenItem),
             ("file-open-inside", "Ctrl+PgDn", OpenInside),
             ("file-open-outside", "Shift+Enter", OpenOutside),
@@ -60,6 +72,11 @@ pub(crate) fn build_menu(owner: &WeakEntity<Workspace>, group: MenuGroup, cx: &m
             ("archive-info", "", ArchiveInfo),
             ("archive-close", "", Close),
             ("", "", Open),
+            ("extract-options", "Alt+E", Extract),
+            ("extract-all-quick", "", QuickExtract),
+            ("extract-selected", "", QuickExtractSelection),
+            ("archive-check", "Alt+T", Check),
+            ("", "", Open),
             (
                 "settings-title",
                 "Ctrl+,",
@@ -75,14 +92,21 @@ pub(crate) fn build_menu(owner: &WeakEntity<Workspace>, group: MenuGroup, cx: &m
             ("select-by-type", "", SelectByType),
             ("deselect-by-type", "", DeselectByType),
         ],
-        MenuGroup::Open => &[("archive-open", "Ctrl+O", Open)],
-        MenuGroup::Extract => &[
-            ("extract-options", "Alt+E", Extract),
-            ("extract-all-quick", "", QuickExtract),
-            ("extract-selected", "", QuickExtractSelection),
-        ],
-        MenuGroup::Check => &[("archive-check", "Alt+T", Check)],
-    };
+    }
+}
+
+pub(crate) fn build_menu(owner: &WeakEntity<Workspace>, group: MenuGroup, cx: &mut App) -> Menu {
+    use Command::*;
+    let mut menu = Menu::new();
+    let items = menu_items(group);
+    let snapshot = owner
+        .read_with(cx, |this, _| {
+            (
+                this.browser.location(),
+                this.browser.view().selected.clone(),
+            )
+        })
+        .ok();
     for &(label, shortcut, action) in items {
         if label.is_empty() {
             menu = menu.separator();
@@ -105,22 +129,35 @@ pub(crate) fn build_menu(owner: &WeakEntity<Workspace>, group: MenuGroup, cx: &m
                 )
             })
             .unwrap_or((false, false));
-        let owner = owner.clone();
+        let callback_owner = owner.clone();
+        let snapshot = snapshot.clone();
         menu = menu.item(
             menu_command_item(tr(label), shortcut)
                 .disabled(!enabled)
                 .checked(checked)
                 .on_select(move |window, cx| {
-                    let _ = owner.update(cx, |this, cx| this.command(action, window, cx));
+                    let _ = callback_owner.update(cx, |this, cx| {
+                        if let Some((location, selected)) = &snapshot {
+                            if this.browser.location() != *location
+                                || this.tasks.is_busy()
+                                || this.dialogs.is_open()
+                                || this.settings_busy(cx)
+                            {
+                                return;
+                            }
+                            this.browser.restore_selection(selected.clone());
+                        }
+                        this.command(action, window, cx);
+                    });
                 }),
         );
-    }
-    match group {
-        MenuGroup::Open => {
-            menu = menus::archive::open_as_menu(owner, menu, cx);
+        if matches!(group, MenuGroup::File) {
+            if matches!(action, OpenInside) {
+                menu = menus::archive::open_as_menu(owner, menu, cx);
+            } else if matches!(action, Check) {
+                menu = menus::archive::checksum_menu(owner, menu, cx);
+            }
         }
-        MenuGroup::Check => menu = menus::archive::checksum_menu(owner, menu, cx),
-        _ => {}
     }
     menu
 }

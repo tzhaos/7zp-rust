@@ -1,10 +1,12 @@
 use gpui_kit::base::{Align, ElementExt as _, Placement, Positioner};
 use gpui_kit::{
     component::{
-        ActiveTheme,
+        ActiveTheme, Icon, Side,
         button::Button,
         h_flex,
         menu::{PopupMenu, PopupMenuItem},
+        native_menu::NativeMenu,
+        v_flex,
     },
     prelude::FluentBuilder,
     *,
@@ -17,15 +19,26 @@ type Handler = Rc<dyn Fn(&mut Window, &mut App)>;
 struct MenuHosts(HashMap<WindowId, WeakEntity<MenuHost>>);
 impl Global for MenuHosts {}
 
+#[derive(Clone, PartialEq, Action)]
+#[action(no_json)]
+struct NativeSelection {
+    window: AnyWindowHandle,
+    epoch: u64,
+    index: usize,
+}
+
 /// Windows own their menus and subscriptions; the registry only holds weak references.
 pub struct MenuHost {
     menu: Option<Entity<PopupMenu>>,
     anchor: Bounds<Pixels>,
     viewport: Size<Pixels>,
+    align_end: bool,
     previous_focus: Option<FocusHandle>,
     more_label: fn() -> SharedString,
     dismiss_subscription: Option<Subscription>,
     _activation_subscription: Subscription,
+    native_epoch: u64,
+    native_handlers: Vec<Handler>,
 }
 
 impl MenuHost {
@@ -45,9 +58,12 @@ impl MenuHost {
             menu: None,
             anchor: Bounds::default(),
             viewport: window.viewport_size(),
+            align_end: false,
             previous_focus: None,
             more_label,
             dismiss_subscription: None,
+            native_epoch: 0,
+            native_handlers: Vec::new(),
             _activation_subscription: cx.observe_window_activation(window, |this, window, cx| {
                 if !window.is_window_active() {
                     this.close(window, cx);
@@ -56,6 +72,30 @@ impl MenuHost {
         });
         if !cx.has_global::<MenuHosts>() {
             cx.set_global(MenuHosts::default());
+            cx.on_action(|selection: &NativeSelection, cx| {
+                let window = selection.window;
+                let Some(host) = cx
+                    .global::<MenuHosts>()
+                    .0
+                    .get(&window.window_id())
+                    .and_then(WeakEntity::upgrade)
+                else {
+                    return;
+                };
+                let handler = host.update(cx, |host, _| {
+                    if host.native_epoch != selection.epoch {
+                        return None;
+                    }
+                    let handler = host.native_handlers.get(selection.index).cloned();
+                    host.native_handlers.clear();
+                    handler
+                });
+                if let Some(handler) = handler {
+                    cx.defer(move |cx| {
+                        let _ = window.update(cx, |_, window, cx| handler(window, cx));
+                    });
+                }
+            });
         }
         let hosts = &mut cx.global_mut::<MenuHosts>().0;
         hosts.retain(|_, host| host.upgrade().is_some());
@@ -87,6 +127,7 @@ impl MenuHost {
         self.previous_focus = window.focused(cx);
         self.anchor = anchor;
         self.viewport = window.viewport_size();
+        self.align_end = menu.align_end;
         let menu = menu.into_popup((self.more_label)(), self.previous_focus.clone(), window, cx);
         self.dismiss_subscription =
             Some(
@@ -113,7 +154,11 @@ impl Render for MenuHost {
                 deferred(
                     Positioner::side(self.anchor)
                         .placement(Placement::Bottom)
-                        .align(Align::Start)
+                        .align(if self.align_end {
+                            Align::End
+                        } else {
+                            Align::Start
+                        })
                         .offset(px(6.))
                         .margin(px(8.))
                         .child(menu.clone()),
@@ -127,6 +172,7 @@ impl Render for MenuHost {
 pub struct Menu {
     entries: Vec<Entry>,
     width: Option<Pixels>,
+    align_end: bool,
 }
 
 enum Entry {
@@ -137,6 +183,8 @@ enum Entry {
 
 pub struct MenuItem {
     label: SharedString,
+    description: Option<SharedString>,
+    icon: Option<Icon>,
     shortcut: Option<&'static str>,
     disabled: bool,
     checked: bool,
@@ -147,6 +195,8 @@ impl MenuItem {
     pub fn new(label: impl Into<SharedString>) -> Self {
         Self {
             label: label.into(),
+            description: None,
+            icon: None,
             shortcut: None,
             disabled: false,
             checked: false,
@@ -155,6 +205,14 @@ impl MenuItem {
     }
     pub fn shortcut(mut self, shortcut: &'static str) -> Self {
         self.shortcut = (!shortcut.is_empty()).then_some(shortcut);
+        self
+    }
+    pub fn description(mut self, description: impl Into<SharedString>) -> Self {
+        self.description = Some(description.into());
+        self
+    }
+    pub fn icon(mut self, icon: impl Into<Icon>) -> Self {
+        self.icon = Some(icon.into());
         self
     }
     pub fn disabled(mut self, disabled: bool) -> Self {
@@ -194,7 +252,70 @@ impl Menu {
         self
     }
     pub fn show(self, position: Point<Pixels>, window: &mut Window, cx: &mut App) {
-        self.show_at(Bounds::new(position, size(px(0.), px(0.))), window, cx);
+        self.show_native(position, window, cx);
+    }
+
+    pub fn show_native(self, position: Point<Pixels>, window: &mut Window, cx: &mut App) {
+        let host = cx
+            .try_global::<MenuHosts>()
+            .and_then(|hosts| hosts.0.get(&window.window_handle().window_id()))
+            .and_then(WeakEntity::upgrade);
+        let Some(host) = host else {
+            return;
+        };
+        let native = host.update(cx, |host, cx| {
+            host.close(window, cx);
+            host.native_epoch += 1;
+            host.native_handlers.clear();
+            self.into_native(
+                window.window_handle(),
+                host.native_epoch,
+                &mut host.native_handlers,
+            )
+        });
+        // The pinned implementation runs the OS modal loop after GPUI borrows are released.
+        native.show(position, window, cx);
+    }
+
+    fn into_native(
+        self,
+        window: AnyWindowHandle,
+        epoch: u64,
+        handlers: &mut Vec<Handler>,
+    ) -> NativeMenu {
+        let mut menu = NativeMenu::new();
+        for entry in self.entries {
+            menu = match entry {
+                Entry::Separator => menu.separator(),
+                Entry::Submenu(label, submenu) => {
+                    menu.submenu(label, submenu.into_native(window, epoch, handlers))
+                }
+                Entry::Item(item) => {
+                    let label = if let Some(shortcut) = item.shortcut {
+                        format!("{}\t{shortcut}", item.label).into()
+                    } else {
+                        item.label
+                    };
+                    let disabled = item.disabled || item.handler.is_none();
+                    let action = Box::new(NativeSelection {
+                        window,
+                        epoch,
+                        index: handlers.len(),
+                    });
+                    if let Some(handler) = item.handler {
+                        handlers.push(handler);
+                    }
+                    if disabled {
+                        menu.menu_with_disabled(label, true, action)
+                    } else if let Some(icon) = item.icon {
+                        menu.menu_with_icon(label, icon, action)
+                    } else {
+                        menu.menu_with_check(label, item.checked, action)
+                    }
+                }
+            };
+        }
+        menu
     }
     fn show_at(self, anchor: Bounds<Pixels>, window: &mut Window, cx: &mut App) {
         let host = cx
@@ -220,7 +341,15 @@ impl Menu {
         }
         let viewport = window.viewport_size();
         let font_size = cx.theme().font_size * 0.875;
-        let row_height = (font_size * 1.5 + px(10.)).max(px(32.));
+        let descriptions = self
+            .entries
+            .iter()
+            .any(|entry| matches!(entry, Entry::Item(item) if item.description.is_some()));
+        let icons = self
+            .entries
+            .iter()
+            .any(|entry| matches!(entry, Entry::Item(item) if item.icon.is_some()));
+        let row_height = (font_size * if descriptions { 2.8 } else { 1.5 } + px(10.)).max(px(34.));
         let width = self
             .width
             .unwrap_or_else(|| (font_size * 24.).max(px(280.)))
@@ -244,11 +373,16 @@ impl Menu {
                 Menu {
                     entries: rest,
                     width: self.width,
+                    align_end: self.align_end,
                 },
             ));
         }
         PopupMenu::build(window, cx, move |mut popup, window, cx| {
-            popup = popup.min_w(width).max_w(width).scrollable(false);
+            popup = popup
+                .min_w(width)
+                .max_w(width)
+                .scrollable(false)
+                .check_side(Side::Right);
             if let Some(focus) = focus.clone() {
                 popup = popup.action_context(focus);
             }
@@ -261,18 +395,39 @@ impl Menu {
                     )),
                     Entry::Item(item) => {
                         let label = item.label;
+                        let description = item.description;
+                        let tooltip: SharedString = description
+                            .as_ref()
+                            .map(|description| format!("{label}\n{description}").into())
+                            .unwrap_or_else(|| label.clone());
                         let shortcut = item.shortcut;
                         let disabled = item.disabled || item.handler.is_none();
                         let mut row = PopupMenuItem::element(move |_, cx| {
                             crate::tooltip::bubble_tooltip(
                                 h_flex()
                                     .id("menu-label")
-                                    .w(width - px(48.))
+                                    .w(width - px(if icons { 72. } else { 48. }))
                                     .h(row_height)
                                     .min_w_0()
                                     .gap(px(12.))
                                     .aria_label(label.clone())
-                                    .child(div().flex_1().min_w_0().truncate().child(label.clone()))
+                                    .child(
+                                        v_flex()
+                                            .flex_1()
+                                            .min_w_0()
+                                            .gap(px(2.))
+                                            .child(div().min_w_0().truncate().child(label.clone()))
+                                            .when_some(description.clone(), |el, description| {
+                                                el.child(
+                                                    div()
+                                                        .min_w_0()
+                                                        .truncate()
+                                                        .text_size(font_size * 0.9)
+                                                        .text_color(cx.theme().muted_foreground)
+                                                        .child(description),
+                                                )
+                                            }),
+                                    )
                                     .when_some(shortcut, |row, shortcut| {
                                         row.child(
                                             div()
@@ -281,11 +436,14 @@ impl Menu {
                                                 .child(shortcut),
                                         )
                                     }),
-                                label.clone(),
+                                tooltip.clone(),
                             )
                         })
                         .disabled(disabled)
                         .checked(item.checked);
+                        if let Some(icon) = item.icon {
+                            row = row.icon(icon);
+                        }
                         if let Some(handler) = item.handler {
                             row = row.on_click(move |_, window, cx| {
                                 let owner = window.window_handle();
@@ -320,7 +478,8 @@ impl MenuTrigger for Button {
             .on_click(move |_, window, cx| {
                 let anchor = bounds.get();
                 let mut menu = build(window, cx);
-                menu.width = Some(anchor.size.width);
+                menu.width = Some((anchor.size.width + px(40.)).max(px(240.)));
+                menu.align_end = true;
                 menu.show_at(anchor, window, cx);
             })
     }
@@ -329,6 +488,9 @@ impl MenuTrigger for Button {
         let bounds = Rc::new(Cell::new(Bounds::<Pixels>::default()));
         let measured = bounds.clone();
         self.on_prepaint(move |value, _, _| measured.set(value))
-            .on_click(move |_, window, cx| build(window, cx).show_at(bounds.get(), window, cx))
+            .on_click(move |_, window, cx| {
+                let anchor = bounds.get();
+                build(window, cx).show_native(point(anchor.left(), anchor.bottom()), window, cx)
+            })
     }
 }

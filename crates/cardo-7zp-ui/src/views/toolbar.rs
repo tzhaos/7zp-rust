@@ -1,5 +1,4 @@
 use crate::commands::Command;
-use crate::menus::menubar::{MenuGroup, build_menu};
 use crate::theme::metrics::*;
 use crate::views::SettingsPage;
 use crate::*;
@@ -19,20 +18,13 @@ impl Workspace {
             .gap(px(TOOL_GAP))
             .items_center()
             .bg(rgb(crate::theme::palette(cx).panel));
-        for (id, icon, label, action, menu) in [
-            (
-                "open",
-                ToolIcon::Open,
-                "open",
-                Command::Open,
-                Some(MenuGroup::Open),
-            ),
+        for (id, icon, label, action) in [
+            ("open", ToolIcon::Open, "open", Command::Open),
             (
                 "extract-options",
                 ToolIcon::Extract,
                 "extract-options",
                 Command::Extract,
-                Some(MenuGroup::Extract),
             ),
             (
                 "extract",
@@ -43,15 +35,8 @@ impl Workspace {
                     "extract-selected"
                 },
                 Command::QuickExtractSelection,
-                None,
             ),
-            (
-                "check",
-                ToolIcon::Check,
-                "check",
-                Command::Check,
-                Some(MenuGroup::Check),
-            ),
+            ("check", ToolIcon::Check, "check", Command::Check),
         ] {
             let button = tool(
                 id,
@@ -62,14 +47,9 @@ impl Workspace {
                 window,
                 cx,
             );
-            row = row.child(if let Some(group) = menu {
-                let owner = cx.entity().downgrade();
-                button.popup_menu(move |_, cx| build_menu(&owner, group, cx))
-            } else {
-                button.on_click(
-                    cx.listener(move |this, _, window, cx| this.command(action, window, cx)),
-                )
-            });
+            row = row.child(button.on_click(
+                cx.listener(move |this, _, window, cx| this.command(action, window, cx)),
+            ));
         }
         row = row.child(div().flex_1().min_w(px(8.)));
         for (id, icon, page) in [

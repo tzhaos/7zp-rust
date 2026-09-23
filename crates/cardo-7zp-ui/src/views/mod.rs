@@ -46,6 +46,19 @@ impl Render for Workspace {
                 }),
             )
             .on_mouse_move(cx.listener(|this, event: &MouseMoveEvent, _, cx| {
+                if let Some((start, offset)) = this.notification_drag {
+                    if event.pressed_button == Some(MouseButton::Left) {
+                        let bounds = this.notification_bounds.get();
+                        let panel = this.content_bounds.get();
+                        let base = bounds.origin - this.notification_offset;
+                        let next = offset + event.position - start;
+                        this.notification_offset = point(
+                            next.x.max(panel.left() + px(12.) - base.x).min(panel.right() - px(12.) - base.x - bounds.size.width),
+                            next.y.max(panel.top() + px(12.) - base.y).min(panel.bottom() - px(12.) - base.y - bounds.size.height),
+                        );
+                        cx.notify();
+                    } else { this.notification_drag = None; }
+                }
                 let Some(anchor) = this.hint_anchor else {
                     return;
                 };
@@ -56,6 +69,7 @@ impl Render for Workspace {
                     cx.notify();
                 }
             }))
+            .on_mouse_up(MouseButton::Left, cx.listener(|this, _, _, _| this.notification_drag = None))
             .on_drag_move(
                 cx.listener(|this, _: &DragMoveEvent<ExternalPaths>, _, cx| {
                     if !this.dialogs.is_open()
@@ -276,25 +290,50 @@ impl Render for Workspace {
 }
 
 impl Workspace {
+    pub(crate) fn notify_message(&mut self, message: String) {
+        self.message_since = Some((message.clone(), std::time::Instant::now()));
+        self.message = Some(message);
+        self.notification_offset = Point::default();
+        self.notification_drag = None;
+    }
+
     fn notification_stack(&self, cx: &Context<Self>) -> Option<Div> {
         let message = self.message.clone()?;
+        let measured = self.notification_bounds.clone();
         Some(
             v_flex()
                 .absolute()
-                .top(px(12.))
+                .bottom(px(16.))
                 .left(px(12.))
                 .right(px(12.))
-                .items_end()
-                .child(notification(
-                    "message-notification",
-                    div().whitespace_normal().child(message),
-                    icon_button("dismiss-message", "Dismiss", tr("message-close"), false, cx)
-                        .on_click(cx.listener(|this, _, _, cx| {
-                            this.message = None;
-                            cx.notify();
-                        })),
-                    cx,
-                )),
+                .items_center()
+                .child(
+                    notification(
+                        "message-notification",
+                        div().whitespace_normal().child(message),
+                        icon_button("dismiss-message", "Dismiss", tr("message-close"), false, cx)
+                            .on_mouse_down(MouseButton::Left, |_, _, cx| cx.stop_propagation())
+                            .on_click(cx.listener(|this, _, _, cx| {
+                                this.message = None;
+                                cx.notify();
+                            })),
+                        cx,
+                    )
+                    .id("notification-drag")
+                    .relative()
+                    .left(self.notification_offset.x)
+                    .top(self.notification_offset.y)
+                    .on_prepaint(move |bounds, _, _| measured.set(bounds))
+                    .on_mouse_down(
+                        MouseButton::Left,
+                        cx.listener(|this, event: &MouseDownEvent, _, cx| {
+                            this.notification_drag =
+                                Some((event.position, this.notification_offset));
+                            cx.stop_propagation();
+                        }),
+                    )
+                    .on_click(|_, _, cx| cx.stop_propagation()),
+                ),
         )
     }
 }

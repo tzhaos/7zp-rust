@@ -93,7 +93,7 @@ impl Selection {
                                 .collect::<Vec<_>>()
                                 .join("\n"),
                         ));
-                        this.message = Some(tr("paths-copied").into());
+                        this.notify_message(tr("paths-copied").into());
                     }
                     Action::SelectAll => this.command(Command::SelectAll, window, cx),
                     Action::Invert => this.command(Command::InvertSelection, window, cx),

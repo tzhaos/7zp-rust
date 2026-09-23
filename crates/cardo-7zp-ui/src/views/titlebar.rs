@@ -26,7 +26,11 @@ impl Workspace {
                     .items_center()
                     .window_control_area(WindowControlArea::Drag)
                     .child(
-                        compact_text("window-heading", title)
+                        div()
+                            .id("window-heading")
+                            .min_w_0()
+                            .truncate()
+                            .child(title)
                             .flex_1()
                             .font_weight(FontWeight::SEMIBOLD),
                     )

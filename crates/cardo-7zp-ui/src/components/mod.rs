@@ -12,6 +12,11 @@ mod tooltip;
 pub(super) use button::{
     checkbox, command, icon_button, menu_choice, primary, subtle_variant, text_input, tool,
 };
+pub(super) use cardo_ui::settings::{
+    SettingsSwitch, action as settings_action, choice as settings_choice, input as settings_input,
+    primary_action as settings_primary, segment as settings_segment, segments as settings_segments,
+    stepper as settings_stepper,
+};
 pub(super) use cardo_ui::text::{body_text, compact_text};
 pub(super) use file_icons::file_icon;
 pub(super) use icons::{ToolIcon, artwork, icon};
@@ -26,6 +31,7 @@ pub(super) use panel::{
     window_grip,
 };
 pub(super) use settings::{
-    settings_content, settings_frame, settings_group, settings_page, settings_row, settings_section,
+    settings_content, settings_detail, settings_group, settings_page, settings_row,
+    settings_section,
 };
 pub(super) use tooltip::bubble_tooltip;

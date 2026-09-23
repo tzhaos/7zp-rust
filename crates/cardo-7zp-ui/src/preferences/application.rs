@@ -11,10 +11,10 @@ impl PreferencesForm {
                 tr("settings-language-history"),
                 settings_group(
                     [
-                        settings_row(
+                        settings_detail(
                             tr("language-menu"),
-                            menu_choice("settings-language", self.language.label(), cx)
-                                .w(px(crate::theme::metrics::settings::SELECTOR_WIDTH))
+                            tr("settings-language-description"),
+                            settings_choice("settings-language", self.language.label(), cx)
                                 .disabled(busy)
                                 .choice_menu(move |_, _| {
                                     let mut menu = Menu::new();
@@ -22,6 +22,8 @@ impl PreferencesForm {
                                         let owner = languages.clone();
                                         menu = menu.item(
                                             MenuItem::new(language.label())
+                                                .description(language.code())
+                                                .icon(icon("Translate", 16.))
                                                 .checked(language == selected_language)
                                                 .on_select(move |window, cx| {
                                                     let _ = owner.update(cx, |this, cx| {

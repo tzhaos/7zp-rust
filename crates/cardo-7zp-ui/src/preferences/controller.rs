@@ -23,7 +23,15 @@ impl PreferencesForm {
             return;
         }
         self.value.temp_directory = self.temporary.read(cx).value().trim().to_owned();
-        self.value.extract_all = self.patterns.read(cx).value().trim().to_owned();
+        self.value.extract_all = self
+            .patterns
+            .read(cx)
+            .value()
+            .split([';', '\n', '\r'])
+            .map(str::trim)
+            .filter(|item| !item.is_empty())
+            .collect::<Vec<_>>()
+            .join(";");
         let font = match crate::theme::resolve_font(&self.font_family.read(cx).value(), cx) {
             Ok(font) => font,
             Err(error) => {
@@ -88,7 +96,7 @@ impl PreferencesForm {
                                             cx,
                                         ) {
                                             tracing::error!(error = %error, "Cannot apply appearance");
-                                            owner.message = Some(error.to_string());
+                                            owner.notify_message(error.to_string());
                                             cx.notify();
                                         }
                                     }
