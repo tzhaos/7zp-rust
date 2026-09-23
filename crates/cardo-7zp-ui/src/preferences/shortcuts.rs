@@ -24,8 +24,11 @@ impl PreferencesForm {
                 .child(
                     body_text(tr("shortcuts-title"))
                         .flex_1()
-                        .text_size(px(24.))
-                        .font_weight(FontWeight::MEDIUM),
+                        .text_size(
+                            px(crate::theme::metrics::settings::SECTION_TITLE_SIZE)
+                                .max(crate::theme::ui_font_size(cx)),
+                        )
+                        .font_weight(FontWeight::SEMIBOLD),
                 )
                 .child(
                     settings_action(
