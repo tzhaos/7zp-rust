@@ -2,7 +2,7 @@ use super::{
     Cancellation, CreateOptions, Engine, Format, Level, Output, Threads, Volume,
     engine::{input_list, list_argument, publish},
 };
-use anyhow::{Context, Result, bail};
+use anyhow::{Context, Result};
 use cardo_7zp_commands::{ArchiveFormat, HashMethod, archive_name};
 use cardo_7zp_core::i18n::tr;
 use std::path::PathBuf;
@@ -74,16 +74,16 @@ impl Engine {
                 "-sccUTF-8".into(),
                 "-scsUTF-8".into(),
                 "-spd".into(),
+                list_argument("-i@", inputs.as_ref()),
                 "--".into(),
                 temporary.as_os_str().into(),
-                list_argument("@", inputs.as_ref()),
             ],
             Some(parent),
             cancel,
             None,
         )?;
         if output.warning {
-            bail!(tr("checksum-warning"));
+            return Err(anyhow::anyhow!(output.text)).context(tr("checksum-warning"));
         }
         publish(&temporary, &destination, false).context(tr("publish-failed"))?;
         Ok(destination)

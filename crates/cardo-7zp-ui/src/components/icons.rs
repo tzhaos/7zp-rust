@@ -26,6 +26,7 @@ pub enum ToolIcon {
     History,
     About,
     Warning,
+    Error,
     Delete,
 }
 
@@ -43,6 +44,7 @@ impl ToolIcon {
             Self::History => "toolbar/history.svg",
             Self::About => "toolbar/about.svg",
             Self::Warning => "toolbar/warning.svg",
+            Self::Error => "toolbar/error.svg",
             Self::Delete => "toolbar/delete.svg",
         }
     }

@@ -175,7 +175,7 @@ impl Engine {
                 warning: false,
             }),
             Some(1) => Ok(Output {
-                text,
+                text: format!("{text}\n{}", String::from_utf8_lossy(&stderr)),
                 warning: true,
             }),
             code => {
@@ -467,13 +467,13 @@ impl Engine {
         let inputs = input_list(sources)?;
         args.extend([
             "-scsUTF-8".into(),
+            list_argument("-i@", inputs.as_ref()),
             "--".into(),
             temporary.as_os_str().into(),
-            list_argument("@", inputs.as_ref()),
         ]);
         let result = self.run(args, cancel)?;
         if result.warning {
-            bail!(tr("create-warning"));
+            return Err(anyhow::anyhow!(result.text)).context(tr("create-warning"));
         }
         let first = if options.volume == Volume::None {
             temporary.clone()

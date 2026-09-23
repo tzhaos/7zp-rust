@@ -12,15 +12,15 @@ impl Workspace {
     pub(crate) fn error_view(
         &self,
         error: &ErrorDialog,
-        _window: &Window,
-        cx: &Context<Self>,
+        window: &mut Window,
+        cx: &mut Context<Self>,
     ) -> Div {
-        let p = crate::theme::palette(cx);
+        let notice = panel_artwork_notice(ToolIcon::Error, error.summary.clone(), window, cx);
         let details = error.details.clone();
         panel_layout(cx)
             .child(
                 panel_document("error-body")
-                    .child(panel_notice("Info", error.summary.clone(), p.danger))
+                    .child(notice)
                     .when_some(error.path.clone(), |el, path| {
                         el.child(path_strip(
                             "error-copy-path",

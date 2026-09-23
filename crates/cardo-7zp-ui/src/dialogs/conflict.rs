@@ -15,7 +15,8 @@ impl Workspace {
         let Some(conflict) = plan.conflicts.get(*index) else {
             return div().into_any_element();
         };
-        let notice_icon = artwork(ToolIcon::Warning, window, cx).into_any_element();
+        let notice =
+            panel_artwork_notice(ToolIcon::Warning, tr("extract-conflict-exists"), window, cx);
         let file = |label: &'static str, bytes: Option<u64>, modified: &str| {
             panel_card(cx)
                 .flex_1()
@@ -47,15 +48,7 @@ impl Workspace {
         panel_layout(cx)
             .child(
                 panel_body("conflict-body")
-                    .child(
-                        h_flex()
-                            .w_full()
-                            .min_w_0()
-                            .flex_shrink_0()
-                            .gap(px(12.))
-                            .child(notice_icon)
-                            .child(body_text(tr("extract-conflict-exists")).flex_1()),
-                    )
+                    .child(notice)
                     .child(
                         compact_text(
                             "conflict-filename",

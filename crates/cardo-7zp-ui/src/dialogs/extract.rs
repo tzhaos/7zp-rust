@@ -109,18 +109,7 @@ impl Workspace {
         panel_layout(cx)
             .child(
                 panel_body("extract-options-body")
-                    .child(
-                        gpui_kit::component::h_flex()
-                            .min_w_0()
-                            .gap(px(12.))
-                            .child(artwork(ToolIcon::Browser, window, cx))
-                            .child(
-                                body_text(name)
-                                    .flex_1()
-                                    .text_size(px(16.))
-                                    .font_weight(FontWeight::SEMIBOLD),
-                            ),
-                    )
+                    .child(panel_artwork_notice(ToolIcon::Browser, name, window, cx))
                     .child(settings_group(
                         [
                             settings_row(tr("extract-scope"), scope, cx).into_any_element(),

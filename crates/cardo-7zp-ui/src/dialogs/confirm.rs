@@ -27,24 +27,14 @@ impl Workspace {
         window: &mut Window,
         cx: &mut Context<Self>,
     ) -> AnyElement {
-        let notice_icon = artwork(ToolIcon::Delete, window, cx).into_any_element();
+        let notice = panel_artwork_notice(
+            ToolIcon::Delete,
+            tf("archive-delete-confirm", &[("count", count.into())]),
+            window,
+            cx,
+        );
         panel_layout(cx)
-            .child(
-                panel_body("confirm-delete-body").child(
-                    gpui_kit::component::h_flex()
-                        .w_full()
-                        .min_w_0()
-                        .flex_shrink_0()
-                        .gap(px(12.))
-                        .child(notice_icon)
-                        .child(
-                            body_text(tf("archive-delete-confirm", &[("count", count.into())]))
-                                .flex_1()
-                                .text_size(px(16.))
-                                .font_weight(FontWeight::SEMIBOLD),
-                        ),
-                ),
-            )
+            .child(panel_body("confirm-delete-body").child(notice))
             .child(
                 panel_actions(cx)
                     .child(

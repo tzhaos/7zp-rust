@@ -1,3 +1,4 @@
+use super::{ToolIcon, artwork};
 use super::{body_text, command, compact_text, icon};
 use crate::{ScrollableElement, theme::metrics::popup as metrics};
 use gpui_kit::{
@@ -314,6 +315,27 @@ pub(crate) fn panel_notice(name: &str, text: impl Into<SharedString>, color: u32
         .gap(px(12.))
         .child(icon(name, 20.).flex_shrink_0().text_color(rgb(color)))
         .child(body_text(text).flex_1())
+}
+
+pub(crate) fn panel_artwork_notice(
+    name: ToolIcon,
+    text: impl Into<SharedString>,
+    window: &mut Window,
+    cx: &mut App,
+) -> Div {
+    let artwork = artwork(name, window, cx).into_any_element();
+    h_flex()
+        .w_full()
+        .min_w_0()
+        .flex_shrink_0()
+        .gap(px(metrics::GAP))
+        .child(artwork)
+        .child(
+            body_text(text)
+                .flex_1()
+                .text_size(px(16.))
+                .font_weight(FontWeight::SEMIBOLD),
+        )
 }
 
 pub(crate) fn panel_card(cx: &App) -> Div {

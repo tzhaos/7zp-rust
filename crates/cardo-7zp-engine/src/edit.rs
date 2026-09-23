@@ -82,10 +82,10 @@ impl Engine {
                 None
             }
         };
-        args.extend(["--".into(), temporary.as_os_str().into()]);
         if let Some(inputs) = &inputs {
-            args.push(list_argument("@", inputs.as_ref()));
+            args.push(list_argument("-i@", inputs.as_ref()));
         }
+        args.extend(["--".into(), temporary.as_os_str().into()]);
         if let Edit::Rename {
             source,
             destination,
@@ -93,8 +93,9 @@ impl Engine {
         {
             args.extend([source.as_str().into(), destination.as_str().into()]);
         }
-        if self.run(args, cancel)?.warning {
-            bail!(tr("archive-edit-warning"));
+        let output = self.run(args, cancel)?;
+        if output.warning {
+            return Err(anyhow::anyhow!(output.text)).context(tr("archive-edit-warning"));
         }
         if self.test(&temporary, password, cancel)?.warning {
             bail!(tr("integrity-warning"));
