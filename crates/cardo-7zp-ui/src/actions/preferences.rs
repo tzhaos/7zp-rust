@@ -154,6 +154,7 @@ impl Workspace {
     }
 
     pub(crate) fn check_updates_quietly(&mut self, cx: &mut Context<Self>) {
+        self.update_status = Some(cardo_7zp_requests::update::Status::Checking);
         let job = cx
             .background_executor()
             .spawn(async { cardo_7zp_requests::update::check() });
@@ -162,12 +163,20 @@ impl Workspace {
             if let Err(error) = &result {
                 tracing::warn!(error = %format!("{error:#}"), "Automatic release check failed");
             }
-            if let Ok(cardo_7zp_requests::update::Status::Available { version, .. }) = result {
-                let _ = view.update(cx, |this, cx| {
-                    this.notify_message(tf("update-available", &[("version", version.into())]));
-                    cx.notify();
-                });
-            }
+            let status = result.unwrap_or_else(|error| {
+                cardo_7zp_requests::update::Status::Failed(format!("{error:#}"))
+            });
+            let _ = view.update(cx, |this, cx| {
+                if let cardo_7zp_requests::update::Status::Available { version, .. } = &status {
+                    this.notify_message(tf(
+                        "update-available",
+                        &[("version", version.as_str().into())],
+                    ));
+                }
+                this.update_status = Some(status);
+                this.update_task = None;
+                cx.notify();
+            });
         }));
     }
 }

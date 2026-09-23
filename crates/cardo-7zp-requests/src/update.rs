@@ -15,6 +15,7 @@ pub enum Status {
     Available {
         version: String,
         download: String,
+        portable: String,
         release: String,
     },
     Failed(String),
@@ -53,26 +54,40 @@ pub fn check() -> Result<Status> {
         bail!(tr("update-no-release"));
     }
     let release: Release = response.error_for_status()?.json()?;
-    let version = Version::parse(release.tag_name.trim_start_matches('v'))
-        .context(tr("update-version-invalid"))?;
+    let version = Version::parse(
+        release
+            .tag_name
+            .strip_prefix('v')
+            .unwrap_or(&release.tag_name),
+    )
+    .context(tr("update-version-invalid"))?;
     if release.draft || release.prerelease || !version.pre.is_empty() {
         bail!(tr("update-no-release"));
     }
     if version <= Version::parse(VERSION)? {
         return Ok(Status::Current);
     }
-    let asset = release
-        .assets
-        .into_iter()
-        .find(|asset| asset.name == "7zplus-amd64-installer.exe")
-        .context(tr("update-asset-missing"))?;
     let base = format!("https://github.com/{repository}/releases/");
-    if !asset
-        .browser_download_url
-        .starts_with(&format!("{base}download/"))
-    {
-        bail!(tr("update-url-invalid"));
-    }
+    let download_asset = |name: &str| -> Result<String> {
+        let asset = release
+            .assets
+            .iter()
+            .find(|asset| asset.name == name)
+            .context(tr("update-asset-missing"))?;
+        let mut expected = reqwest::Url::parse(&format!("{base}download/"))?;
+        expected
+            .path_segments_mut()
+            .map_err(|_| anyhow::anyhow!(tr("update-url-invalid")))?
+            .pop_if_empty()
+            .push(&release.tag_name)
+            .push(name);
+        if reqwest::Url::parse(&asset.browser_download_url)? != expected {
+            bail!(tr("update-url-invalid"));
+        }
+        Ok(expected.into())
+    };
+    let download = download_asset("7zplus-amd64-installer.exe")?;
+    let portable = download_asset("7zplus-amd64-portable.zip")?;
     let mut page = reqwest::Url::parse(&format!("{base}tag/"))?;
     page.path_segments_mut()
         .map_err(|_| anyhow::anyhow!(tr("update-url-invalid")))?
@@ -80,7 +95,8 @@ pub fn check() -> Result<Status> {
         .push(&release.tag_name);
     Ok(Status::Available {
         version: version.to_string(),
-        download: asset.browser_download_url,
+        download,
+        portable,
         release: page.into(),
     })
 }

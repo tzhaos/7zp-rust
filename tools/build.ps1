@@ -74,6 +74,18 @@ try {
             $hash = (Get-FileHash -LiteralPath $_ -Algorithm SHA256).Hash.ToLowerInvariant()
             "$hash  $([IO.Path]::GetFileName($_))"
         } | Set-Content -LiteralPath 'dist/SHA256SUMS.txt' -Encoding ascii
+        $commit = & git rev-parse HEAD
+        if ($LASTEXITCODE -ne 0) { throw 'Cannot identify build commit' }
+        $changes = & git status --porcelain
+        if ($LASTEXITCODE -ne 0) { throw 'Cannot identify build working tree state' }
+        [ordered]@{
+            version = $version
+            commit = $commit
+            dirty = [bool]$changes
+            repository = $ReleaseRepository
+            target = 'x86_64-pc-windows-msvc'
+            checksums = (Get-FileHash -LiteralPath 'dist/SHA256SUMS.txt' -Algorithm SHA256).Hash.ToLowerInvariant()
+        } | ConvertTo-Json | Set-Content -LiteralPath 'dist/build-info.json' -Encoding utf8
     }
     foreach ($legacy in @('bin/7zplus-amd64-installer.exe', 'bin/SHA256SUMS.txt', 'bin/THIRD_PARTY.md')) {
         if (Test-Path -LiteralPath $legacy) { Remove-Item -LiteralPath $legacy }

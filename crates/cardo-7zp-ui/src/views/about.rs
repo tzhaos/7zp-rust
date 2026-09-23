@@ -47,10 +47,14 @@ impl Workspace {
                 tr("settings-update-source"),
             ));
         if let Some(Status::Available {
-            download, release, ..
+            download,
+            portable,
+            release,
+            ..
         }) = status
         {
             let download = download.clone();
+            let portable = portable.clone();
             let release = release.clone();
             actions = actions
                 .child(
@@ -59,7 +63,12 @@ impl Workspace {
                     ),
                 )
                 .child(
-                    settings_primary("update-download", tr("update-download"), cx)
+                    settings_action("update-portable", tr("update-portable"), cx).on_click(
+                        cx.listener(move |this, _, _, cx| this.open_update_link(&portable, cx)),
+                    ),
+                )
+                .child(
+                    settings_primary("update-download", tr("update-installer"), cx)
                         .icon(icon("ArrowDownload", 16.))
                         .on_click(
                             cx.listener(move |this, _, _, cx| this.open_update_link(&download, cx)),

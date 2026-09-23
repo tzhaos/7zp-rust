@@ -58,6 +58,7 @@ jobs:
             dist/7zplus-amd64-installer.exe
             dist/7zplus-amd64-portable.zip
             dist/SHA256SUMS.txt
+            dist/build-info.json
 
   release:
     needs: package
