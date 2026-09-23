@@ -32,6 +32,12 @@ Redistribution guidance: https://learn.microsoft.com/en-us/cpp/windows/redistrib
 
 ## Rust Dependencies
 
+SQLite state storage uses the bundled SQLite core through rusqlite 0.40.2.
+The binding's MIT license is included as `SQLite-binding-LICENSE.txt` from
+`cardo/licenses/rusqlite.txt`. SQLite core is in the public domain.
+TOML configuration uses `toml` and `toml_edit`; their licenses are recorded in
+the corresponding dependency manifests.
+
 - GPUI: Apache-2.0, https://github.com/zed-industries/zed
 - GPUI Kit: Apache-2.0, https://github.com/longbridge/gpui-kit
 - GPUI Component 0.6.1: Apache-2.0, https://github.com/longbridge/gpui-component. Resolved from crates.io through GPUI Kit; provides the themed PopupMenu component, cascading and keyboard interactions.

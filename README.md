@@ -20,7 +20,7 @@ Choose an **[installer or portable ZIP](https://github.com/tzhaos/7zp-rust/relea
 | `p7z-amd64-installer.exe` | Per-user installation with Explorer integration |
 | `p7z-amd64-portable.zip` | Extract the whole folder and run `p7z.exe` |
 
-Releases include `SHA256SUMS.txt`. Installed and portable copies can check for updates in **About**. Configuration and runtime data live in `%LOCALAPPDATA%\p7z`.
+Releases include `SHA256SUMS.txt`. Installed and portable copies can check for updates in **About**. Configuration and runtime data live in `%LOCALAPPDATA%\p7z`: TOML for preferences, SQLite for history and runtime state. See [storage contracts](cardo/docs/storage.md).
 
 ## Features
 
@@ -50,4 +50,4 @@ The application package is `p7z`; supporting crates use `p7z-*`. Shared `cardo-r
 
 ## License
 
-[MIT](LICENSE). Bundled 7-Zip, glyph assets and the Visual C++ runtime retain their respective licenses. See [third-party notices](THIRD_PARTY.md).
+[MIT](LICENSE). Bundled 7-Zip, Fluent icons and the Visual C++ runtime retain their respective licenses. See [third-party notices](THIRD_PARTY.md).

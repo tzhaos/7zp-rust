@@ -20,7 +20,7 @@
 | `p7z-amd64-installer.exe` | 当前用户安装，提供资源管理器集成 |
 | `p7z-amd64-portable.zip` | 完整解压文件夹后运行 `p7z.exe` |
 
-发行包附带 `SHA256SUMS.txt`。两种版本均可在**关于**页检查更新，设置与历史保存在 `%LOCALAPPDATA%\p7z`。
+发行包附带 `SHA256SUMS.txt`。两种版本均可在**关于**页检查更新，数据保存在 `%LOCALAPPDATA%\p7z`：TOML 保存偏好，SQLite 保存历史与运行状态。详见[存储约定](cardo/docs/storage.md)。
 
 ## 功能
 
@@ -50,4 +50,4 @@ cd 7zp-rust
 
 ## 许可
 
-项目采用 [MIT](LICENSE)。随包的 7-Zip、小图标资源及 Visual C++ 运行库保留各自许可，详见[第三方声明](THIRD_PARTY.md)。
+项目采用 [MIT](LICENSE)。随包的 7-Zip、Fluent 图标及 Visual C++ 运行库保留各自许可，详见[第三方声明](THIRD_PARTY.md)。

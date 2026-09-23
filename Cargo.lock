@@ -4891,7 +4891,7 @@ dependencies = [
 
 [[package]]
 name = "p7z"
-version = "0.2.3"
+version = "0.2.4"
 dependencies = [
  "anyhow",
  "cardo-runtime",
@@ -4906,14 +4906,14 @@ dependencies = [
 
 [[package]]
 name = "p7z-commands"
-version = "0.2.3"
+version = "0.2.4"
 dependencies = [
  "serde",
 ]
 
 [[package]]
 name = "p7z-core"
-version = "0.2.3"
+version = "0.2.4"
 dependencies = [
  "anyhow",
  "cardo-runtime",
@@ -4924,7 +4924,7 @@ dependencies = [
 
 [[package]]
 name = "p7z-engine"
-version = "0.2.3"
+version = "0.2.4"
 dependencies = [
  "anyhow",
  "p7z-commands",
@@ -4936,7 +4936,7 @@ dependencies = [
 
 [[package]]
 name = "p7z-explorer"
-version = "0.2.3"
+version = "0.2.4"
 dependencies = [
  "p7z-commands",
  "serde_json",
@@ -4948,7 +4948,7 @@ dependencies = [
 
 [[package]]
 name = "p7z-platform"
-version = "0.2.3"
+version = "0.2.4"
 dependencies = [
  "anyhow",
  "cardo-runtime",
@@ -4966,7 +4966,7 @@ dependencies = [
 
 [[package]]
 name = "p7z-requests"
-version = "0.2.3"
+version = "0.2.4"
 dependencies = [
  "anyhow",
  "p7z-commands",
@@ -4984,7 +4984,7 @@ dependencies = [
 
 [[package]]
 name = "p7z-ui"
-version = "0.2.3"
+version = "0.2.4"
 dependencies = [
  "anyhow",
  "cardo-ui",
