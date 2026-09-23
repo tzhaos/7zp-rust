@@ -18,12 +18,10 @@ impl Render for PreferencesForm {
                 cx,
             ),
         };
-        let error = self.error.clone().map(|error| {
-            div()
-                .text_color(rgb(crate::theme::palette(cx).danger))
-                .whitespace_normal()
-                .child(error)
-        });
+        let error = self
+            .error
+            .clone()
+            .map(|error| body_text(error).text_color(rgb(crate::theme::palette(cx).danger)));
         if self.tab == Tab::Updates {
             return v_flex()
                 .flex_shrink_0()

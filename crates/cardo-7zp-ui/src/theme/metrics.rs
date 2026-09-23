@@ -70,6 +70,7 @@ pub mod home {
 
 pub mod titlebar {
     pub const HEIGHT: f32 = 36.;
+    pub const MENU_MAX_WIDTH: f32 = 160.;
     pub const CONTROL_WIDTH: f32 = 42.;
     pub const GRIP_WIDTH: f32 = 28.;
     pub const GRIP_DOT_SIZE: f32 = 2.;

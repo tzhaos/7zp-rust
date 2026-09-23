@@ -10,8 +10,9 @@ mod settings;
 mod tooltip;
 
 pub(super) use button::{
-    command, icon_button, menu_choice, primary, subtle_variant, text_input, tool,
+    checkbox, command, icon_button, menu_choice, primary, subtle_variant, text_input, tool,
 };
+pub(super) use cardo_ui::text::{body_text, compact_text};
 pub(super) use file_icons::file_icon;
 pub(super) use icons::{ToolIcon, artwork, icon};
 pub(super) use list::{list_entry, list_row};

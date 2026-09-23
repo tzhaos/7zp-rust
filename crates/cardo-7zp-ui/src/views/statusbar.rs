@@ -70,7 +70,7 @@ impl Workspace {
             .border_color(rgb(p.border))
             .text_size(px(11.))
             .text_color(rgb(p.muted))
-            .child(div().flex_1().min_w_0().truncate().child(summary))
+            .child(compact_text("status-summary", summary).flex_1())
             .when(
                 !self.tasks.is_busy() && !browser.selected.is_empty(),
                 |el| {
@@ -100,6 +100,7 @@ impl Workspace {
                         .border_0()
                         .h(px(24.))
                         .flex_shrink_0()
+                        .max_w(px(120.))
                         .disabled(self.tasks.cancelled())
                         .on_click(cx.listener(|this, _, _, cx| {
                             this.tasks.cancel(tr("cancelling"));
@@ -112,6 +113,7 @@ impl Workspace {
                 el.child(
                     h_flex()
                         .flex_shrink_0()
+                        .max_w(px(120.))
                         .h(px(22.))
                         .px(px(7.))
                         .gap(px(5.))
@@ -120,7 +122,7 @@ impl Workspace {
                         .text_color(rgb(p.text))
                         .text_size(px(10.))
                         .when(encrypted, |el| el.child(icon("LockClosed", 12.)))
-                        .child(catalog.format.clone()),
+                        .child(compact_text("archive-format", catalog.format.clone())),
                 )
             })
             .when(self.tasks.is_busy(), |el| {

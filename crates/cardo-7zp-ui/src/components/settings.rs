@@ -10,6 +10,7 @@ pub fn settings_page(cx: &App) -> Div {
         .min_w_0()
         .min_h_0()
         .text_size(crate::theme::ui_font_size(cx))
+        .whitespace_normal()
         .line_height(relative(1.5))
 }
 
@@ -26,16 +27,13 @@ pub fn settings_row(label: &str, control: impl IntoElement, cx: &App) -> Div {
         .py(px(metrics::ROW_PADDING))
         .gap(px(20.))
         .child(
-            div()
+            super::body_text(label.to_owned())
                 .flex_1()
-                .min_w_0()
                 .text_size(crate::theme::ui_font_size(cx))
                 .line_height(relative(1.5))
-                .whitespace_normal()
-                .font_weight(FontWeight::NORMAL)
-                .child(label.to_owned()),
+                .font_weight(FontWeight::NORMAL),
         )
-        .child(div().flex_shrink_0().child(control))
+        .child(div().min_w_0().max_w_full().flex_shrink_0().child(control))
 }
 
 pub fn settings_group(rows: impl IntoIterator<Item = AnyElement>, cx: &App) -> Div {
@@ -63,10 +61,10 @@ pub fn settings_section(title: &str, group: Div, cx: &App) -> Div {
         .flex_shrink_0()
         .gap(px(metrics::HEADING_GAP))
         .child(
-            div()
+            super::body_text(title.to_owned())
+                .w_full()
                 .text_size(px(metrics::SECTION_TITLE_SIZE).max(crate::theme::ui_font_size(cx)))
-                .font_weight(FontWeight::SEMIBOLD)
-                .child(title.to_owned()),
+                .font_weight(FontWeight::SEMIBOLD),
         )
         .child(group)
 }

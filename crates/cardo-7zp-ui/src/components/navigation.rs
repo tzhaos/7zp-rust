@@ -13,9 +13,10 @@ pub fn navigation_row(cx: &App) -> Div {
         .border_color(rgb(crate::theme::palette(cx).border))
 }
 
-pub fn path_strip(id: impl Into<ElementId>, path: String, cx: &App) -> Div {
+pub fn path_strip(id: impl Into<ElementId>, path: String, cx: &App) -> Stateful<Div> {
     let p = crate::theme::palette(cx);
     gpui_kit::component::h_flex()
+        .id(id)
         .min_w_0()
         .gap(px(6.))
         .child(
@@ -32,10 +33,14 @@ pub fn path_strip(id: impl Into<ElementId>, path: String, cx: &App) -> Div {
                 .text_color(rgb(p.muted))
                 .text_size(px(12.))
                 .child(icon("Folder", 14.))
-                .child(div().flex_1().min_w_0().truncate().child(path.clone())),
+                .child(
+                    super::compact_text("path-value", path.clone())
+                        .flex_1()
+                        .text_ellipsis_middle(),
+                ),
         )
         .child(
-            icon_button(id, "Copy", tr("browser-copy-path"), true, cx)
+            icon_button("copy-path", "Copy", tr("browser-copy-path"), true, cx)
                 .w(px(crate::theme::metrics::CONTROL_HEIGHT))
                 .h(px(crate::theme::metrics::CONTROL_HEIGHT))
                 .on_click(move |_, _, cx| {

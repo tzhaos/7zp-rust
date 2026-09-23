@@ -5,9 +5,7 @@ use cardo_7zp_requests::filesystem::{self, SourceInfo};
 use cardo_ui::menu::{Menu, MenuItem, MenuTrigger};
 use gpui_kit::{
     component::{
-        Disableable,
-        checkbox::Checkbox,
-        h_flex,
+        Disableable, h_flex,
         input::{InputEvent, InputState},
         switch::Switch,
         v_flex,
@@ -288,19 +286,16 @@ impl CreateForm {
                     .border_b_1()
                     .border_color(rgb(p.border))
                     .child(
-                        div()
+                        compact_text("source-heading", tr("source-files"))
                             .flex_1()
-                            .min_w_0()
                             .text_size(px(12.))
-                            .text_color(rgb(p.muted))
-                            .child(tr("source-files")),
+                            .text_color(rgb(p.muted)),
                     )
                     .child(
-                        div()
-                            .flex_shrink_0()
+                        compact_text("source-total", total_label)
+                            .max_w(relative(0.4))
                             .text_size(px(11.))
-                            .text_color(rgb(p.muted))
-                            .child(total_label),
+                            .text_color(rgb(p.muted)),
                     )
                     .child(
                         command("add-files", tr("add-files"))
@@ -323,7 +318,7 @@ impl CreateForm {
                             .gap(px(6.))
                             .text_color(rgb(p.muted))
                             .child(icon("FolderOpen", 22.))
-                            .child(div().text_size(px(12.)).child(tr("source-empty")))
+                            .child(body_text(tr("source-empty")).text_size(px(12.)))
                     })
                     .children(self.files.iter().enumerate().map(|(index, path)| {
                         let name = path
@@ -364,29 +359,32 @@ impl CreateForm {
                                 v_flex()
                                     .flex_1()
                                     .min_w_0()
-                                    .child(div().truncate().text_size(px(13.)).child(name.clone()))
+                                    .child(
+                                        compact_text("source-name", name.clone())
+                                            .w_full()
+                                            .text_ellipsis_middle()
+                                            .text_size(px(13.)),
+                                    )
                                     .when_some(detail, |el, detail| {
                                         el.child(
-                                            div()
-                                                .truncate()
+                                            compact_text("source-detail", detail)
+                                                .w_full()
                                                 .text_size(px(11.))
                                                 .text_color(rgb(if failed {
                                                     p.danger
                                                 } else {
                                                     p.muted
-                                                }))
-                                                .child(detail),
+                                                })),
                                         )
                                     }),
                             )
                             .child(
-                                div()
+                                compact_text("source-size", size)
                                     .w(px(72.))
                                     .flex_shrink_0()
                                     .text_right()
                                     .text_size(px(11.))
-                                    .text_color(rgb(p.muted))
-                                    .child(size),
+                                    .text_color(rgb(p.muted)),
                             )
                             .child(
                                 icon_button(
@@ -530,9 +528,10 @@ impl Render for CreateForm {
                             .gap(px(8.))
                             .items_center()
                             .child(icon("LockClosed", 19.))
-                            .child(div().flex_1().child(tr("password-protection")))
+                            .child(body_text(tr("password-protection")).flex_1())
                             .child(
                                 Switch::new("encrypted")
+                                    .flex_shrink_0()
                                     .checked(encrypted)
                                     .disabled(!self.format.supports_password())
                                     .on_click(cx.listener(|this, checked: &bool, _, cx| {
@@ -580,8 +579,7 @@ impl Render for CreateForm {
                                 ))
                                 .when(self.format.supports_header_encryption(), |el| {
                                     el.child(
-                                        Checkbox::new("encrypt-names")
-                                            .label(tr("encrypt-names"))
+                                        checkbox("encrypt-names", tr("encrypt-names"))
                                             .text_size(px(13.))
                                             .checked(self.encrypt_names)
                                             .on_click(cx.listener(
@@ -671,8 +669,7 @@ impl Render for CreateForm {
                                     )
                                 })
                                 .child(
-                                    Checkbox::new("solid")
-                                        .label(tr("solid"))
+                                    checkbox("solid", tr("solid"))
                                         .text_size(px(13.))
                                         .checked(self.solid && self.format.supports_solid())
                                         .disabled(!self.format.supports_solid())

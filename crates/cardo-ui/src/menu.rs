@@ -105,17 +105,21 @@ impl Render for MenuHost {
         if self.viewport != window.viewport_size() {
             self.close(window, cx);
         }
-        div().absolute().children(self.menu.as_ref().map(|menu| {
-            deferred(
-                Positioner::side(self.anchor)
-                    .placement(Placement::Bottom)
-                    .align(Align::Start)
-                    .offset(px(6.))
-                    .margin(px(8.))
-                    .child(menu.clone()),
-            )
-            .with_priority(gpui_kit::base::POPUP_PRIORITY)
-        }))
+        div()
+            .absolute()
+            .whitespace_nowrap()
+            .text_ellipsis()
+            .children(self.menu.as_ref().map(|menu| {
+                deferred(
+                    Positioner::side(self.anchor)
+                        .placement(Placement::Bottom)
+                        .align(Align::Start)
+                        .offset(px(6.))
+                        .margin(px(8.))
+                        .child(menu.clone()),
+                )
+                .with_priority(gpui_kit::base::POPUP_PRIORITY)
+            }))
     }
 }
 

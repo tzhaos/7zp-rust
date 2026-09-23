@@ -81,6 +81,7 @@ impl Workspace {
                         .border_0()
                         .rounded(px(0.))
                         .h(px(columns::HEADER_HEIGHT))
+                        .w_full()
                         .px_0()
                         .disabled(busy)
                         .child(icon(if sorted { direction } else { "ArrowSort" }, 12.))
@@ -260,44 +261,39 @@ impl Workspace {
                 .when(entry.encrypted, |el| el.child(icon("LockClosed", 12.))),
             )
             .child(
-                div()
-                    .w(px(columns::SIZE_WIDTH))
-                    .truncate()
-                    .flex_shrink_0()
-                    .text_size(crate::theme::ui_font_size(cx))
-                    .text_color(rgb(p.muted))
-                    .child(if directory {
+                compact_text(
+                    "entry-size",
+                    if directory {
                         "—".into()
                     } else {
                         size_text(entry.size.unwrap_or(0))
-                    }),
+                    },
+                )
+                .w(px(columns::SIZE_WIDTH))
+                .flex_shrink_0()
+                .text_size(crate::theme::ui_font_size(cx))
+                .text_color(rgb(p.muted)),
             )
             .child(
-                div()
+                compact_text("entry-type", file_kind(&entry.name, directory))
                     .w(px(columns::TYPE_WIDTH))
-                    .truncate()
                     .flex_shrink_0()
                     .text_size(crate::theme::ui_font_size(cx))
-                    .text_color(rgb(p.muted))
-                    .child(file_kind(&entry.name, directory)),
+                    .text_color(rgb(p.muted)),
             )
             .child(
-                div()
-                    .w(px(columns::MODIFIED_WIDTH))
-                    .truncate()
-                    .flex_shrink_0()
-                    .text_size(crate::theme::ui_font_size(cx))
-                    .text_color(rgb(p.muted))
-                    .child(if entry.modified.is_empty() {
+                compact_text(
+                    "entry-modified",
+                    if entry.modified.is_empty() {
                         "—".into()
                     } else {
-                        entry
-                            .modified
-                            .chars()
-                            .take(16)
-                            .collect::<String>()
-                            .replace('-', "/")
-                    }),
+                        entry.modified.replace('-', "/")
+                    },
+                )
+                .w(px(columns::MODIFIED_WIDTH))
+                .flex_shrink_0()
+                .text_size(crate::theme::ui_font_size(cx))
+                .text_color(rgb(p.muted)),
             )
             .on_mouse_down(
                 MouseButton::Right,

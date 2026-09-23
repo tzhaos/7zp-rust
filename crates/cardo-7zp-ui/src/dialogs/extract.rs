@@ -1,5 +1,5 @@
 use crate::*;
-use gpui_kit::component::{Disableable, Selectable, checkbox::Checkbox, h_flex, v_flex};
+use gpui_kit::component::{Disableable, Selectable, h_flex, v_flex};
 
 impl Workspace {
     fn destination_button(
@@ -169,8 +169,7 @@ impl Workspace {
                             path_strip("copy-extract-path", output, cx),
                         ))
                         .child(
-                            Checkbox::new("extract-open-after")
-                                .label(tr("extract-open-after"))
+                            checkbox("extract-open-after", tr("extract-open-after"))
                                 .text_size(px(13.))
                                 .checked(*open_after)
                                 .on_click(cx.listener(|this, checked: &bool, _, cx| {

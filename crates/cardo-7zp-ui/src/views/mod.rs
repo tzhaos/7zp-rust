@@ -36,6 +36,7 @@ impl Render for Workspace {
             .text_color(rgb(p.text))
             .font(crate::theme::interface_font(cx))
             .text_size(px(appearance.font_size))
+            .whitespace_normal()
             .on_key_down(cx.listener(Self::keyboard))
             .on_mouse_down(
                 MouseButton::Left,
@@ -153,7 +154,7 @@ impl Render for Workspace {
                                                                 window,
                                                                 cx,
                                                             ))
-                                                            .child(div().text_size(px(14.)).child(
+                                                            .child(div().min_w_0().w_full().whitespace_normal().text_size(px(14.)).child(
                                                                 if searching {
                                                                     tf(
                                                                         "search-empty",

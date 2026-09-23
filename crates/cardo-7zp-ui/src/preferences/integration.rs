@@ -1,8 +1,5 @@
 use super::*;
-use gpui_kit::{
-    base::{Align, ElementExt, FocusTrapElement, Placement, Positioner},
-    component::checkbox::Checkbox,
-};
+use gpui_kit::base::{Align, ElementExt, FocusTrapElement, Placement, Positioner};
 
 #[derive(Clone, Copy)]
 enum AssociationSelection {
@@ -173,20 +170,24 @@ impl PreferencesForm {
                             .associations
                             .iter()
                             .any(|value| value == extension);
-                        Checkbox::new(SharedString::from(format!("association:{extension}")))
-                            .label(extension.trim_start_matches('.').to_owned())
-                            .checked(selected)
-                            .disabled(busy)
-                            .w_full()
-                            .px(px(8.))
-                            .py(px(6.))
-                            .on_click(cx.listener(move |this, checked: &bool, window, cx| {
+                        checkbox(
+                            SharedString::from(format!("association:{extension}")),
+                            extension.trim_start_matches('.'),
+                        )
+                        .checked(selected)
+                        .disabled(busy)
+                        .w_full()
+                        .px(px(8.))
+                        .py(px(6.))
+                        .on_click(cx.listener(
+                            move |this, checked: &bool, window, cx| {
                                 this.value.associations.retain(|value| value != extension);
                                 if *checked {
                                     this.value.associations.push(extension.into());
                                 }
                                 this.save(window, cx);
-                            }))
+                            },
+                        ))
                     })),
             )
             .focus_trap("association-focus", &focus);

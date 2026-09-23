@@ -26,17 +26,14 @@ impl Workspace {
                     .items_center()
                     .window_control_area(WindowControlArea::Drag)
                     .child(
-                        div()
+                        compact_text("window-heading", title)
                             .flex_1()
-                            .min_w_0()
-                            .truncate()
-                            .font_weight(FontWeight::SEMIBOLD)
-                            .child(title),
+                            .font_weight(FontWeight::SEMIBOLD),
                     )
                     .child(self.menubar(cx)),
             )
             .child(
-                h_flex().gap_0().children(
+                h_flex().flex_shrink_0().gap_0().children(
                     [
                         ("minimize", "Subtract", tr("window-minimize")),
                         (

@@ -17,6 +17,7 @@ impl Workspace {
         h_flex()
             .id("titlebar-menus")
             .h(px(36.))
+            .max_w(px(crate::theme::metrics::titlebar::MENU_MAX_WIDTH))
             .flex_shrink_0()
             .px(px(8.))
             .gap(px(2.))

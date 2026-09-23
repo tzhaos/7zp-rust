@@ -1,8 +1,9 @@
-use super::{ToolIcon, artwork, bubble_tooltip, icon};
+use super::{ToolIcon, artwork, body_text, bubble_tooltip, icon};
 use crate::theme::metrics::*;
 use gpui_kit::component::{
     Disableable, Sizable,
     button::{Button, ButtonCustomVariant, ButtonVariants},
+    checkbox::Checkbox,
     input::{Input, InputState},
 };
 use gpui_kit::prelude::FluentBuilder;
@@ -30,26 +31,6 @@ pub fn tool(
     } else {
         TOOL_ICON_HEIGHT
     };
-    let label_width = label
-        .split_whitespace()
-        .map(|word| {
-            let run = TextRun {
-                len: word.len(),
-                font: crate::theme::interface_font(cx),
-                color: rgb(p.text).into(),
-                background_color: None,
-                underline: None,
-                strikethrough: None,
-            };
-            f32::from(
-                window
-                    .text_system()
-                    .shape_line(word.to_owned().into(), px(11.), &[run], None)
-                    .width,
-            )
-        })
-        .fold(1., f32::max);
-    let label_size = (11. * (TOOL_MIN_WIDTH - 8.) / label_width).min(11.);
     let button = Button::new(id)
         .custom(subtle_variant(cx))
         .disabled(disabled)
@@ -86,33 +67,45 @@ pub fn tool(
                             .child(
                                 div()
                                     .w_full()
-                                    .text_size(px(label_size))
+                                    .min_w_0()
+                                    .text_size(px(11.))
                                     .line_height(px(13.))
                                     .text_center()
                                     .whitespace_normal()
+                                    .line_clamp(2)
+                                    .text_ellipsis()
                                     .text_color(rgb(if disabled { p.muted } else { p.text }))
                                     .child(label.to_owned()),
                             ),
                     )
                 }),
         );
-    if show_label {
-        button
-    } else {
-        bubble_tooltip(button, label.to_owned())
-    }
+    bubble_tooltip(button, label.to_owned())
 }
 
 pub fn command(id: impl Into<ElementId>, label: &str) -> Button {
     // Button sizes control the inner label; an outer text_size is overridden.
-    Button::new(id)
-        .xsmall()
-        .label(label.to_owned())
-        .h(px(CONTROL_HEIGHT))
-        .px(px(12.))
-        .rounded(px(CONTROL_RADIUS))
-        .border_1()
-        .shadow_none()
+    bubble_tooltip(
+        Button::new(id)
+            .xsmall()
+            .label(label.to_owned())
+            .min_w_0()
+            .max_w_full()
+            .h(px(CONTROL_HEIGHT))
+            .px(px(12.))
+            .rounded(px(CONTROL_RADIUS))
+            .border_1()
+            .shadow_none(),
+        label.to_owned(),
+    )
+}
+
+pub fn checkbox(id: impl Into<ElementId>, label: &str) -> Checkbox {
+    Checkbox::new(id)
+        .accessibility_label(label.to_owned())
+        .w_full()
+        .min_w_0()
+        .child(body_text(label.to_owned()))
 }
 
 pub fn text_input(state: &Entity<InputState>) -> Input {

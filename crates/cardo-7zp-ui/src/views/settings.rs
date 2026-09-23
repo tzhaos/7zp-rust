@@ -95,10 +95,10 @@ impl Workspace {
                             ),
                     )
                     .child(
-                        div()
+                        compact_text("settings-heading", page.title())
+                            .flex_1()
                             .text_size(px(crate::theme::metrics::settings::TITLE_SIZE))
-                            .font_weight(FontWeight::SEMIBOLD)
-                            .child(page.title()),
+                            .font_weight(FontWeight::SEMIBOLD),
                     ),
             )
             .child(

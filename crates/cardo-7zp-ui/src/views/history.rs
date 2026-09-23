@@ -103,7 +103,7 @@ impl Workspace {
                     .h(px(32.))
                     .px(px(8.))
                     .gap(px(8.))
-                    .child(div().flex_1().min_w_0().child(tr("history-title")))
+                    .child(compact_text("history-heading", tr("history-title")).flex_1())
                     .child(
                         icon_button("history-clear", "Delete", tr("recent-clear"), true, cx)
                             .disabled(self.history.is_empty())
@@ -115,10 +115,9 @@ impl Workspace {
             )
             .when(self.history.is_empty(), |el| {
                 el.child(
-                    div()
+                    body_text(tr("history-empty"))
                         .p(px(12.))
-                        .text_color(rgb(p.muted))
-                        .child(tr("history-empty")),
+                        .text_color(rgb(p.muted)),
                 )
             })
             .children(self.history.iter().enumerate().skip(start).take(count).map(
@@ -132,7 +131,14 @@ impl Workspace {
                             .px(px(8.))
                             .gap(px(8.))
                             .child(icon(if directory { "Folder" } else { "Archive" }, 18.))
-                            .child(div().flex_1().min_w_0().truncate().child(path.clone()))
+                            .child(
+                                div()
+                                    .flex_1()
+                                    .min_w_0()
+                                    .truncate()
+                                    .text_ellipsis_middle()
+                                    .child(path.clone()),
+                            )
                             .on_click(cx.listener(move |this, _, window, cx| {
                                 this.visit_history(target.clone(), window, cx)
                             })),
@@ -146,14 +152,21 @@ impl Workspace {
                         .h(px(36.))
                         .px(px(8.))
                         .gap(px(8.))
-                        .child(div().flex_1().min_w_0().text_color(rgb(p.muted)).child(tf(
-                            "history-range",
-                            &[
-                                ("first", (start + 1).to_string().into()),
-                                ("last", end.to_string().into()),
-                                ("total", self.history.len().to_string().into()),
-                            ],
-                        )))
+                        .child(
+                            compact_text(
+                                "history-range",
+                                tf(
+                                    "history-range",
+                                    &[
+                                        ("first", (start + 1).to_string().into()),
+                                        ("last", end.to_string().into()),
+                                        ("total", self.history.len().to_string().into()),
+                                    ],
+                                ),
+                            )
+                            .flex_1()
+                            .text_color(rgb(p.muted)),
+                        )
                         .child(
                             icon_button(
                                 "history-previous",

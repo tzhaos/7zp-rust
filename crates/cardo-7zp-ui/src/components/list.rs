@@ -57,14 +57,17 @@ pub fn list_entry(
             gpui_kit::component::v_flex()
                 .flex_1()
                 .min_w_0()
-                .child(div().truncate().child(name.to_owned()))
+                .child(
+                    super::compact_text("entry-name", name.to_owned())
+                        .w_full()
+                        .text_ellipsis_middle(),
+                )
                 .when_some(detail, |el, detail| {
                     el.child(
-                        div()
-                            .truncate()
+                        super::compact_text("entry-detail", detail)
+                            .w_full()
                             .text_size(px((crate::theme::ui_font_size(cx).as_f32() - 1.).max(11.)))
-                            .text_color(rgb(p.muted))
-                            .child(detail),
+                            .text_color(rgb(p.muted)),
                     )
                 }),
         )

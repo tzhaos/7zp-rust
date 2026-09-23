@@ -11,10 +11,9 @@ impl Workspace {
             .child(
                 body_container("comment-body")
                     .child(
-                        div()
+                        body_text(tr("archive-comment"))
                             .text_size(px(12.))
-                            .font_weight(FontWeight::MEDIUM)
-                            .child(tr("archive-comment")),
+                            .font_weight(FontWeight::MEDIUM),
                     )
                     .child(Textarea::new(input).h_full().min_h_0().text_size(px(13.))),
             )

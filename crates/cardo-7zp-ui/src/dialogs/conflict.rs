@@ -1,5 +1,5 @@
 use crate::*;
-use gpui_kit::component::{checkbox::Checkbox, h_flex};
+use gpui_kit::component::h_flex;
 
 impl Workspace {
     pub(super) fn conflict_view(&self, cx: &mut Context<Self>) -> AnyElement {
@@ -21,11 +21,10 @@ impl Workspace {
                 .flex_1()
                 .min_w(px(220.))
                 .child(
-                    div()
+                    body_text(label)
                         .text_size(px(12.))
                         .font_weight(FontWeight::MEDIUM)
-                        .text_color(rgb(p.muted))
-                        .child(label),
+                        .text_color(rgb(p.muted)),
                 )
                 .child(panel_property(
                     tr("size"),
@@ -54,18 +53,18 @@ impl Workspace {
                         p.accent,
                     ))
                     .child(
-                        div()
-                            .min_w_0()
-                            .truncate()
-                            .font_weight(FontWeight::SEMIBOLD)
-                            .child(
-                                conflict
-                                    .destination
-                                    .file_name()
-                                    .unwrap_or_default()
-                                    .to_string_lossy()
-                                    .into_owned(),
-                            ),
+                        compact_text(
+                            "conflict-filename",
+                            conflict
+                                .destination
+                                .file_name()
+                                .unwrap_or_default()
+                                .to_string_lossy()
+                                .into_owned(),
+                        )
+                        .w_full()
+                        .text_ellipsis_middle()
+                        .font_weight(FontWeight::SEMIBOLD),
                     )
                     .child(path_strip(
                         "conflict-path",
@@ -90,8 +89,7 @@ impl Workspace {
                             )),
                     )
                     .child(
-                        Checkbox::new("conflict-repeat")
-                            .label(tr("conflict-repeat"))
+                        checkbox("conflict-repeat", tr("conflict-repeat"))
                             .text_size(px(12.))
                             .checked(*repeat)
                             .on_click(cx.listener(|this, checked: &bool, _, cx| {

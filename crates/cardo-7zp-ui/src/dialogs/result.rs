@@ -45,7 +45,7 @@ impl Workspace {
         panel_layout(cx)
             .child(
                 panel_body("extraction-result")
-                    .child(panel_card(cx).child(div().whitespace_normal().child(text.clone()))),
+                    .child(panel_card(cx).child(body_text(text.clone()))),
             )
             .into_any_element()
     }

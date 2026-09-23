@@ -78,10 +78,9 @@ impl Workspace {
                                 .min_h_0()
                                 .gap(px(metrics::HISTORY_GAP))
                                 .child(
-                                    div()
+                                    body_text(tr("recent-title"))
                                         .text_size(px(14.))
-                                        .font_weight(FontWeight::SEMIBOLD)
-                                        .child(tr("recent-title")),
+                                        .font_weight(FontWeight::SEMIBOLD),
                                 )
                                 .when(has_history, |el| {
                                     el.child(
@@ -92,9 +91,7 @@ impl Workspace {
                                     )
                                 })
                                 .when(!has_history, |el| {
-                                    el.child(
-                                        div().text_color(rgb(p.muted)).child(tr("recent-empty")),
-                                    )
+                                    el.child(body_text(tr("recent-empty")).text_color(rgb(p.muted)))
                                 }),
                         ),
                     ),

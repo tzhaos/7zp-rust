@@ -1,4 +1,4 @@
-use super::{command, icon, primary};
+use super::{body_text, command, compact_text, icon, primary};
 use crate::{ScrollableElement, theme::metrics::popup as metrics};
 use gpui_kit::{
     component::{
@@ -49,6 +49,7 @@ pub(crate) fn panel_frame(cx: &App) -> Div {
         .text_color(rgb(crate::theme::palette(cx).text))
         .font(crate::theme::interface_font(cx))
         .text_size(px(metrics::BODY_TEXT))
+        .whitespace_normal()
         .line_height(px(metrics::LINE_HEIGHT))
 }
 
@@ -165,12 +166,10 @@ pub(crate) fn panel_header(title: impl Into<SharedString>, drag: bool, cx: &App)
                 .h_full()
                 .when(drag, |el| el.window_control_area(WindowControlArea::Drag))
                 .child(
-                    div()
-                        .min_w_0()
-                        .truncate()
+                    compact_text("dialog-heading", title)
+                        .flex_1()
                         .text_size(px(metrics::TITLE_TEXT))
-                        .font_weight(FontWeight::SEMIBOLD)
-                        .child(title.into()),
+                        .font_weight(FontWeight::SEMIBOLD),
                 ),
         )
         .when(drag, |el| el.child(window_grip(cx)))
@@ -266,10 +265,10 @@ pub(crate) fn panel_field(label: impl Into<SharedString>, content: impl IntoElem
         .flex_shrink_0()
         .gap(px(metrics::FIELD_GAP))
         .child(
-            div()
+            body_text(label)
+                .w_full()
                 .text_size(px(12.))
-                .font_weight(FontWeight::MEDIUM)
-                .child(label.into()),
+                .font_weight(FontWeight::MEDIUM),
         )
         .child(content)
 }
@@ -282,13 +281,7 @@ pub(crate) fn panel_notice(name: &str, text: impl Into<SharedString>, color: u32
         .items_start()
         .gap(px(12.))
         .child(icon(name, 20.).flex_shrink_0().text_color(rgb(color)))
-        .child(
-            div()
-                .flex_1()
-                .min_w_0()
-                .whitespace_normal()
-                .child(text.into()),
-        )
+        .child(body_text(text).flex_1())
 }
 
 pub(crate) fn panel_card(cx: &App) -> Div {
@@ -317,18 +310,11 @@ pub(crate) fn panel_property(
         .gap(px(16.))
         .py(px(4.))
         .child(
-            div()
+            body_text(label)
                 .w(px(104.))
                 .flex_shrink_0()
                 .text_size(px(12.))
-                .text_color(rgb(p.muted))
-                .child(label.into()),
+                .text_color(rgb(p.muted)),
         )
-        .child(
-            div()
-                .flex_1()
-                .min_w_0()
-                .whitespace_normal()
-                .child(value.into()),
-        )
+        .child(body_text(value).flex_1())
 }

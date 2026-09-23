@@ -8,13 +8,17 @@ struct BubbleTooltip {
 }
 
 impl Render for BubbleTooltip {
-    fn render(&mut self, _: &mut Window, _: &mut Context<Self>) -> impl IntoElement {
+    fn render(&mut self, window: &mut Window, _: &mut Context<Self>) -> impl IntoElement {
         let trigger = self.trigger.get();
+        let viewport = window.viewport_size();
         let bubble = gpui_kit::base::Tooltip::new("bubble-tooltip")
-            .min_w(px(32.))
-            .max_w(px(360.))
+            .max_w(px(360.).min((viewport.width - px(16.)).max(px(1.))))
             .child(
                 div()
+                    .id("tooltip-text")
+                    .min_w_0()
+                    .max_h((viewport.height - px(16.)).max(px(1.)))
+                    .overflow_y_scroll()
                     .px(px(12.))
                     .py(px(8.))
                     .rounded(px(14.))
@@ -45,7 +49,7 @@ pub fn bubble_tooltip<E: InteractiveElement + ParentElement + Styled>(
     let mut element = element
         .relative()
         .on_prepaint(move |bounds, _, _| measured.set(bounds));
-    element.interactivity().tooltip(move |_, cx| {
+    element.interactivity().hoverable_tooltip(move |_, cx| {
         cx.new(|_| BubbleTooltip {
             text: text.clone(),
             trigger: trigger.clone(),
