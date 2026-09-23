@@ -20,11 +20,11 @@ impl Workspace {
             panel_card(cx)
                 .flex_1()
                 .min_w(px(220.))
+                .gap(px(12.))
                 .child(
                     body_text(label)
-                        .text_size(px(12.))
-                        .font_weight(FontWeight::MEDIUM)
-                        .text_color(rgb(p.muted)),
+                        .text_size(px(14.))
+                        .font_weight(FontWeight::SEMIBOLD),
                 )
                 .child(panel_property(
                     tr("size"),
@@ -75,8 +75,8 @@ impl Workspace {
                         h_flex()
                             .flex_wrap()
                             .w_full()
-                            .items_start()
-                            .gap(px(12.))
+                            .items_stretch()
+                            .gap(px(16.))
                             .child(file(
                                 tr("extract-conflict-incoming"),
                                 conflict.incoming_size,

@@ -7,7 +7,6 @@ use gpui_kit::{
     component::{
         Disableable, h_flex,
         input::{InputEvent, InputState},
-        switch::Switch,
         v_flex,
     },
     prelude::FluentBuilder,
@@ -215,8 +214,7 @@ impl CreateForm {
             .map(|(_, label)| label.clone())
             .unwrap_or_default();
         let view = cx.entity().downgrade();
-        menu_choice(id, &label, cx)
-            .w_full()
+        settings_choice(id, &label, cx)
             .disabled(disabled)
             .choice_menu(move |_, _| {
                 let mut menu = Menu::new();
@@ -265,14 +263,8 @@ fn volume_label(volume: Volume) -> String {
 impl CreateForm {
     fn source_list(&self, total_label: String, cx: &mut Context<Self>) -> Div {
         let p = crate::theme::palette(cx);
-        v_flex()
-            .min_w_0()
-            .flex_shrink_0()
-            .bg(rgb(p.surface))
-            .border_1()
-            .border_color(rgb(p.border))
-            .rounded(px(6.))
-            .overflow_hidden()
+        cardo_ui::settings::frame(cx)
+            .p(px(8.))
             .child(
                 h_flex()
                     .min_h(px(36.))
@@ -288,8 +280,8 @@ impl CreateForm {
                     .child(
                         compact_text("source-heading", tr("source-files"))
                             .flex_1()
-                            .text_size(px(12.))
-                            .text_color(rgb(p.muted)),
+                            .text_size(px(13.))
+                            .font_weight(FontWeight::SEMIBOLD),
                     )
                     .child(
                         compact_text("source-total", total_label)
@@ -298,7 +290,7 @@ impl CreateForm {
                             .text_color(rgb(p.muted)),
                     )
                     .child(
-                        command("add-files", tr("add-files"))
+                        panel_button("add-files", tr("add-files"))
                             .icon(icon("Add", 14.))
                             .on_click(
                                 cx.listener(|this, _, window, cx| this.choose_files(window, cx)),
@@ -407,10 +399,6 @@ impl CreateForm {
     }
 }
 
-fn field(label: &str, content: impl IntoElement) -> Div {
-    panel_field(label.to_owned(), content)
-}
-
 impl CreateForm {
     fn can_submit(&self, cx: &App) -> bool {
         let name = self.name.read(cx).value();
@@ -447,7 +435,6 @@ impl Render for CreateForm {
             .filter(|meta| meta.file)
             .map(|meta| meta.size)
             .sum();
-        let encrypted = self.encrypted && self.format.supports_password();
         let total_label = if self
             .files
             .iter()
@@ -465,135 +452,166 @@ impl Render for CreateForm {
         };
         let disabled = !self.can_submit(cx);
         let invalid_name = self.name.read(cx).value().contains(['/', '\\', ':']);
-        let extension = self.format.extension();
+        let encrypted = self.encrypted && self.format.supports_password();
+        let input_width = px(cardo_ui::settings::metrics::INPUT_WIDTH);
+        let name = v_flex()
+            .w(input_width)
+            .max_w_full()
+            .min_w_0()
+            .gap(px(6.))
+            .child(
+                h_flex()
+                    .min_w_0()
+                    .gap(px(6.))
+                    .child(
+                        div()
+                            .flex_1()
+                            .min_w_0()
+                            .child(settings_input(&self.name, tr("archive-name"))),
+                    )
+                    .child(
+                        div()
+                            .flex_shrink_0()
+                            .text_color(rgb(p.muted))
+                            .child(format!(".{}", self.format.extension())),
+                    ),
+            )
+            .when(invalid_name, |el| {
+                el.child(body_text(tr("archive-name-invalid")).text_color(rgb(p.danger)))
+            });
+        let output = settings_group(
+            [
+                settings_row(tr("archive-name"), name, cx).into_any_element(),
+                cardo_ui::settings::row(
+                    tr("format"),
+                    self.format
+                        .single_file()
+                        .then(|| tr("single-file-note").into()),
+                    self.choice(
+                        "format",
+                        self.format,
+                        Format::ALL
+                            .into_iter()
+                            .map(|format| (format, format.title()))
+                            .collect(),
+                        false,
+                        |form, format| {
+                            form.format = format;
+                            form.method = format.default_method();
+                        },
+                        cx,
+                    ),
+                    cx,
+                )
+                .into_any_element(),
+                settings_row(
+                    tr("compression-level"),
+                    self.choice(
+                        "level",
+                        self.level,
+                        Level::ALL
+                            .into_iter()
+                            .map(|level| (level, tr(level.label_key()).into()))
+                            .collect(),
+                        self.format == Format::Tar,
+                        |form, level| form.level = level,
+                        cx,
+                    ),
+                    cx,
+                )
+                .into_any_element(),
+            ],
+            cx,
+        );
+        let mut security = vec![
+            settings_row(
+                tr("password-protection"),
+                SettingsSwitch::new(
+                    "encrypted",
+                    tr("password-protection"),
+                    encrypted,
+                    !self.format.supports_password(),
+                )
+                .on_click(cx.listener(|this, checked: &bool, _, cx| {
+                    this.encrypted = *checked;
+                    cx.notify();
+                })),
+                cx,
+            )
+            .into_any_element(),
+        ];
+        if encrypted {
+            security.push(
+                settings_row(
+                    tr("password"),
+                    h_flex()
+                        .w(input_width)
+                        .max_w_full()
+                        .min_w_0()
+                        .gap(px(6.))
+                        .child(
+                            div()
+                                .flex_1()
+                                .min_w_0()
+                                .child(settings_input(&self.password, tr("password"))),
+                        )
+                        .child(
+                            icon_button(
+                                "password-visibility",
+                                if self.visible { "EyeOff" } else { "Eye" },
+                                if self.visible {
+                                    tr("password-hide")
+                                } else {
+                                    tr("password-show")
+                                },
+                                true,
+                                cx,
+                            )
+                            .on_click(cx.listener(
+                                |this, _, window, cx| {
+                                    this.visible = !this.visible;
+                                    this.password.update(cx, |input, cx| {
+                                        input.set_masked(!this.visible, window, cx)
+                                    });
+                                    cx.notify();
+                                },
+                            )),
+                        ),
+                    cx,
+                )
+                .into_any_element(),
+            );
+            if self.format.supports_header_encryption() {
+                security.push(
+                    settings_row(
+                        tr("encrypt-names"),
+                        SettingsSwitch::new(
+                            "encrypt-names",
+                            tr("encrypt-names"),
+                            self.encrypt_names,
+                            false,
+                        )
+                        .on_click(cx.listener(
+                            |this, checked: &bool, _, cx| {
+                                this.encrypt_names = *checked;
+                                cx.notify();
+                            },
+                        )),
+                        cx,
+                    )
+                    .into_any_element(),
+                );
+            }
+        }
         panel_layout(cx)
             .child(
                 panel_body("create-body")
-                    .child(self.source_list(total_label.clone(), cx))
-                    .child(field(
-                        tr("archive-name"),
-                        h_flex()
-                            .gap_2()
-                            .items_center()
-                            .child(div().flex_1().min_w_0().child(text_input(&self.name)))
-                            .child(format!(".{extension}")),
-                    ))
-                    .when(invalid_name, |el| {
-                        el.child(panel_notice("Info", tr("archive-name-invalid"), p.danger))
-                    })
+                    .child(self.source_list(total_label, cx))
+                    .child(output)
+                    .child(settings_group(security, cx))
                     .child(
-                        panel_fields()
-                            .child(panel_column(
-                                tr("format"),
-                                self.choice(
-                                    "format",
-                                    self.format,
-                                    Format::ALL
-                                        .into_iter()
-                                        .map(|format| (format, format.title()))
-                                        .collect(),
-                                    false,
-                                    |form, format| {
-                                        form.format = format;
-                                        form.method = format.default_method();
-                                    },
-                                    cx,
-                                ),
-                            ))
-                            .child(panel_column(
-                                tr("compression-level"),
-                                self.choice(
-                                    "level",
-                                    self.level,
-                                    Level::ALL
-                                        .into_iter()
-                                        .map(|level| (level, tr(level.label_key()).into()))
-                                        .collect(),
-                                    self.format == Format::Tar,
-                                    |form, level| form.level = level,
-                                    cx,
-                                ),
-                            )),
-                    )
-                    .when(self.format.single_file(), |el| {
-                        el.child(
-                            div()
-                                .text_color(rgb(p.muted))
-                                .text_size(px(12.))
-                                .child(tr("single-file-note")),
-                        )
-                    })
-                    .child(
-                        h_flex()
-                            .gap(px(8.))
-                            .items_center()
-                            .child(icon("LockClosed", 19.))
-                            .child(body_text(tr("password-protection")).flex_1())
-                            .child(
-                                Switch::new("encrypted")
-                                    .flex_shrink_0()
-                                    .checked(encrypted)
-                                    .disabled(!self.format.supports_password())
-                                    .on_click(cx.listener(|this, checked: &bool, _, cx| {
-                                        this.encrypted = *checked;
-                                        cx.notify();
-                                    })),
-                            ),
-                    )
-                    .when(encrypted, |el| {
-                        el.child(
-                            v_flex()
-                                .gap(px(12.))
-                                .child(field(
-                                    tr("password"),
-                                    h_flex()
-                                        .gap(px(6.))
-                                        .child(
-                                            div()
-                                                .flex_1()
-                                                .min_w_0()
-                                                .child(text_input(&self.password)),
-                                        )
-                                        .child(
-                                            icon_button(
-                                                "password-visibility",
-                                                if self.visible { "EyeOff" } else { "Eye" },
-                                                if self.visible {
-                                                    tr("password-hide")
-                                                } else {
-                                                    tr("password-show")
-                                                },
-                                                true,
-                                                cx,
-                                            )
-                                            .on_click(
-                                                cx.listener(|this, _, window, cx| {
-                                                    this.visible = !this.visible;
-                                                    this.password.update(cx, |input, cx| {
-                                                        input.set_masked(!this.visible, window, cx)
-                                                    });
-                                                    cx.notify();
-                                                }),
-                                            ),
-                                        ),
-                                ))
-                                .when(self.format.supports_header_encryption(), |el| {
-                                    el.child(
-                                        checkbox("encrypt-names", tr("encrypt-names"))
-                                            .text_size(px(13.))
-                                            .checked(self.encrypt_names)
-                                            .on_click(cx.listener(
-                                                |this, checked: &bool, _, cx| {
-                                                    this.encrypt_names = *checked;
-                                                    cx.notify();
-                                                },
-                                            )),
-                                    )
-                                }),
-                        )
-                    })
-                    .child(
-                        command("advanced", tr("advanced-options"))
+                        panel_button("advanced", tr("advanced-options"))
+                            .self_start()
                             .icon(icon(
                                 if self.advanced {
                                     "ChevronDown"
@@ -608,46 +626,45 @@ impl Render for CreateForm {
                             })),
                     )
                     .when(self.advanced, |el| {
-                        el.child(
-                            v_flex()
-                                .gap(px(20.))
-                                .child(
-                                    panel_fields()
-                                        .child(panel_column(
-                                            tr("compression-method"),
-                                            self.choice(
-                                                "method",
-                                                self.method,
-                                                self.format
-                                                    .methods()
-                                                    .iter()
-                                                    .copied()
-                                                    .map(|method| (method, method_label(method)))
-                                                    .collect(),
-                                                !self.format.supports_method(),
-                                                |form, method| form.method = method,
-                                                cx,
-                                            ),
-                                        ))
-                                        .child(panel_column(
-                                            tr("threads"),
-                                            self.choice(
-                                                "threads",
-                                                self.threads,
-                                                Threads::ALL
-                                                    .into_iter()
-                                                    .map(|threads| {
-                                                        (threads, threads_label(threads))
-                                                    })
-                                                    .collect(),
-                                                false,
-                                                |form, threads| form.threads = threads,
-                                                cx,
-                                            ),
-                                        )),
+                        el.child(settings_group(
+                            [
+                                settings_row(
+                                    tr("compression-method"),
+                                    self.choice(
+                                        "method",
+                                        self.method,
+                                        self.format
+                                            .methods()
+                                            .iter()
+                                            .copied()
+                                            .map(|method| (method, method_label(method)))
+                                            .collect(),
+                                        !self.format.supports_method(),
+                                        |form, method| form.method = method,
+                                        cx,
+                                    ),
+                                    cx,
                                 )
-                                .child(field(
+                                .into_any_element(),
+                                settings_row(
+                                    tr("threads"),
+                                    self.choice(
+                                        "threads",
+                                        self.threads,
+                                        Threads::ALL
+                                            .into_iter()
+                                            .map(|threads| (threads, threads_label(threads)))
+                                            .collect(),
+                                        false,
+                                        |form, threads| form.threads = threads,
+                                        cx,
+                                    ),
+                                    cx,
+                                )
+                                .into_any_element(),
+                                cardo_ui::settings::row(
                                     tr("volume-size"),
+                                    (self.volume != Volume::None).then(|| tr("volume-note").into()),
                                     self.choice(
                                         "split",
                                         self.volume,
@@ -659,26 +676,29 @@ impl Render for CreateForm {
                                         |form, volume| form.volume = volume,
                                         cx,
                                     ),
-                                ))
-                                .when(self.volume != Volume::None, |el| {
-                                    el.child(
-                                        div()
-                                            .text_size(px(12.))
-                                            .text_color(rgb(p.muted))
-                                            .child(tr("volume-note")),
+                                    cx,
+                                )
+                                .into_any_element(),
+                                settings_row(
+                                    tr("solid"),
+                                    SettingsSwitch::new(
+                                        "solid",
+                                        tr("solid"),
+                                        self.solid && self.format.supports_solid(),
+                                        !self.format.supports_solid(),
                                     )
-                                })
-                                .child(
-                                    checkbox("solid", tr("solid"))
-                                        .text_size(px(13.))
-                                        .checked(self.solid && self.format.supports_solid())
-                                        .disabled(!self.format.supports_solid())
-                                        .on_click(cx.listener(|this, checked: &bool, _, cx| {
+                                    .on_click(cx.listener(
+                                        |this, checked: &bool, _, cx| {
                                             this.solid = *checked;
                                             cx.notify();
-                                        })),
-                                ),
-                        )
+                                        },
+                                    )),
+                                    cx,
+                                )
+                                .into_any_element(),
+                            ],
+                            cx,
+                        ))
                     }),
             )
             .child(

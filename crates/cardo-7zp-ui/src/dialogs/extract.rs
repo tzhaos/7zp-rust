@@ -1,60 +1,50 @@
 use crate::*;
-use gpui_kit::component::{Disableable, Selectable, h_flex, v_flex};
 
 impl Workspace {
-    fn destination_button(
-        &self,
-        kind: Option<DestinationKind>,
-        selected: usize,
-        cx: &Context<Self>,
-    ) -> impl IntoElement + use<> {
-        let index = kind.and_then(|kind| {
-            self.destinations
-                .iter()
-                .position(|(candidate, _)| *candidate == kind)
-        });
-        let custom = self
+    fn destination_choice(&self, selected: usize, cx: &Context<Self>) -> impl IntoElement + use<> {
+        let label = self
             .destinations
-            .iter()
-            .position(|(candidate, _)| *candidate == DestinationKind::Custom);
-        let (id, label, icon_name, chosen, enabled) = match kind {
-            None => (
-                "browse-extract",
-                tr("browse-directory"),
-                "FolderOpen",
-                custom == Some(selected),
-                true,
-            ),
-            Some(kind) => (
-                match kind {
-                    DestinationKind::Archive => "destination-archive",
-                    DestinationKind::Downloads => "destination-downloads",
-                    DestinationKind::Desktop => "destination-desktop",
-                    DestinationKind::Custom => "destination-custom",
-                },
-                kind.label(),
-                kind.icon(),
-                index == Some(selected),
-                index.is_some(),
-            ),
-        };
-        command(id, label)
-            .icon(icon(icon_name, 18.))
-            .flex_1()
-            .min_w(px(160.))
-            .selected(chosen)
-            .disabled(!enabled)
-            .on_click(cx.listener(move |this, _, window, cx| {
-                if kind.is_none() {
-                    this.choose_extract_directory(window, cx);
-                    return;
-                }
-                let Some(index) = index else { return };
-                if let Some(Modal::Extract { destination, .. }) = this.dialogs.current_mut() {
-                    *destination = index;
-                    cx.notify();
-                }
-            }))
+            .get(selected)
+            .map(|(kind, _)| kind.label())
+            .unwrap_or_else(|| tr("browse-directory"));
+        let destinations = self.destinations.clone();
+        let owner = cx.entity().downgrade();
+        settings_choice("extract-destination", label, cx).choice_menu(move |_, _| {
+            let mut menu = Menu::new();
+            for (index, (kind, path)) in destinations.iter().enumerate() {
+                let view = owner.clone();
+                let kind = *kind;
+                menu = menu.item(
+                    MenuItem::new(kind.label())
+                        .icon(icon(kind.icon(), 16.))
+                        .description(path.display().to_string())
+                        .checked(index == selected)
+                        .on_select(move |_, cx| {
+                            let _ = view.update(cx, |this, cx| {
+                                if let Some(index) = this
+                                    .destinations
+                                    .iter()
+                                    .position(|(candidate, _)| *candidate == kind)
+                                    && let Some(Modal::Extract { destination, .. }) =
+                                        this.dialogs.current_mut()
+                                {
+                                    *destination = index;
+                                    cx.notify();
+                                }
+                            });
+                        }),
+                );
+            }
+            let view = owner.clone();
+            menu.separator().item(
+                MenuItem::new(tr("browse-directory"))
+                    .icon(icon("FolderOpen", 16.))
+                    .on_select(move |window, cx| {
+                        let _ =
+                            view.update(cx, |this, cx| this.choose_extract_directory(window, cx));
+                    }),
+            )
+        })
     }
 
     pub(super) fn extract_view(
@@ -66,129 +56,114 @@ impl Workspace {
         _window: &mut Window,
         cx: &mut Context<Self>,
     ) -> AnyElement {
-        {
-            let name = self
-                .browser
-                .view()
-                .catalog
-                .as_ref()
-                .and_then(|c| c.path.file_name())
-                .unwrap_or_default()
-                .to_string_lossy()
-                .into_owned();
-            let output = self
-                .destinations
-                .get(*destination)
-                .map(|(_, path)| {
-                    path.join(folder.read(cx).value().trim())
-                        .display()
-                        .to_string()
-                })
-                .unwrap_or_default();
-            panel_layout(cx)
-                .child(
-                    panel_body("extract-options-body")
-                        .child(panel_notice(
-                            "FolderZip",
-                            name,
-                            crate::theme::palette(cx).accent,
-                        ))
-                        .child(panel_field(
-                            tr("extract-scope"),
-                            h_flex()
-                                .flex_wrap()
-                                .gap_2()
-                                .child(
-                                    command("scope-all", tr("all-files"))
-                                        .selected(!*selected)
-                                        .on_click(cx.listener(|this, _, _, cx| {
-                                            if let Some(Modal::Extract { selected, .. }) =
-                                                this.dialogs.current_mut()
-                                            {
-                                                *selected = false;
-                                                cx.notify();
-                                            }
-                                        })),
+        let name = self
+            .browser
+            .view()
+            .catalog
+            .as_ref()
+            .and_then(|catalog| catalog.path.file_name())
+            .unwrap_or_default()
+            .to_string_lossy()
+            .into_owned();
+        let output = self
+            .destinations
+            .get(*destination)
+            .map(|(_, path)| {
+                path.join(folder.read(cx).value().trim())
+                    .display()
+                    .to_string()
+            })
+            .unwrap_or_default();
+        let selected_count = self.browser.view().selected.len();
+        let scope = settings_segments("extract-scope", tr("extract-scope")).children(
+            [false, true]
+                .into_iter()
+                .enumerate()
+                .map(|(index, selection_only)| {
+                    let label = if selection_only {
+                        tf("selected-count", &[("count", selected_count.into())])
+                    } else {
+                        tr("all-files").to_owned()
+                    };
+                    let owner = cx.entity().downgrade();
+                    settings_segment(
+                        ("extract-scope-option", index),
+                        &label,
+                        *selected == selection_only,
+                        selection_only && selected_count == 0,
+                        cx,
+                    )
+                    .set_position(index + 1, 2)
+                    .on_change(move |_, _, _, cx| {
+                        let _ = owner.update(cx, |this, cx| {
+                            if let Some(Modal::Extract { selected, .. }) =
+                                this.dialogs.current_mut()
+                            {
+                                *selected = selection_only;
+                                cx.notify();
+                            }
+                        });
+                    })
+                }),
+        );
+        panel_layout(cx)
+            .child(
+                panel_body("extract-options-body")
+                    .child(
+                        panel_notice("FolderZip", name, crate::theme::palette(cx).accent)
+                            .font_weight(FontWeight::SEMIBOLD),
+                    )
+                    .child(settings_group(
+                        [
+                            settings_row(tr("extract-scope"), scope, cx).into_any_element(),
+                            settings_row(
+                                tr("save-location"),
+                                self.destination_choice(*destination, cx),
+                                cx,
+                            )
+                            .into_any_element(),
+                            settings_row(
+                                tr("new-folder"),
+                                settings_input(folder, tr("new-folder"))
+                                    .w(px(cardo_ui::settings::metrics::INPUT_WIDTH)),
+                                cx,
+                            )
+                            .into_any_element(),
+                            settings_row(
+                                tr("extract-open-after"),
+                                SettingsSwitch::new(
+                                    "extract-open-after",
+                                    tr("extract-open-after"),
+                                    *open_after,
+                                    false,
                                 )
-                                .child(
-                                    command(
-                                        "scope-selected",
-                                        &tf(
-                                            "selected-count",
-                                            &[("count", self.browser.view().selected.len().into())],
-                                        ),
-                                    )
-                                    .disabled(self.browser.view().selected.is_empty())
-                                    .selected(*selected)
-                                    .on_click(cx.listener(
-                                        |this, _, _, cx| {
-                                            if let Some(Modal::Extract { selected, .. }) =
-                                                this.dialogs.current_mut()
-                                            {
-                                                *selected = true;
-                                                cx.notify();
-                                            }
-                                        },
-                                    )),
-                                ),
-                        ))
-                        .child(panel_field(
-                            tr("save-location"),
-                            v_flex()
-                                .gap(px(8.))
-                                .child(
-                                    h_flex()
-                                        .flex_wrap()
-                                        .gap(px(8.))
-                                        .child(self.destination_button(None, *destination, cx))
-                                        .child(self.destination_button(
-                                            Some(DestinationKind::Archive),
-                                            *destination,
-                                            cx,
-                                        )),
-                                )
-                                .child(
-                                    h_flex()
-                                        .flex_wrap()
-                                        .gap(px(8.))
-                                        .child(self.destination_button(
-                                            Some(DestinationKind::Downloads),
-                                            *destination,
-                                            cx,
-                                        ))
-                                        .child(self.destination_button(
-                                            Some(DestinationKind::Desktop),
-                                            *destination,
-                                            cx,
-                                        )),
-                                ),
-                        ))
-                        .child(panel_field(tr("new-folder"), text_input(folder)))
-                        .child(panel_field(
-                            tr("extract-location"),
-                            path_strip("copy-extract-path", output, cx),
-                        ))
-                        .child(
-                            checkbox("extract-open-after", tr("extract-open-after"))
-                                .text_size(px(13.))
-                                .checked(*open_after)
-                                .on_click(cx.listener(|this, checked: &bool, _, cx| {
-                                    if let Some(Modal::Extract { open_after, .. }) =
-                                        this.dialogs.current_mut()
-                                    {
-                                        *open_after = *checked;
-                                        cx.notify();
-                                    }
-                                })),
-                        ),
-                )
-                .child(self.footer(
-                    tr("extract-start"),
-                    self.destinations.is_empty(),
-                    cx.listener(|this, _, _, cx| this.submit_extract(cx)),
-                    cx,
-                ))
-                .into_any_element()
-        }
+                                .on_click(cx.listener(
+                                    |this, checked: &bool, _, cx| {
+                                        if let Some(Modal::Extract { open_after, .. }) =
+                                            this.dialogs.current_mut()
+                                        {
+                                            *open_after = *checked;
+                                            cx.notify();
+                                        }
+                                    },
+                                )),
+                                cx,
+                            )
+                            .into_any_element(),
+                        ],
+                        cx,
+                    ))
+                    .child(panel_field(
+                        tr("extract-location"),
+                        path_strip("copy-extract-path", output, cx),
+                    )),
+            )
+            .child(self.footer(
+                tr("extract-start"),
+                self.destinations.is_empty(),
+                cx.listener(|this, _, _, cx| this.submit_extract(cx)),
+                cx,
+            ))
+            .into_any_element()
     }
 }

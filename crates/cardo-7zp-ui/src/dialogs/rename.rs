@@ -13,7 +13,10 @@ impl Workspace {
             .child(
                 panel_body("rename-body")
                     .child(path_strip("rename-source", source.clone(), cx))
-                    .child(panel_field(tr("rename-new-name"), text_input(input)))
+                    .child(panel_field(
+                        tr("rename-new-name"),
+                        settings_input(input, tr("rename-new-name")),
+                    ))
                     .when_some(error.clone(), |el, error| {
                         el.child(panel_notice(
                             "Info",

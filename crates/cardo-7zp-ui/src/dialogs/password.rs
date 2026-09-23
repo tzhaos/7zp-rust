@@ -14,7 +14,10 @@ impl Workspace {
                         tr("password-prompt"),
                         crate::theme::palette(cx).accent,
                     ))
-                    .child(panel_field(tr("password"), text_input(input))),
+                    .child(panel_field(
+                        tr("password"),
+                        settings_input(input, tr("password")),
+                    )),
             )
             .child(self.footer(
                 tr("continue"),

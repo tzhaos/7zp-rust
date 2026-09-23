@@ -1,7 +1,8 @@
-use super::{body_text, command, compact_text, icon, primary};
+use super::{body_text, command, compact_text, icon};
 use crate::{ScrollableElement, theme::metrics::popup as metrics};
 use gpui_kit::{
     component::{
+        Sizable,
         button::{Button, ButtonVariants},
         h_flex,
         scroll::Scrollable,
@@ -64,7 +65,7 @@ impl PanelSize {
             Self::Compact => (600., 280.),
             Self::Standard => (700., 420.),
             Self::Wide => (820., 600.),
-            Self::Form => (860., 800.),
+            Self::Form => (780., 760.),
             Self::Comparison => (840., 560.),
             Self::Extract => (740., 640.),
             Self::Properties(rows) => (660., (144. + rows as f32 * 36.).clamp(240., 560.)),
@@ -274,33 +275,19 @@ pub(crate) fn panel_actions(cx: &App) -> Div {
 
 pub(crate) fn panel_button(id: impl Into<ElementId>, label: &str) -> Button {
     command(id, label)
+        .small()
+        .rounded(px(cardo_ui::settings::metrics::CONTROL_RADIUS))
+        .border_0()
         .min_w(px(metrics::ACTION_MIN_WIDTH))
         .flex_shrink_0()
 }
 
 pub(crate) fn panel_primary(id: impl Into<ElementId>, label: &str) -> Button {
-    primary(id, label)
-        .min_w(px(metrics::ACTION_MIN_WIDTH))
-        .flex_shrink_0()
+    panel_button(id, label).primary()
 }
 
 pub(crate) fn panel_danger(id: impl Into<ElementId>, label: &str) -> Button {
     panel_button(id, label).danger()
-}
-
-pub(crate) fn panel_fields() -> Div {
-    h_flex()
-        .w_full()
-        .min_w_0()
-        .flex_wrap()
-        .items_start()
-        .gap(px(metrics::GAP))
-}
-
-pub(crate) fn panel_column(label: impl Into<SharedString>, content: impl IntoElement) -> Div {
-    panel_field(label, content)
-        .flex_1()
-        .min_w(px(metrics::FIELD_MIN_WIDTH))
 }
 
 pub(crate) fn panel_field(label: impl Into<SharedString>, content: impl IntoElement) -> Div {
@@ -312,8 +299,8 @@ pub(crate) fn panel_field(label: impl Into<SharedString>, content: impl IntoElem
         .child(
             body_text(label)
                 .w_full()
-                .text_size(px(12.))
-                .font_weight(FontWeight::MEDIUM),
+                .text_size(px(metrics::BODY_TEXT))
+                .font_weight(FontWeight::SEMIBOLD),
         )
         .child(content)
 }
@@ -330,16 +317,10 @@ pub(crate) fn panel_notice(name: &str, text: impl Into<SharedString>, color: u32
 }
 
 pub(crate) fn panel_card(cx: &App) -> Div {
-    let p = crate::theme::palette(cx);
-    v_flex()
-        .min_w_0()
-        .flex_shrink_0()
+    cardo_ui::settings::frame(cx)
+        .w_auto()
         .p(px(metrics::CARD_PADDING))
-        .gap(px(metrics::FIELD_GAP))
-        .bg(rgb(p.panel))
-        .border_1()
-        .border_color(rgb(p.border))
-        .rounded(px(metrics::CARD_RADIUS))
+        .gap(px(metrics::GAP))
 }
 
 pub(crate) fn panel_property(

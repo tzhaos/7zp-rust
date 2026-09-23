@@ -26,7 +26,7 @@ pub fn path_strip(id: impl Into<ElementId>, path: String, cx: &App) -> Stateful<
                 .h(px(crate::theme::metrics::CONTROL_HEIGHT))
                 .px(px(8.))
                 .gap(px(7.))
-                .rounded(px(crate::theme::metrics::CONTROL_RADIUS))
+                .rounded(px(cardo_ui::settings::metrics::CONTROL_RADIUS))
                 .bg(rgb(p.surface))
                 .border_1()
                 .border_color(rgb(p.border))

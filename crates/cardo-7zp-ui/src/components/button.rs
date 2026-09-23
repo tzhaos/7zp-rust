@@ -117,13 +117,6 @@ pub fn primary(id: impl Into<ElementId>, label: &str) -> Button {
     command(id, label).primary()
 }
 
-pub fn menu_choice(id: impl Into<ElementId>, label: &str, cx: &App) -> Button {
-    let p = crate::theme::palette(cx);
-    command(id, label)
-        .border_color(rgb(p.border))
-        .dropdown_caret(true)
-}
-
 pub fn icon_button(
     id: impl Into<ElementId>,
     name: &str,

@@ -32,15 +32,14 @@ pub mod settings {
 }
 
 pub mod popup {
+    pub const OUTER_INSET: f32 = 12.;
     pub const TITLE_HEIGHT: f32 = 44.;
     pub const TITLE_TEXT: f32 = 14.;
     pub const ACTION_MIN_WIDTH: f32 = 80.;
-    pub const FIELD_MIN_WIDTH: f32 = 200.;
     pub const PADDING: f32 = 20.;
     pub const GAP: f32 = 16.;
     pub const FIELD_GAP: f32 = 8.;
     pub const CARD_PADDING: f32 = 16.;
-    pub const CARD_RADIUS: f32 = 6.;
     pub const FOOTER_PADDING: f32 = 12.;
     pub const BODY_TEXT: f32 = 13.;
     pub const LINE_HEIGHT: f32 = 20.;

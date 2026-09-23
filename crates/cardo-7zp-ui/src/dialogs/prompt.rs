@@ -1,7 +1,7 @@
 use super::*;
 use gpui_kit::{
     base::FocusTrapElement,
-    component::{Root, h_flex, v_flex},
+    component::{Root, v_flex},
 };
 use std::cell::Cell;
 
@@ -315,31 +315,13 @@ impl Workspace {
         let body = self.dialog_body(window, cx)?;
         let dismissible =
             !matches!(self.dialogs.current(), Some(Modal::Progress)) && !self.settings_busy(cx);
-        let body = {
-            h_flex()
-                .flex_1()
-                .min_h_0()
-                .pb(px(12.))
-                .pr(px(12.))
-                .child(
-                    v_flex()
-                        .w(px(100.))
-                        .h_full()
-                        .flex_shrink_0()
-                        .items_center()
-                        .pt(px(28.))
-                        .gap(px(12.))
-                        .child(img("brand/logo.png").size(px(56.)))
-                        .child(
-                            div()
-                                .text_size(px(12.))
-                                .text_color(rgb(crate::theme::palette(cx).muted))
-                                .child("7zplus"),
-                        ),
-                )
-                .child(panel_surface(cx).h_full().child(body))
-                .into_any_element()
-        };
+        let body = v_flex()
+            .flex_1()
+            .min_w_0()
+            .min_h_0()
+            .px(px(crate::theme::metrics::popup::OUTER_INSET))
+            .pb(px(crate::theme::metrics::popup::OUTER_INSET))
+            .child(panel_surface(cx).child(body));
         Some(
             panel_frame(cx)
                 .id("prompt-panel")
