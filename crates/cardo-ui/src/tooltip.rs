@@ -13,21 +13,21 @@ impl Render for BubbleTooltip {
         let viewport = window.viewport_size();
         let bubble = gpui_kit::base::Tooltip::new("bubble-tooltip")
             .max_w(px(360.).min((viewport.width - px(16.)).max(px(1.))))
+            .px(px(10.))
+            .py(px(4.))
+            .rounded(px(14.))
+            .bg(rgb(0x202020))
+            .text_color(rgb(0xffffff))
+            .text_size(px(12.))
+            .line_height(px(18.))
+            .shadow_sm()
             .child(
                 div()
                     .id("tooltip-text")
                     .min_w_0()
-                    .max_h((viewport.height - px(16.)).max(px(1.)))
+                    .max_h((viewport.height - px(24.)).max(px(1.)))
                     .overflow_y_scroll()
-                    .px(px(12.))
-                    .py(px(8.))
-                    .rounded(px(14.))
-                    .bg(rgb(0x202020))
-                    .text_color(rgb(0xffffff))
-                    .text_size(px(12.))
-                    .line_height(px(18.))
                     .whitespace_normal()
-                    .shadow_sm()
                     .child(self.text.clone()),
             );
         // Positioner measures the bubble before centering and clamping it in the viewport.

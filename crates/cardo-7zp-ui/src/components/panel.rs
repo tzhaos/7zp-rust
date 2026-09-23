@@ -9,6 +9,43 @@ use gpui_kit::{
     },
     *,
 };
+use std::time::{Duration, Instant};
+
+#[derive(Clone, Copy, Default)]
+pub(crate) struct TabIndicator {
+    target: Option<Pixels>,
+    origin: Pixels,
+    started: Option<Instant>,
+}
+
+impl TabIndicator {
+    const DURATION: Duration = Duration::from_millis(200);
+
+    pub(crate) fn move_to(&mut self, target: Pixels, reduce_motion: bool) {
+        if self.target == Some(target) {
+            return;
+        }
+        let now = Instant::now();
+        self.origin = self.position(now).0;
+        self.started = if self.target.is_some() && !reduce_motion {
+            Some(now)
+        } else {
+            None
+        };
+        self.target = Some(target);
+    }
+
+    fn position(&self, now: Instant) -> (Pixels, bool) {
+        let target = self.target.unwrap_or_default();
+        let Some(started) = self.started else {
+            return (target, false);
+        };
+        let progress =
+            (now.duration_since(started).as_secs_f32() / Self::DURATION.as_secs_f32()).min(1.);
+        let eased = 1. - (1. - progress).powi(3);
+        (self.origin + (target - self.origin) * eased, progress < 1.)
+    }
+}
 
 #[derive(Clone, Copy)]
 pub(crate) enum PanelSize {
@@ -87,7 +124,7 @@ pub(crate) fn popup_surface(cx: &App) -> Div {
 }
 
 pub(crate) fn connected_panel_outline(
-    center: std::rc::Rc<std::cell::Cell<Pixels>>,
+    indicator: std::rc::Rc<std::cell::Cell<TabIndicator>>,
 ) -> impl IntoElement {
     canvas(
         |_, _, _| (),
@@ -98,8 +135,16 @@ pub(crate) fn connected_panel_outline(
             let top = bounds.top() + px(0.5);
             let bottom = bounds.bottom() - px(0.5);
             let radius = px(crate::theme::metrics::PANEL_RADIUS);
+            let mut state = indicator.get();
+            if cx.reduce_motion() {
+                state.started = None;
+                indicator.set(state);
+            }
+            let (center, moving) = state.position(Instant::now());
+            if moving {
+                window.request_animation_frame();
+            }
             let x = center
-                .get()
                 .max(left + radius + px(18.))
                 .min(right - radius - px(18.));
             // The notch and frame are one closed path, so no border crosses their junction.

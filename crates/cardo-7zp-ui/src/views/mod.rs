@@ -78,7 +78,7 @@ impl Render for Workspace {
                 panel_surface(cx)
                     .border_0()
                     .shadow_none()
-                    .child(crate::components::panel::connected_panel_outline(self.active_tab_center.clone()))
+                    .child(crate::components::panel::connected_panel_outline(self.active_tab_indicator.clone()))
                     .id("content-panel")
                     .on_prepaint(move |bounds, _, _| content_bounds.set(bounds))
                     .relative()

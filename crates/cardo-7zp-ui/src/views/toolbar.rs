@@ -92,7 +92,7 @@ impl Workspace {
             ("page-about", ToolIcon::About, Some(SettingsPage::About)),
         ] {
             let label = page.map(SettingsPage::title).unwrap_or(tr("files-view"));
-            let center = self.active_tab_center.clone();
+            let indicator = self.active_tab_indicator.clone();
             row = row.child(
                 tool(
                     id,
@@ -104,10 +104,10 @@ impl Workspace {
                     cx,
                 )
                 .when(self.settings_page == page, |button| {
-                    button.on_prepaint(move |bounds, window, _| {
-                        if center.replace(bounds.center().x) != bounds.center().x {
-                            window.request_animation_frame();
-                        }
+                    button.on_prepaint(move |bounds, _, cx| {
+                        let mut state = indicator.get();
+                        state.move_to(bounds.center().x, cx.reduce_motion());
+                        indicator.set(state);
                     })
                 })
                 .on_click(cx.listener(move |this, _, window, cx| match page {
