@@ -62,6 +62,8 @@ Enter, Shift+Enter, Ctrl+Page Down, arrows, Space, Backspace, Escape and Shift+F
 
 Requirements: Windows x64, Visual Studio C++ Build Tools with Windows SDK, PowerShell, and the Rust toolchain pinned in `rust-toolchain.toml` (currently 1.95.0). Initial downloads require network access.
 
+Clone with `git clone --recurse-submodules`, or run `git submodule update --init --recursive` in an existing checkout. The `cardo/` submodule contains the shared crates; the application crates under `crates/` are maintained here.
+
 ```powershell
 ./tools/build.ps1 -ReleaseRepository tzhaos/7zp-rust -Package All
 ./bin/7zplus.exe
@@ -87,16 +89,18 @@ Logs in the `logs/` subdirectory rotate daily in UTC and retain up to 14 files. 
 
 | Crate | Responsibility |
 | --- | --- |
-| `cardo-7zp-app` | Startup and packaging |
-| `cardo-7zp-ui` | Workspace, settings, dialogs and command dispatch |
-| `cardo-7zp-core` | Preferences, localization, history and shortcut definitions |
-| `cardo-7zp-engine` | 7-Zip adapter, operations and progress |
-| `cardo-7zp-requests` | Background requests, release checks and update downloads |
-| `cardo-7zp-platform` | Windows integration, registry policy, update application and single instance |
-| `cardo-7zp-explorer` | Explorer extension, independent of GPUI and the engine adapter |
-| `cardo-7zp-commands` | Shared command identities, routing and request data |
+| `zip-app` | Startup and packaging |
+| `zip-ui` | Workspace, settings, dialogs and command dispatch |
+| `zip-core` | Preferences, localization, history and shortcut definitions |
+| `zip-engine` | 7-Zip adapter, operations and progress |
+| `zip-requests` | Background requests, release checks and update downloads |
+| `zip-platform` | Windows integration, registry policy, update application and single instance |
+| `zip-explorer` | Explorer extension, independent of GPUI and the engine adapter |
+| `zip-commands` | Shared command identities, routing and request data |
 | `cardo-ui` | Reusable settings, menus, tooltips, text, font and theme components |
 | `cardo-runtime` | Atomic storage, Fluent catalogs, diagnostics and registry ownership |
+
+The `cardo-*` crates live in the separate [Cardo repository](https://github.com/tzhaos/cardo-rust) at the commit pinned by the submodule. This repository owns the `zip-*` crates and its own release version.
 
 Business work runs outside render. Product modules own values and persistence; shared components own presentation. Dialogs share frames and artwork notices. Command menus are native Windows surfaces; settings selectors remain themed. Constrained text uses ellipsis with full-text hints only when truncated.
 
@@ -117,3 +121,5 @@ Local builds and selected engine operations have been verified, including v0.2.1
 ## Third-Party Components
 
 The engine is [7-Zip](https://www.7-zip.org/); retain its included license and notices. Small icons come from [Microsoft Fluent UI System Icons](https://github.com/microsoft/fluentui-system-icons), with their [MIT license](assets/fluent/LICENSE). Brand and toolbar artwork are original project assets. The Visual C++ runtime is distributed under Microsoft's redistribution terms.
+
+The project source is licensed under [MIT](LICENSE). The Cardo submodule carries its own MIT license.

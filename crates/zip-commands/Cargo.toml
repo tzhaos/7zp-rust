@@ -1,0 +1,10 @@
+[package]
+name = "zip-commands"
+version.workspace = true
+edition.workspace = true
+publish.workspace = true
+license.workspace = true
+description = "Context-menu commands and archive-type ids shared by the Explorer DLL and 7zplus."
+
+[dependencies]
+serde.workspace = true

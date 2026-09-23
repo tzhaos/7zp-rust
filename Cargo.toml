@@ -1,35 +1,35 @@
 [workspace]
 members = [
-    "crates/cardo-runtime",
-    "crates/cardo-ui",
-    "crates/cardo-7zp-app",
-    "crates/cardo-7zp-core",
-    "crates/cardo-7zp-engine",
-    "crates/cardo-7zp-requests",
-    "crates/cardo-7zp-platform",
-    "crates/cardo-7zp-ui",
-    "crates/cardo-7zp-commands",
-    "crates/cardo-7zp-explorer",
+    "crates/zip-app",
+    "crates/zip-core",
+    "crates/zip-engine",
+    "crates/zip-requests",
+    "crates/zip-platform",
+    "crates/zip-ui",
+    "crates/zip-commands",
+    "crates/zip-explorer",
 ]
+exclude = ["cardo"]
 resolver = "3"
 
 [workspace.package]
-version = "0.2.2"
+version = "0.2.3"
 edition = "2024"
 publish = false
+license = "MIT"
 
 [workspace.dependencies]
-cardo-runtime = { path = "crates/cardo-runtime" }
+cardo-runtime = { path = "cardo/crates/cardo-runtime" }
+cardo-ui = { path = "cardo/crates/cardo-ui" }
 tracing = "0.1"
 tracing-subscriber = "0.3"
 tracing-appender = "0.2"
-cardo-ui = { path = "crates/cardo-ui" }
-cardo-7zp-core = { path = "crates/cardo-7zp-core" }
-cardo-7zp-engine = { path = "crates/cardo-7zp-engine" }
-cardo-7zp-requests = { path = "crates/cardo-7zp-requests" }
-cardo-7zp-platform = { path = "crates/cardo-7zp-platform" }
-cardo-7zp-ui = { path = "crates/cardo-7zp-ui" }
-cardo-7zp-commands = { path = "crates/cardo-7zp-commands" }
+zip-core = { path = "crates/zip-core" }
+zip-engine = { path = "crates/zip-engine" }
+zip-requests = { path = "crates/zip-requests" }
+zip-platform = { path = "crates/zip-platform" }
+zip-ui = { path = "crates/zip-ui" }
+zip-commands = { path = "crates/zip-commands" }
 anyhow = "1.0"
 gpui-kit = "=0.6.1"
 image = { version = "0.25", default-features = false }

@@ -184,6 +184,8 @@ Section
     SetOverwrite on
     SetOutPath "$INSTDIR"
     File /oname=Fluent-LICENSE.txt "${PROJECT_ROOT}\assets\fluent\LICENSE"
+    File /oname=LICENSE.txt "${PROJECT_ROOT}\LICENSE"
+    File /oname=Cardo-LICENSE.txt "${PROJECT_ROOT}\cardo\LICENSE"
     SetOutPath "$INSTDIR\runtime\7zip"
     File "${PROJECT_ROOT}\bin\runtime\7zip\*.*"
     ${If} ${Errors}
@@ -271,6 +273,8 @@ Section "Uninstall"
     Delete "$INSTDIR\7zplus.exe"
     Delete "$INSTDIR\vcruntime140.dll"
     Delete "$INSTDIR\Fluent-LICENSE.txt"
+    Delete "$INSTDIR\LICENSE.txt"
+    Delete "$INSTDIR\Cardo-LICENSE.txt"
     Delete "$INSTDIR\THIRD_PARTY.md"
     Delete "$INSTDIR\runtime\7zip\7z.exe"
     Delete "$INSTDIR\runtime\7zip\7z.dll"

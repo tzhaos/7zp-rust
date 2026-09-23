@@ -16,7 +16,7 @@ try {
     $env:SEVENZIP_RELEASE_REPOSITORY = $ReleaseRepository
     $metadata = & cargo metadata --no-deps --format-version 1 | ConvertFrom-Json
     if ($LASTEXITCODE -ne 0) { throw 'Cannot read package version' }
-    $version = ($metadata.packages | Where-Object name -eq 'cardo-7zp-app').version
+    $version = ($metadata.packages | Where-Object name -eq 'zip-app').version
     if ($version -notmatch '^\d+\.\d+\.\d+$') { throw 'Installer requires a stable major.minor.patch version' }
     & (Join-Path $PSScriptRoot 'prepare-engine.ps1')
     & (Join-Path $PSScriptRoot 'prepare-msvc.ps1')
@@ -26,9 +26,11 @@ try {
     & cargo build --workspace --locked --release --target x86_64-pc-windows-msvc --target-dir target
     if ($LASTEXITCODE -ne 0) { throw "Cargo build failed: $LASTEXITCODE" }
     Copy-Item -LiteralPath 'target/x86_64-pc-windows-msvc/release/7zplus.exe' -Destination 'bin/7zplus.exe' -Force
-    Copy-Item -LiteralPath 'target/x86_64-pc-windows-msvc/release/cardo_7zp_explorer.dll' -Destination 'bin/7-zip-plus.dll' -Force
+    Copy-Item -LiteralPath 'target/x86_64-pc-windows-msvc/release/zip_explorer.dll' -Destination 'bin/7-zip-plus.dll' -Force
     Copy-Item -LiteralPath 'assets/fluent/LICENSE' -Destination 'bin/Fluent-LICENSE.txt' -Force
-    foreach ($leftover in @('bin/cardo_7zp_explorer.dll', 'bin/cardo_7zp_shell.dll')) {
+    Copy-Item -LiteralPath 'LICENSE' -Destination 'bin/LICENSE.txt' -Force
+    Copy-Item -LiteralPath 'cardo/LICENSE' -Destination 'bin/Cardo-LICENSE.txt' -Force
+    foreach ($leftover in @('bin/cardo_7zp_explorer.dll', 'bin/cardo_7zp_shell.dll', 'bin/zip_explorer.dll')) {
         if (Test-Path -LiteralPath $leftover) {
             Remove-Item -LiteralPath $leftover
         }
@@ -43,7 +45,7 @@ try {
         $portableRoot = Join-Path $staging '7zplus'
         New-Item -ItemType Directory -Force -Path (Join-Path $portableRoot 'runtime/7zip') | Out-Null
         try {
-            foreach ($name in @('7zplus.exe', '7-zip-plus.dll', 'vcruntime140.dll', 'Fluent-LICENSE.txt')) {
+            foreach ($name in @('7zplus.exe', '7-zip-plus.dll', 'vcruntime140.dll', 'LICENSE.txt', 'Cardo-LICENSE.txt', 'Fluent-LICENSE.txt')) {
                 Copy-Item -LiteralPath (Join-Path 'bin' $name) -Destination (Join-Path $portableRoot $name)
             }
             $engine = Get-Content -LiteralPath (Join-Path $PSScriptRoot 'engine.lock.json') -Raw | ConvertFrom-Json

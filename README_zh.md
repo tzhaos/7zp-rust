@@ -62,6 +62,8 @@ Enter、Shift+Enter、Ctrl+Page Down、方向键、空格、Backspace、Escape �
 
 需要 Windows x64、Visual Studio C++ Build Tools 与 Windows SDK、PowerShell，以及 `rust-toolchain.toml` 固定的 Rust 工具链（当前为 1.95.0）。首次下载依赖需要网络。
 
+克隆时使用 `git clone --recurse-submodules`；已有工作区执行 `git submodule update --init --recursive`。`cardo/` 子模块包含共用 crate，`crates/` 下的 `zip-*` crate 由本仓库维护。
+
 ```powershell
 ./tools/build.ps1 -ReleaseRepository tzhaos/7zp-rust -Package All
 ./bin/7zplus.exe
@@ -87,16 +89,18 @@ Windows 工作流构建分支和 Pull Request。匹配版本号的标签在验�
 
 | Crate | 职责 |
 | --- | --- |
-| `cardo-7zp-app` | 启动与打包 |
-| `cardo-7zp-ui` | 工作区、设置、弹窗和命令分发 |
-| `cardo-7zp-core` | 配置、本地化、历史与快捷键定义 |
-| `cardo-7zp-engine` | 7-Zip 适配、操作与进度 |
-| `cardo-7zp-requests` | 后台请求、发布检查与更新下载 |
-| `cardo-7zp-platform` | Windows 集成、注册策略、更新应用与单实例 |
-| `cardo-7zp-explorer` | 独立于 GPUI 和引擎适配器的资源管理器扩展 |
-| `cardo-7zp-commands` | 共用命令标识、路由和请求数据 |
+| `zip-app` | 启动与打包 |
+| `zip-ui` | 工作区、设置、弹窗和命令分发 |
+| `zip-core` | 配置、本地化、历史与快捷键定义 |
+| `zip-engine` | 7-Zip 适配、操作与进度 |
+| `zip-requests` | 后台请求、发布检查与更新下载 |
+| `zip-platform` | Windows 集成、注册策略、更新应用与单实例 |
+| `zip-explorer` | 独立于 GPUI 和引擎适配器的资源管理器扩展 |
+| `zip-commands` | 共用命令标识、路由和请求数据 |
 | `cardo-ui` | 可复用设置、菜单、提示、文本、字体与主题组件 |
 | `cardo-runtime` | 原子存储、Fluent 语言目录、诊断和注册表归属检查 |
+
+`cardo-*` crate 位于独立的 [Cardo 仓库](https://github.com/tzhaos/cardo-rust)，由子模块固定提交；本仓库维护 `zip-*` crate 和独立的发布版本。
 
 业务操作不在 render 中执行。产品模块负责值与持久化，共享组件负责展示。弹窗共用框架和大图标提示。命令菜单采用 Windows 原生表面，设置选择器沿用自绘主题。受限文本使用省略号，仅在实际截断时提供全文提示。
 
@@ -117,3 +121,5 @@ Windows 工作流构建分支和 Pull Request。匹配版本号的标签在验�
 ## 第三方组件
 
 引擎来自 [7-Zip](https://www.7-zip.org/)，请保留附带许可与声明。小图标来自 [Microsoft Fluent UI System Icons](https://github.com/microsoft/fluentui-system-icons)，采用附带的 [MIT 许可](assets/fluent/LICENSE)。品牌和工具栏图标为项目原创资源。Visual C++ 运行库依据 Microsoft 的再分发条款提供。
+
+项目源码采用 [MIT 许可](LICENSE)。Cardo 子模块有独立的 MIT 许可。

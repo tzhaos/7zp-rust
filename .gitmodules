@@ -1,0 +1,3 @@
+[submodule "cardo"]
+	path = cardo
+	url = https://github.com/tzhaos/cardo-rust.git

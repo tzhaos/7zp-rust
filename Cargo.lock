@@ -825,123 +825,8 @@ dependencies = [
 ]
 
 [[package]]
-name = "cardo-7zp-app"
-version = "0.2.2"
-dependencies = [
- "anyhow",
- "cardo-7zp-core",
- "cardo-7zp-platform",
- "cardo-7zp-ui",
- "cardo-runtime",
- "embed-resource",
- "gpui-kit",
- "rfd",
- "tracing",
-]
-
-[[package]]
-name = "cardo-7zp-commands"
-version = "0.2.2"
-dependencies = [
- "serde",
-]
-
-[[package]]
-name = "cardo-7zp-core"
-version = "0.2.2"
-dependencies = [
- "anyhow",
- "cardo-runtime",
- "fluent-bundle",
- "serde",
- "windows-sys 0.59.0",
-]
-
-[[package]]
-name = "cardo-7zp-engine"
-version = "0.2.2"
-dependencies = [
- "anyhow",
- "cardo-7zp-commands",
- "cardo-7zp-core",
- "tempfile",
- "windows-sys 0.59.0",
- "zip",
-]
-
-[[package]]
-name = "cardo-7zp-explorer"
-version = "0.2.2"
-dependencies = [
- "cardo-7zp-commands",
- "serde_json",
- "tempfile",
- "windows 0.61.3",
- "windows-core 0.61.2",
- "winreg",
-]
-
-[[package]]
-name = "cardo-7zp-platform"
-version = "0.2.2"
-dependencies = [
- "anyhow",
- "cardo-7zp-commands",
- "cardo-7zp-core",
- "cardo-runtime",
- "serde",
- "serde_json",
- "sha2 0.10.9",
- "tempfile",
- "tracing",
- "windows-sys 0.59.0",
- "winreg",
- "zip",
-]
-
-[[package]]
-name = "cardo-7zp-requests"
-version = "0.2.2"
-dependencies = [
- "anyhow",
- "cardo-7zp-commands",
- "cardo-7zp-core",
- "cardo-7zp-engine",
- "cardo-7zp-platform",
- "reqwest",
- "semver",
- "serde",
- "sha2 0.10.9",
- "tempfile",
- "tokio",
- "windows-sys 0.59.0",
-]
-
-[[package]]
-name = "cardo-7zp-ui"
-version = "0.2.2"
-dependencies = [
- "anyhow",
- "cardo-7zp-commands",
- "cardo-7zp-core",
- "cardo-7zp-engine",
- "cardo-7zp-platform",
- "cardo-7zp-requests",
- "cardo-ui",
- "dirs 6.0.0",
- "gpui-kit",
- "image",
- "rfd",
- "rust-embed",
- "serde",
- "serde_json",
- "tempfile",
- "tracing",
-]
-
-[[package]]
 name = "cardo-runtime"
-version = "0.2.2"
+version = "0.1.0"
 dependencies = [
  "anyhow",
  "dirs 6.0.0",
@@ -959,7 +844,7 @@ dependencies = [
 
 [[package]]
 name = "cardo-ui"
-version = "0.2.2"
+version = "0.1.0"
 dependencies = [
  "gpui-kit",
  "tracing",
@@ -9270,6 +9155,121 @@ dependencies = [
  "memchr",
  "thiserror 2.0.20",
  "zopfli",
+]
+
+[[package]]
+name = "zip-app"
+version = "0.2.3"
+dependencies = [
+ "anyhow",
+ "cardo-runtime",
+ "embed-resource",
+ "gpui-kit",
+ "rfd",
+ "tracing",
+ "zip-core",
+ "zip-platform",
+ "zip-ui",
+]
+
+[[package]]
+name = "zip-commands"
+version = "0.2.3"
+dependencies = [
+ "serde",
+]
+
+[[package]]
+name = "zip-core"
+version = "0.2.3"
+dependencies = [
+ "anyhow",
+ "cardo-runtime",
+ "fluent-bundle",
+ "serde",
+ "windows-sys 0.59.0",
+]
+
+[[package]]
+name = "zip-engine"
+version = "0.2.3"
+dependencies = [
+ "anyhow",
+ "tempfile",
+ "windows-sys 0.59.0",
+ "zip",
+ "zip-commands",
+ "zip-core",
+]
+
+[[package]]
+name = "zip-explorer"
+version = "0.2.3"
+dependencies = [
+ "serde_json",
+ "tempfile",
+ "windows 0.61.3",
+ "windows-core 0.61.2",
+ "winreg",
+ "zip-commands",
+]
+
+[[package]]
+name = "zip-platform"
+version = "0.2.3"
+dependencies = [
+ "anyhow",
+ "cardo-runtime",
+ "serde",
+ "serde_json",
+ "sha2 0.10.9",
+ "tempfile",
+ "tracing",
+ "windows-sys 0.59.0",
+ "winreg",
+ "zip",
+ "zip-commands",
+ "zip-core",
+]
+
+[[package]]
+name = "zip-requests"
+version = "0.2.3"
+dependencies = [
+ "anyhow",
+ "reqwest",
+ "semver",
+ "serde",
+ "sha2 0.10.9",
+ "tempfile",
+ "tokio",
+ "windows-sys 0.59.0",
+ "zip-commands",
+ "zip-core",
+ "zip-engine",
+ "zip-platform",
+]
+
+[[package]]
+name = "zip-ui"
+version = "0.2.3"
+dependencies = [
+ "anyhow",
+ "cardo-ui",
+ "dirs 6.0.0",
+ "gpui-kit",
+ "image",
+ "rfd",
+ "rust-embed",
+ "serde",
+ "serde_json",
+ "tempfile",
+ "tracing",
+ "zip-commands",
+ "zip-core",
+ "zip-engine",
+ "zip-platform",
+ "zip-requests",
 ]
 
 [[package]]
