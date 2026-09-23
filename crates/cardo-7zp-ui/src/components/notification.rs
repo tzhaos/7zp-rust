@@ -17,7 +17,7 @@ pub(crate) fn notification(
         .max_w_full()
         .p(px(12.))
         .gap(px(12.))
-        .items_start()
+        .items_center()
         .bg(rgb(p.surface))
         .border_1()
         .border_color(rgb(p.border))

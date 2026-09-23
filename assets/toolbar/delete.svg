@@ -1,0 +1,16 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="256" height="256" viewBox="0 0 256 256">
+  <defs>
+    <linearGradient id="face" x1="63" y1="83" x2="157" y2="218" gradientUnits="userSpaceOnUse"><stop stop-color="#ffaaa4"/><stop offset=".5" stop-color="#ef625d"/><stop offset="1" stop-color="#c7353d"/></linearGradient>
+    <linearGradient id="side" x1="178" y1="90" x2="200" y2="209" gradientUnits="userSpaceOnUse"><stop stop-color="#d94a50"/><stop offset="1" stop-color="#922735"/></linearGradient>
+    <linearGradient id="top" x1="64" y1="49" x2="198" y2="91" gradientUnits="userSpaceOnUse"><stop stop-color="#ffd1c9"/><stop offset="1" stop-color="#f27a73"/></linearGradient>
+  </defs>
+  <path d="M58 87L180 100L169 213Q168 226 155 224L86 215Q76 214 74 203Z" fill="url(#face)"/>
+  <path d="M180 100L207 85L193 195Q192 206 181 212L163 223Q168 219 169 210Z" fill="url(#side)"/>
+  <path d="M96 52L99 36Q100 29 108 30L151 35Q160 36 160 44V59L148 58V47L111 43L109 54Z" fill="#b93440"/>
+  <path d="M46 66L74 50L213 67L184 85Z" fill="url(#top)"/>
+  <path d="M46 66L184 85L182 102L44 83Z" fill="url(#face)"/>
+  <path d="M184 85L213 67L211 84L182 102Z" fill="url(#side)"/>
+  <path d="M88 111L97 193M115 115L121 197M142 119L145 199" fill="none" stroke="#a72d39" stroke-width="9" stroke-linecap="round"/>
+  <path d="M85 110L94 192M112 114L118 196M139 118L142 198" fill="none" stroke="#ffd1c9" stroke-width="6" stroke-linecap="round"/>
+  <path d="M51 68L179 86" stroke="#ffe5de" stroke-width="3" stroke-linecap="round"/>
+</svg>

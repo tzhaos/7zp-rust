@@ -97,7 +97,7 @@ impl Workspace {
             Modal::Info(fields) => self.info_view(fields, window, cx),
             Modal::Password { input, .. } => self.password_view(input, cx),
             Modal::ConfirmRun { entry } => self.confirm_run_view(entry, cx),
-            Modal::ConfirmDelete { count, .. } => self.confirm_delete_view(*count, cx),
+            Modal::ConfirmDelete { count, .. } => self.confirm_delete_view(*count, window, cx),
             Modal::Conflict { .. } => self.conflict_view(window, cx),
             Modal::Extract {
                 folder,
