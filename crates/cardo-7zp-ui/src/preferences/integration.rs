@@ -1,13 +1,6 @@
 use super::*;
 use gpui_kit::base::{Align, ElementExt, FocusTrapElement, Placement, Positioner};
 
-#[derive(Clone, Copy)]
-enum AssociationSelection {
-    All,
-    None,
-    Invert,
-}
-
 impl PreferencesForm {
     pub(super) fn integration_page(&self, cx: &mut Context<Self>) -> Div {
         let busy = self.is_busy();
@@ -131,85 +124,17 @@ impl PreferencesForm {
                 }
             }))
             .child(
-                div().p(px(4.)).child(
-                    settings_input(&self.association_search, tr("association-search"))
-                        .prefix(icon("Search", 14.))
-                        .bordered(false),
-                ),
-            )
-            .child(
-                h_flex().w_full().gap(px(4.)).pb(px(6.)).children(
-                    [
-                        ("association-all", "select-all", AssociationSelection::All),
-                        (
-                            "association-none",
-                            "select-none",
-                            AssociationSelection::None,
-                        ),
-                        (
-                            "association-invert",
-                            "select-invert",
-                            AssociationSelection::Invert,
-                        ),
-                    ]
-                    .into_iter()
-                    .map(|(id, label, mode)| {
-                        let filtered = !query.is_empty();
-                        settings_action(
-                            id,
-                            tr(if filtered {
-                                match mode {
-                                    AssociationSelection::All => "association-select-visible",
-                                    AssociationSelection::None => "association-clear-visible",
-                                    AssociationSelection::Invert => "select-invert",
-                                }
-                            } else {
-                                label
-                            }),
-                            cx,
-                        )
-                        .flex_1()
-                        .min_w_0()
-                        .px(px(4.))
-                        .disabled(busy || empty)
-                        .on_click(cx.listener(
-                            move |this, _, window, cx| {
-                                let query = this
-                                    .association_search
-                                    .read(cx)
-                                    .value()
-                                    .trim()
-                                    .to_ascii_lowercase();
-                                this.value.associations = cardo_7zp_commands::EXTENSIONS
-                                    .iter()
-                                    .filter(|extension| {
-                                        let selected = this
-                                            .value
-                                            .associations
-                                            .iter()
-                                            .any(|value| value == **extension);
-                                        if !extension.contains(&query) {
-                                            return selected;
-                                        }
-                                        match mode {
-                                            AssociationSelection::All => true,
-                                            AssociationSelection::None => false,
-                                            AssociationSelection::Invert => !selected,
-                                        }
-                                    })
-                                    .map(|extension| (*extension).to_owned())
-                                    .collect();
-                                this.save(window, cx);
-                            },
-                        ))
-                    }),
-                ),
-            )
-            .child(
                 cardo_ui::settings::picker_list(
                     "association-options",
-                    (px(36. * extensions.len().max(1) as f32))
-                        .min((height - px(100.)).max(px(34.))),
+                    (px(36. * extensions.len().max(1) as f32 + 42.))
+                        .min((height - px(12.)).max(px(76.))),
+                )
+                .child(
+                    div().flex_shrink_0().p(px(4.)).child(
+                        settings_input(&self.association_search, tr("association-search"))
+                            .prefix(icon("Search", 14.))
+                            .bordered(false),
+                    ),
                 )
                 .children(extensions.into_iter().map(|extension| {
                     let selected = self

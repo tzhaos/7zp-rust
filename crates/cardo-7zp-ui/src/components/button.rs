@@ -32,7 +32,7 @@ pub fn tool(
         TOOL_ICON_HEIGHT
     };
     let button = Button::new(id)
-        .secondary()
+        .custom(subtle_variant(cx))
         .disabled(disabled)
         .accessibility_label(label.to_owned())
         .w(px(TOOL_MAX_WIDTH))
@@ -130,10 +130,10 @@ pub fn icon_button(
     name: &str,
     title: &str,
     hint: bool,
-    _cx: &App,
+    cx: &App,
 ) -> Button {
     let button = Button::new(id)
-        .secondary()
+        .custom(subtle_variant(cx))
         .compact()
         .icon(icon(name, 16.))
         .accessibility_label(title.to_owned())
