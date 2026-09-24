@@ -109,7 +109,7 @@ impl Engine {
         cancel: &Cancellation,
         progress: Option<Progress>,
     ) -> Result<Output> {
-        if cancel.load(Ordering::Relaxed) {
+        if cancel.is_cancelled() {
             bail!(tr("task-cancelled"));
         }
         let mut command = self.command();
@@ -137,7 +137,7 @@ impl Engine {
         };
         let completion = (|| -> std::io::Result<_> {
             loop {
-                if cancel.load(Ordering::Relaxed) {
+                if cancel.is_cancelled() {
                     let _ = child.kill();
                     break Ok((child.wait()?, true));
                 }
@@ -324,7 +324,7 @@ impl Engine {
                 None
             };
         for entry in &entries {
-            if cancel.load(Ordering::Relaxed) {
+            if cancel.is_cancelled() {
                 bail!(tr("extract-cancelled"));
             }
             if entry.link
@@ -483,7 +483,7 @@ impl Engine {
         if self.test(&first, password, cancel)?.warning {
             bail!(tr("integrity-warning"));
         }
-        if cancel.load(Ordering::Relaxed) {
+        if cancel.is_cancelled() {
             bail!(tr("task-cancelled"));
         }
         if options.volume == Volume::None {
@@ -507,7 +507,7 @@ impl Engine {
             if bundled.warning {
                 bail!(tr("volume-warning"));
             }
-            if cancel.load(Ordering::Relaxed) {
+            if cancel.is_cancelled() {
                 bail!(tr("task-cancelled"));
             }
             publish(&bundle, destination, false).context(tr("volume-publish-failed"))?;

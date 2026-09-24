@@ -850,6 +850,7 @@ name = "cardo-ui"
 version = "0.2.0"
 dependencies = [
  "anyhow",
+ "cardo-runtime",
  "gpui-kit",
  "image",
  "tracing",
@@ -4929,6 +4930,7 @@ name = "p7z-engine"
 version = "0.2.4"
 dependencies = [
  "anyhow",
+ "cardo-runtime",
  "p7z-commands",
  "p7z-core",
  "tempfile",
@@ -4989,6 +4991,7 @@ name = "p7z-ui"
 version = "0.2.4"
 dependencies = [
  "anyhow",
+ "cardo-runtime",
  "cardo-ui",
  "dirs 6.0.0",
  "gpui-kit",

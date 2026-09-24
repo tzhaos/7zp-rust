@@ -6,7 +6,6 @@ use anyhow::{Context, Result};
 use p7z_commands::{ArchiveFormat, HashMethod, archive_name};
 use p7z_core::i18n::tr;
 use std::path::PathBuf;
-use std::sync::atomic::Ordering;
 
 impl Engine {
     pub fn quick_compress(
@@ -113,7 +112,7 @@ impl Engine {
                     result.warning |= output.warning;
                 }
                 Err(error) => {
-                    if cancel.load(Ordering::Relaxed) {
+                    if cancel.is_cancelled() {
                         return Err(error);
                     }
                     result

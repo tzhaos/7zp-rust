@@ -1,11 +1,7 @@
 use anyhow::{Context, Result, bail};
-use cardo_runtime::localization::{Catalog, MessageValue};
-use std::sync::{
-    OnceLock,
-    atomic::{AtomicUsize, Ordering},
-};
-static LOCALIZERS: OnceLock<Vec<Catalog>> = OnceLock::new();
-static LANGUAGE: AtomicUsize = AtomicUsize::new(0);
+use cardo_runtime::localization::{Catalog, CatalogSet, MessageValue};
+use std::sync::OnceLock;
+static LOCALIZERS: OnceLock<CatalogSet> = OnceLock::new();
 
 #[derive(Clone, Copy, PartialEq, Eq)]
 pub enum Language {
@@ -38,14 +34,14 @@ impl Language {
 }
 
 pub fn current() -> Language {
-    LANGUAGES[LANGUAGE.load(Ordering::Relaxed)]
+    LANGUAGES.iter().copied().find(|language| language.code() == LOCALIZERS.get().expect("localization initialized").locale()).expect("registered language")
 }
 
 pub fn select(language: Language) {
-    LANGUAGE.store(language as usize, Ordering::Relaxed);
+    LOCALIZERS.get().expect("localization initialized").select(language.code()).expect("registered language");
 }
 
-pub fn init(language: Option<&str>) -> Result<()> {
+pub fn init() -> Result<()> {
     let detected = unsafe { windows_sys::Win32::Globalization::GetUserDefaultUILanguage() };
     let system_language = match detected {
         0x0404 | 0x0c04 | 0x1404 => Language::TraditionalChinese,
@@ -57,10 +53,13 @@ pub fn init(language: Option<&str>) -> Result<()> {
         .map(|language| load(language.code()))
         .collect::<Result<Vec<_>>>()?;
     LOCALIZERS
-        .set(localizers)
+        .set(CatalogSet::new(localizers, system_language.code())?)
         .map_err(|_| anyhow::anyhow!("Localization already initialized"))?;
     select(system_language);
-    crate::settings::initialize()?;
+    Ok(())
+}
+
+pub fn apply_preference(language: Option<&str>) -> Result<()> {
     let saved = if language.is_none() {
         crate::settings::load_language()?
     } else {
@@ -68,7 +67,7 @@ pub fn init(language: Option<&str>) -> Result<()> {
     };
     let requested = language
         .or(saved.as_deref())
-        .unwrap_or(system_language.code());
+        .unwrap_or(current().code());
     let selected = LANGUAGES
         .iter()
         .find(|language| language.code() == requested)
@@ -93,7 +92,7 @@ fn load(language: &str) -> Result<Catalog> {
 pub fn tr(key: &str) -> &'static str {
     LOCALIZERS
         .get()
-        .expect("localization initialized before UI")[LANGUAGE.load(Ordering::Relaxed)]
+        .expect("localization initialized before UI")
     .text(key)
     .unwrap_or_else(|error| panic!("{error:#}"))
 }
@@ -101,7 +100,7 @@ pub fn tr(key: &str) -> &'static str {
 pub fn tf(key: &str, values: &[(&str, MessageValue<'_>)]) -> String {
     let localizer = &LOCALIZERS
         .get()
-        .expect("localization initialized before UI")[LANGUAGE.load(Ordering::Relaxed)];
+        .expect("localization initialized before UI");
     localizer
         .format(key, values)
         .unwrap_or_else(|error| panic!("{error:#}"))

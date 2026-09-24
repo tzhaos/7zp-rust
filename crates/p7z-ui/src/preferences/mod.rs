@@ -70,7 +70,7 @@ impl Toggle {
 
 pub(super) struct PreferencesForm {
     owner: WeakEntity<Workspace>,
-    value: Preferences,
+    value: cardo_runtime::settings::SettingsDraft<Preferences>,
     tab: Tab,
     theme: crate::theme::ThemeId,
     language: p7z_core::i18n::Language,
@@ -83,7 +83,6 @@ pub(super) struct PreferencesForm {
     system_temporary: SharedString,
     patterns: Entity<TextareaState>,
     task: Option<Task<()>>,
-    saving: bool,
     update_busy: bool,
     shortcut_expanded: bool,
     shortcut_search: Entity<InputState>,
@@ -113,11 +112,11 @@ impl PreferencesForm {
     }
 
     pub fn controls_disabled(&self) -> bool {
-        self.is_busy() && !self.saving
+        self.is_busy() && !self.value.is_saving()
     }
 
     pub fn is_saving(&self) -> bool {
-        self.saving
+        self.value.is_saving()
     }
     pub fn new(
         owner: WeakEntity<Workspace>,
@@ -179,7 +178,7 @@ impl PreferencesForm {
         }));
         Self {
             owner,
-            value,
+            value: cardo_runtime::settings::SettingsDraft::new(value),
             tab,
             theme: crate::theme::current(cx),
             language: p7z_core::i18n::current(),
@@ -192,7 +191,6 @@ impl PreferencesForm {
             system_temporary,
             patterns,
             task: None,
-            saving: false,
             update_busy: false,
             shortcut_expanded: false,
             shortcut_search,

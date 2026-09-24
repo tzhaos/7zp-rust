@@ -54,7 +54,7 @@ impl PreferencesForm {
             font_family,
             font_size: self.font_size,
         };
-        let value = self.value.clone();
+        let Some(value) = self.value.begin_save() else { return; };
         let owner = self.owner.clone();
         let handle = window.window_handle();
         let theme = self.theme;
@@ -73,14 +73,13 @@ impl PreferencesForm {
             p7z_core::settings::save_all(&value, &appearance, theme, language)?;
             Ok::<_, anyhow::Error>((value, appearance))
         });
-        self.saving = true;
         self.task = Some(cx.spawn(async move |view, cx| {
             let result = job.await;
             let _ = view.update(cx, |this, cx| {
                 this.task = None;
-                this.saving = false;
                 match result {
                     Ok((value, appearance)) => {
+                        this.value.complete();
                         tracing::info!("Preferences saved");
                         App::defer(cx, move |cx| {
                             let _ = handle.update(cx, |_, window, cx| {
@@ -112,6 +111,7 @@ impl PreferencesForm {
                     Err(error) => {
                         let details = format!("{error:#}");
                         tracing::error!(error = %details, "Cannot save preferences");
+                        this.value.fail("save", details.clone());
                         this.error = Some(details);
                     }
                 }

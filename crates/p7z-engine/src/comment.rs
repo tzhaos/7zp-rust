@@ -2,7 +2,6 @@ use super::{Cancellation, Catalog, Engine, engine::publish};
 use anyhow::{Context, Result, bail};
 use p7z_core::i18n::tr;
 use std::fs::{File, OpenOptions};
-use std::sync::atomic::Ordering;
 
 impl Engine {
     pub fn comment(catalog: &Catalog) -> Result<String> {
@@ -39,7 +38,7 @@ impl Engine {
             bail!(tr("integrity-warning"));
         }
         let mut updated = self.list(&temporary, password, cancel)?;
-        if cancel.load(Ordering::Relaxed) {
+        if cancel.is_cancelled() {
             bail!(tr("task-cancelled"));
         }
         publish(&temporary, &catalog.path, true).context(tr("publish-failed"))?;

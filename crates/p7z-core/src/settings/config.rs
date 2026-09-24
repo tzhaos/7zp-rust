@@ -1,11 +1,11 @@
 use super::{Appearance, Preferences, ThemeId, state::StateStore};
 use crate::i18n::{tf, tr};
 use anyhow::{Context, Result, ensure};
-use cardo_runtime::config::Snapshot;
+use cardo_runtime::config::{Snapshot, ConfigService};
 use serde::{Deserialize, Serialize};
-use std::sync::{Mutex, OnceLock};
+use std::sync::OnceLock;
 
-static CONFIG: OnceLock<Mutex<Snapshot<Configuration>>> = OnceLock::new();
+static CONFIG: OnceLock<ConfigService<Configuration>> = OnceLock::new();
 static STATE: OnceLock<StateStore> = OnceLock::new();
 
 #[derive(Clone, Serialize, Deserialize)]
@@ -93,7 +93,7 @@ pub fn initialize() -> Result<()> {
         snapshot.save(snapshot.value().clone())?;
     }
     CONFIG
-        .set(Mutex::new(snapshot))
+        .set(ConfigService::new(snapshot))
         .map_err(|_| anyhow::anyhow!("Configuration already initialized"))?;
     STATE
         .set(state)
@@ -102,12 +102,7 @@ pub fn initialize() -> Result<()> {
 }
 
 pub(super) fn current() -> Result<Configuration> {
-    let config = CONFIG
-        .get()
-        .context("Configuration not initialized")?
-        .lock()
-        .map_err(|_| anyhow::anyhow!("Configuration lock poisoned"))?;
-    Ok(config.value().clone())
+    CONFIG.get().context("Configuration not initialized")?.current()
 }
 
 pub(super) fn state() -> Result<&'static StateStore> {
@@ -124,11 +119,6 @@ pub fn save_all(
     theme: ThemeId,
     language: crate::i18n::Language,
 ) -> Result<()> {
-    let mut config = CONFIG
-        .get()
-        .context("Configuration not initialized")?
-        .lock()
-        .map_err(|_| anyhow::anyhow!("Configuration lock poisoned"))?;
     let next = Configuration {
         schema_version: 1,
         preferences: preferences.clone(),
@@ -136,7 +126,5 @@ pub fn save_all(
         theme,
         language: Some(language.code().into()),
     };
-    next.validate()
-        .with_context(|| format!("Invalid configuration {}", config.path().display()))?;
-    config.save(next)
+    CONFIG.get().context("Configuration not initialized")?.save(next, Configuration::validate)
 }

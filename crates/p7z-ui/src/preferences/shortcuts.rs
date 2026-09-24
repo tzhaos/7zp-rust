@@ -202,9 +202,7 @@ impl PreferencesForm {
         cx: &mut Context<Self>,
     ) {
         if let Some(key) = &binding {
-            if let Some(other) = ShortcutAction::ALL.iter().copied().find(|&other| {
-                other != action && other.binding(&self.value.shortcuts).as_ref() == Some(key)
-            }) {
+            if let Some(other) = cardo_runtime::shortcuts::conflict(action, key, ShortcutAction::ALL.iter().copied().map(|id| (id, id.binding(&self.value.shortcuts)))) {
                 self.shortcut_error = Some(tf(
                     "shortcuts-conflict",
                     &[
@@ -242,33 +240,13 @@ impl PreferencesForm {
             cx.notify();
             return false;
         }
-        if event.is_held {
-            return true;
-        }
-        if event.keystroke.key == "escape" {
-            self.shortcut_recording = None;
-            self.shortcut_error = None;
-            cx.notify();
-            return true;
-        }
-        if matches!(
-            event.keystroke.key.as_str(),
-            "control" | "shift" | "alt" | "platform" | "fn"
-        ) {
-            return true;
-        }
-        let Some(binding) = crate::shortcuts::chord(event) else {
-            self.shortcut_error = Some(tr("shortcuts-reserved").to_owned());
-            cx.notify();
-            return true;
-        };
-        if binding.key == "backspace" && !binding.control && !binding.shift && !binding.alt {
-            self.assign_shortcut(action, None, window, cx);
-        } else if !binding.allowed() {
-            self.shortcut_error = Some(tr("shortcuts-reserved").to_owned());
-            cx.notify();
-        } else {
-            self.assign_shortcut(action, Some(binding), window, cx);
+        use cardo_ui::shortcuts::Recording;
+        match cardo_ui::shortcuts::record(event) {
+            Recording::Ignore => {},
+            Recording::Cancel => { self.shortcut_recording=None; self.shortcut_error=None; cx.notify(); },
+            Recording::Clear => self.assign_shortcut(action, None, window, cx),
+            Recording::Reserved => { self.shortcut_error=Some(tr("shortcuts-reserved").to_owned()); cx.notify(); },
+            Recording::Assign(key) => self.assign_shortcut(action, Some(key), window, cx),
         }
         true
     }

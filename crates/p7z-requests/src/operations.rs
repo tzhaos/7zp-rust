@@ -7,7 +7,6 @@ use p7z_engine::{Cancellation, Catalog, CreateOptions, Edit, Engine, Overwrite, 
 use p7z_platform as platform;
 use std::{
     path::{Path, PathBuf},
-    sync::atomic::Ordering,
 };
 
 #[derive(Clone)]
@@ -461,7 +460,7 @@ fn open_entry(
             entry: path.to_owned(),
         });
     }
-    if cancel.load(Ordering::Relaxed) {
+    if cancel.is_cancelled() {
         return Ok(Outcome::Cancelled);
     }
     platform::open_file(&target)?;

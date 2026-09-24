@@ -5,7 +5,6 @@ use super::{
 use anyhow::{Context, Result, bail};
 use p7z_core::i18n::tr;
 use std::path::PathBuf;
-use std::sync::atomic::Ordering;
 
 #[derive(Clone)]
 pub enum Edit {
@@ -101,7 +100,7 @@ impl Engine {
             bail!(tr("integrity-warning"));
         }
         let mut updated = self.list(&temporary, password, cancel)?;
-        if cancel.load(Ordering::Relaxed) {
+        if cancel.is_cancelled() {
             bail!(tr("task-cancelled"));
         }
         publish(&temporary, &catalog.path, true).context(tr("publish-failed"))?;

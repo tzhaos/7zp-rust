@@ -1,18 +1,10 @@
 use p7z_engine::Cancellation;
 use gpui_kit::Task;
-use std::sync::{
-    Arc,
-    atomic::{AtomicBool, Ordering},
-};
-
 use crate::progress::ExtractionProgress;
 
 pub(crate) struct TaskState {
-    busy: bool,
-    status: String,
-    cancel: Cancellation,
+    state: cardo_runtime::task::TaskState<ExtractionProgress>,
     task: Option<Task<()>>,
-    extraction: Option<ExtractionProgress>,
     temporary_files: Vec<tempfile::TempDir>,
     close_after: bool,
     close_archive: bool,
@@ -22,11 +14,8 @@ pub(crate) struct TaskState {
 impl Default for TaskState {
     fn default() -> Self {
         Self {
-            busy: false,
-            status: String::new(),
-            cancel: Arc::new(AtomicBool::new(false)),
+            state: Default::default(),
             task: None,
-            extraction: None,
             temporary_files: Vec::new(),
             close_after: false,
             close_archive: false,
@@ -45,13 +34,13 @@ impl TaskState {
         self.extraction_warning
     }
     pub(crate) fn is_busy(&self) -> bool {
-        self.busy
+        self.state.is_busy()
     }
     pub(crate) fn status(&self) -> &str {
-        &self.status
+        self.state.status()
     }
     pub(crate) fn cancelled(&self) -> bool {
-        self.cancel.load(Ordering::Relaxed)
+        self.state.cancelled()
     }
     pub(crate) fn close_after(&self) -> bool {
         self.close_after
@@ -67,10 +56,7 @@ impl TaskState {
     }
 
     pub(crate) fn begin(&mut self, label: &str) -> Cancellation {
-        self.busy = true;
-        self.status = label.to_owned();
-        self.cancel = Arc::new(AtomicBool::new(false));
-        self.cancel.clone()
+        self.state.begin(label)
     }
 
     pub(crate) fn attach(&mut self, task: Task<()>) {
@@ -78,8 +64,7 @@ impl TaskState {
     }
 
     pub(crate) fn finish(&mut self) -> Option<ExtractionProgress> {
-        self.busy = false;
-        self.extraction.take()
+        self.state.finish()
     }
 
     pub(crate) fn release(&mut self) {
@@ -87,8 +72,7 @@ impl TaskState {
     }
 
     pub(crate) fn cancel(&mut self, status: &str) {
-        self.cancel.store(true, Ordering::Relaxed);
-        self.status = status.to_owned();
+        self.state.cancel(status);
     }
 
     pub(crate) fn retain_file(&mut self, directory: tempfile::TempDir) {
@@ -96,10 +80,10 @@ impl TaskState {
     }
 
     pub(crate) fn show_extraction(&mut self, progress: ExtractionProgress) {
-        self.extraction = Some(progress);
+        self.state.set_progress(progress);
     }
 
     pub(crate) fn extraction(&self) -> Option<&ExtractionProgress> {
-        self.extraction.as_ref()
+        self.state.progress()
     }
 }

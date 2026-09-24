@@ -2,10 +2,9 @@ use p7z_commands::OpenType;
 use std::{
     collections::BTreeMap,
     path::PathBuf,
-    sync::{Arc, atomic::AtomicBool},
 };
 
-pub type Cancellation = Arc<AtomicBool>;
+pub use cardo_runtime::task::CancellationToken as Cancellation;
 
 #[derive(Clone, Copy, PartialEq, Eq)]
 pub enum Format {

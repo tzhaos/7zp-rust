@@ -7,6 +7,7 @@ license.workspace = true
 description = "Runs the bundled 7z.exe and parses listings, extraction, creation, and progress."
 
 [dependencies]
+cardo-runtime.workspace = true
 p7z-core.workspace = true
 p7z-commands.workspace = true
 anyhow.workspace = true

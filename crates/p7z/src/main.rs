@@ -29,7 +29,7 @@ fn main() {
     let mut args: Vec<String> = std::env::args().skip(1).collect();
     let language = if let Some(index) = args.iter().position(|arg| arg == "--lang") {
         if index + 1 == args.len() {
-            match i18n::init(None) {
+            match i18n::init() {
                 Ok(()) => report(i18n::tr("language-required")),
                 Err(error) => report(error),
             }
@@ -41,7 +41,7 @@ fn main() {
     } else {
         None
     };
-    if let Err(error) = i18n::init(language.as_deref()) {
+    if let Err(error) = i18n::init().and_then(|_| p7z_core::settings::initialize()).and_then(|_| i18n::apply_preference(language.as_deref())) {
         report(error);
         return;
     }

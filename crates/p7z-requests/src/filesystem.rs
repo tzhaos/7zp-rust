@@ -4,7 +4,6 @@ use p7z_engine::Entry;
 use std::{
     os::windows::fs::MetadataExt,
     path::{Path, PathBuf},
-    sync::atomic::Ordering,
 };
 
 #[derive(Clone, Copy)]
@@ -58,7 +57,7 @@ pub fn name_conflicts(
         .iter()
         .filter(|entry| crate::extraction::entry_selected(&entry.path, selected))
     {
-        if cancel.load(Ordering::Relaxed) {
+        if cancel.is_cancelled() {
             bail!(tr("extract-cancelled"));
         }
         let path = destination.join(&entry.path);

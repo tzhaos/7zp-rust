@@ -1,5 +1,5 @@
 use crate::*;
-use p7z_core::settings::shortcuts::{Shortcut, ShortcutAction};
+use p7z_core::settings::shortcuts::ShortcutAction;
 
 impl commands::Command {
     pub(crate) fn shortcut_label(
@@ -16,18 +16,7 @@ impl commands::Command {
     }
 }
 
-pub(crate) fn chord(event: &KeyDownEvent) -> Option<Shortcut> {
-    let modifiers = event.keystroke.modifiers;
-    if modifiers.platform || modifiers.function {
-        return None;
-    }
-    Some(Shortcut {
-        key: event.keystroke.key.to_lowercase(),
-        control: modifiers.control,
-        alt: modifiers.alt,
-        shift: modifiers.shift,
-    })
-}
+pub(crate) use cardo_ui::shortcuts::chord;
 
 impl Workspace {
     pub(crate) fn dispatch_shortcut(
@@ -48,24 +37,7 @@ impl Workspace {
             return false;
         };
         // Custom global bindings must not replace editing in a focused input.
-        if !self.focus.is_focused(window)
-            && !chord.alt
-            && (chord.key == "delete"
-                || (chord.control
-                    && matches!(
-                        chord.key.as_str(),
-                        "a" | "c"
-                            | "v"
-                            | "x"
-                            | "z"
-                            | "y"
-                            | "left"
-                            | "right"
-                            | "up"
-                            | "down"
-                            | "home"
-                            | "end"
-                    )))
+        if !self.focus.is_focused(window) && chord.protects_input()
         {
             return false;
         }
