@@ -26,7 +26,13 @@ impl Workspace {
         let panel = self.dialogs.panel_size();
         let title = self.dialogs.title().to_owned().into();
         let owner = cx.entity();
+        let owner_id = owner.entity_id();
         let focus = self.dialogs.focus().clone();
+        let pending = self.dialogs.pending.take();
+        let files = self.dialogs.pending_create.take();
+        let email = std::mem::take(&mut self.dialogs.pending_email);
+        let name = self.dialogs.pending_name.take();
+        let form_owner = owner.downgrade();
         let opened = self.dialogs.host.open(
             owner,
             self.main_window,
@@ -37,22 +43,72 @@ impl Workspace {
                 minimum: panel.minimum(),
             },
             focus,
-            |workspace, window, cx| workspace.prompt_content(window, cx),
-            |workspace, _, cx| {
-                if matches!(workspace.dialogs.current(), Some(Modal::Progress))
-                    || workspace.settings_busy(cx)
-                {
-                    return false;
+            move |window, cx| {
+                if let Some(files) = files {
+                    return Some(Modal::Create(cx.new(|cx| {
+                        let mut form = CreateForm::new(form_owner, files, window, cx);
+                        form.email = email;
+                        if let Some(name) = name {
+                            form.suggest_name(name, window, cx);
+                        }
+                        form
+                    })));
                 }
+                pending.map(|pending| match pending {
+                    PendingModal::Comment(text) => {
+                        let input = cx.new(|cx| TextareaState::new(window, cx).default_value(text));
+                        input.update(cx, |input, cx| input.focus(window, cx));
+                        Modal::Comment(input)
+                    }
+                    PendingModal::Password(request) => Modal::Password {
+                        input: create_input(String::new(), true, window, cx),
+                        request,
+                    },
+                    PendingModal::Rename { source, name } => Modal::Rename {
+                        source,
+                        input: create_input(name, false, window, cx),
+                        error: None,
+                    },
+                    PendingModal::Extract {
+                        folder,
+                        selected,
+                        destination,
+                        open_after,
+                    } => Modal::Extract {
+                        folder: create_input(folder, false, window, cx),
+                        selected,
+                        destination,
+                        open_after,
+                    },
+                })
+            },
+            |workspace, window, cx| workspace.prompt_content(window, cx),
+            |workspace, cx| {
+                !matches!(workspace.dialogs.current(), Some(Modal::Progress))
+                    && !workspace.settings_busy(cx)
+            },
+            move |workspace, reason, cx| {
                 workspace.dialogs.host.detach();
-                workspace.close_modal(cx);
-                true
+                if !matches!(reason, cardo_ui::dialog::CloseReason::Submit) {
+                    workspace.cleanup_modal();
+                }
+                cx.notify(owner_id);
+                cx.refresh_windows();
             },
             || tr("menu-more").into(),
             cx,
         );
         match opened {
-            Ok(handle) => self.bind_dialog(handle, cx),
+            Ok((_, Some(modal))) => {
+                match &modal {
+                    Modal::Extract { folder: input, .. }
+                    | Modal::Password { input, .. }
+                    | Modal::Rename { input, .. } => self.dialogs.watch_input(input, cx),
+                    _ => {}
+                }
+                self.dialogs.show(self.dialogs.title().to_owned(), modal);
+            }
+            Ok((_, None)) => {}
             Err(error) => self.prompt_failed(error.context("Cannot create native dialog"), cx),
         }
     }
@@ -94,90 +150,6 @@ impl Workspace {
         cx.notify();
     }
 
-    fn bind_dialog(&mut self, prompt: gpui_kit::AnyWindowHandle, cx: &mut Context<Self>) {
-        if let Some(files) = self.dialogs.pending_create.take() {
-            let email = self.dialogs.pending_email;
-            let name = self.dialogs.pending_name.take();
-            self.dialogs.pending_email = false;
-            let owner = cx.entity().downgrade();
-            let form = prompt.update(cx, move |_, window, cx| {
-                cx.new(|cx| {
-                    let mut form = CreateForm::new(owner, files, window, cx);
-                    form.email = email;
-                    if let Some(name) = name {
-                        form.suggest_name(name, window, cx);
-                    }
-                    form
-                })
-            });
-            match form {
-                Ok(form) => {
-                    let title = self.dialogs.title().to_owned();
-                    self.dialogs.show(title, Modal::Create(form));
-                }
-                Err(error) => {
-                    self.prompt_failed(error.context("Cannot initialize dialog form"), cx)
-                }
-            }
-            return;
-        }
-        let prepared = match self.dialogs.current() {
-            Some(Modal::Extract { folder, .. }) => {
-                Prepared::Text(folder.read(cx).value().to_string(), false)
-            }
-            Some(Modal::Password { input, .. }) => {
-                Prepared::Text(input.read(cx).value().to_string(), true)
-            }
-            Some(Modal::Rename { input, .. }) => {
-                Prepared::Text(input.read(cx).value().to_string(), false)
-            }
-            Some(Modal::Comment(input)) => Prepared::Comment(input.read(cx).value().to_string()),
-            _ => return,
-        };
-        let created = prompt.update(cx, |_, window, cx| match &prepared {
-            Prepared::Text(value, masked) => {
-                let input = cx.new(|cx| InputState::new(window, cx).masked(*masked));
-                let text = value.clone();
-                input.update(cx, |input, cx| input.set_value(text, window, cx));
-                input.update(cx, |input, cx| input.focus(window, cx));
-                Bound::Text(input)
-            }
-            Prepared::Comment(value) => {
-                let input =
-                    cx.new(|cx| TextareaState::new(window, cx).default_value(value.clone()));
-                input.update(cx, |input, cx| input.focus(window, cx));
-                Bound::Comment(input)
-            }
-        });
-        let bound = match created {
-            Ok(bound) => bound,
-            Err(error) => {
-                self.prompt_failed(error.context("Cannot initialize dialog input"), cx);
-                return;
-            }
-        };
-        match bound {
-            Bound::Text(input) => {
-                self.dialogs.watch_input(&input, cx);
-                match self.dialogs.current_mut() {
-                    Some(
-                        Modal::Extract { folder, .. }
-                        | Modal::Password { input: folder, .. }
-                        | Modal::Rename { input: folder, .. },
-                    ) => {
-                        *folder = input;
-                    }
-                    _ => {}
-                }
-            }
-            Bound::Comment(input) => {
-                if let Some(Modal::Comment(slot)) = self.dialogs.current_mut() {
-                    *slot = input;
-                }
-            }
-        }
-    }
-
     fn prompt_content(
         &mut self,
         window: &mut Window,
@@ -202,7 +174,7 @@ impl Workspace {
                         return;
                     }
                     if event.keystroke.key == "escape" {
-                        this.close_modal(cx);
+                        this.dismiss_modal(cardo_ui::dialog::CloseReason::Escape, cx);
                         cx.stop_propagation();
                     }
                 }))
@@ -214,12 +186,16 @@ impl Workspace {
     }
 }
 
-enum Prepared {
-    Text(String, bool),
-    Comment(String),
-}
-
-enum Bound {
-    Text(Entity<InputState>),
-    Comment(Entity<TextareaState>),
+fn create_input(
+    value: String,
+    masked: bool,
+    window: &mut Window,
+    cx: &mut App,
+) -> Entity<InputState> {
+    let input = cx.new(|cx| InputState::new(window, cx).masked(masked));
+    input.update(cx, |input, cx| {
+        input.set_value(value, window, cx);
+        input.focus(window, cx);
+    });
+    input
 }

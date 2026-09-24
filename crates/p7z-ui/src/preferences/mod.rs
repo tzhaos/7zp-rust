@@ -8,10 +8,8 @@ mod shortcuts;
 mod view;
 
 use super::*;
+use gpui_kit::component::{Disableable, h_flex, v_flex};
 use p7z_core::settings::Preferences;
-use gpui_kit::{
-    component::{Disableable, h_flex, v_flex},
-};
 
 #[derive(Clone, Copy, PartialEq, Eq)]
 pub(super) enum Tab {
@@ -68,9 +66,28 @@ impl Toggle {
     }
 }
 
+#[derive(Clone)]
+struct DraftValues {
+    preferences: Preferences,
+    theme: crate::theme::ThemeId,
+    language: p7z_core::i18n::Language,
+    appearance: p7z_core::settings::Appearance,
+}
+impl std::ops::Deref for DraftValues {
+    type Target = Preferences;
+    fn deref(&self) -> &Preferences {
+        &self.preferences
+    }
+}
+impl std::ops::DerefMut for DraftValues {
+    fn deref_mut(&mut self) -> &mut Preferences {
+        &mut self.preferences
+    }
+}
+
 pub(super) struct PreferencesForm {
     owner: WeakEntity<Workspace>,
-    value: cardo_runtime::settings::SettingsDraft<Preferences>,
+    value: cardo_runtime::settings::SettingsDraft<DraftValues>,
     tab: Tab,
     theme: crate::theme::ThemeId,
     language: p7z_core::i18n::Language,
@@ -178,7 +195,12 @@ impl PreferencesForm {
         }));
         Self {
             owner,
-            value: cardo_runtime::settings::SettingsDraft::new(value),
+            value: cardo_runtime::settings::SettingsDraft::new(DraftValues {
+                preferences: value,
+                theme: crate::theme::current(cx),
+                language: p7z_core::i18n::current(),
+                appearance: appearance.clone(),
+            }),
             tab,
             theme: crate::theme::current(cx),
             language: p7z_core::i18n::current(),

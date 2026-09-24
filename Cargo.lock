@@ -825,6 +825,18 @@ dependencies = [
 ]
 
 [[package]]
+name = "cardo-app"
+version = "0.2.0"
+dependencies = [
+ "anyhow",
+ "cardo-platform",
+ "cardo-runtime",
+ "cardo-ui",
+ "cardo-update",
+ "gpui-kit",
+]
+
+[[package]]
 name = "cardo-platform"
 version = "0.2.0"
 dependencies = [
@@ -4930,6 +4942,7 @@ name = "p7z"
 version = "0.2.4"
 dependencies = [
  "anyhow",
+ "cardo-app",
  "cardo-runtime",
  "embed-resource",
  "gpui-kit",

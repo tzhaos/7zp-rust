@@ -14,7 +14,7 @@ mod result;
 mod state;
 pub(super) use create::CreateForm;
 pub(super) use error::ErrorDialog;
-pub(crate) use state::{DialogState, Modal};
+pub(crate) use state::{DialogState, Modal, PendingModal};
 
 use crate::*;
 use p7z_core::i18n::tr;

@@ -10,16 +10,15 @@ impl Workspace {
         if self.tasks.is_busy() {
             return;
         }
-        self.close_modal(cx);
+        self.dialogs.take();
+        self.dialogs.close_prompt(cx);
+        self.dialogs.bump_generation();
         self.settings_page = None;
         let cancel = self.tasks.begin(label);
         tracing::info!(operation = label, "Task started");
         self.toast.update(cx, |toast, cx| toast.clear(cx));
         self.completion = None;
-        let job = cx.background_executor().spawn(async move { work(cancel) });
-        self.tasks.attach(cx.spawn(async move |view, cx| {
-            let result = job.await;
-            let _ = view.update(cx, |this, cx| {
+        self.tasks.attach(cardo_ui::task::spawn(cx, cancel, work, |this, result, cx| {
                 let mut dispatch = None;
                 let mut follow = None;
                 let extraction = this.tasks.finish();
@@ -173,7 +172,6 @@ impl Workspace {
                     this.execute(request, password, cx);
                 }
                 cx.notify();
-            });
         }));
         cx.notify();
     }
@@ -226,9 +224,7 @@ impl Workspace {
             return;
         }
         let extraction = request.extraction_paths();
-        let progress = extraction
-            .as_ref()
-            .map(|_| p7z_engine::Progress::new());
+        let progress = extraction.as_ref().map(|_| p7z_engine::Progress::new());
         let reporting = progress.clone();
         let close_after = self.tasks.close_after()
             && matches!(

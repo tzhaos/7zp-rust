@@ -15,6 +15,7 @@ const FILES: &[&str] = &[
     "Fluent-LICENSE.txt",
     "LICENSE.txt",
     "Cardo-LICENSE.txt",
+    "Cardo-dependencies-LICENSE.txt",
     "SQLite-binding-LICENSE.txt",
     "runtime/7zip/7z.dll",
     "runtime/7zip/7z.exe",

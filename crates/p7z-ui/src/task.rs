@@ -1,10 +1,10 @@
-use p7z_engine::Cancellation;
-use gpui_kit::Task;
 use crate::progress::ExtractionProgress;
+use cardo_ui::task::TaskHandle;
+use p7z_engine::Cancellation;
 
 pub(crate) struct TaskState {
     state: cardo_runtime::task::TaskState<ExtractionProgress>,
-    task: Option<Task<()>>,
+    task: Option<TaskHandle>,
     temporary_files: Vec<tempfile::TempDir>,
     close_after: bool,
     close_archive: bool,
@@ -59,7 +59,7 @@ impl TaskState {
         self.state.begin(label)
     }
 
-    pub(crate) fn attach(&mut self, task: Task<()>) {
+    pub(crate) fn attach(&mut self, task: TaskHandle) {
         self.task = Some(task);
     }
 

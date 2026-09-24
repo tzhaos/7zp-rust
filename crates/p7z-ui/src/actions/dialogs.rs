@@ -2,11 +2,25 @@ use crate::*;
 
 impl Workspace {
     pub(crate) fn close_modal(&mut self, cx: &mut Context<Self>) {
-        if self.settings_busy(cx) {
+        self.dismiss_modal(cardo_ui::dialog::CloseReason::Cancel, cx);
+    }
+    pub(crate) fn dismiss_modal(
+        &mut self,
+        reason: cardo_ui::dialog::CloseReason,
+        cx: &mut Context<Self>,
+    ) {
+        if self.settings_busy(cx) || matches!(self.dialogs.current(), Some(Modal::Progress)) {
             return;
         }
-        match self.dialogs.current() {
-            Some(Modal::Progress) => return,
+        if self.dialogs.has_prompt() {
+            self.dialogs.host.close(reason, cx);
+        } else {
+            self.cleanup_modal();
+        }
+        cx.notify();
+    }
+    pub(crate) fn cleanup_modal(&mut self) {
+        match self.dialogs.take() {
             Some(Modal::Password { .. }) => {
                 self.tasks.set_close_after(false);
                 self.after_open = None;
@@ -20,9 +34,6 @@ impl Workspace {
             }
             _ => {}
         }
-        self.dialogs.take();
-        self.dialogs.close_prompt(cx);
-        cx.notify();
     }
 
     pub(crate) fn submit_rename(&mut self, cx: &mut Context<Self>) {

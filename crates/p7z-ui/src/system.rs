@@ -2,9 +2,8 @@ use super::*;
 use p7z_platform::ExplorerAction;
 
 impl Workspace {
-    pub fn attach_system(
+    pub fn receive_launch(
         &mut self,
-        system: p7z_platform::System,
         args: Vec<String>,
         window: &mut Window,
         cx: &mut Context<Self>,
@@ -12,68 +11,24 @@ impl Workspace {
         if !args.is_empty() {
             self.launches.push_back(args);
         }
-        let receiver = system.receiver.clone();
-        self.instance = Some(system);
-        let handle = window.window_handle();
-        let entity = cx.entity();
-        self._dispatch_subscription = Some(cx.observe(&entity, move |_, _, cx| {
-            let weak = cx.entity().downgrade();
-            cx.defer(move |cx| {
-                let _ = handle.update(cx, |_, window, cx| {
-                    let _ = weak.update(cx, |this, cx| this.dispatch(window, cx));
+        if self._dispatch_subscription.is_none() {
+            let entity = cx.entity();
+            let handle = window.window_handle();
+            self._dispatch_subscription = Some(cx.observe(&entity, move |_, _, cx| {
+                let weak = cx.entity().downgrade();
+                cx.defer(move |cx| {
+                    let _ = handle.update(cx, |_, window, cx| {
+                        let _ = weak.update(cx, |this, cx| this.dispatch(window, cx));
+                    });
                 });
-            });
-        }));
-        self.system_task = Some(cx.spawn(async move |view, cx| {
-            while let Ok(command) = receiver.recv().await {
-                if handle
-                    .update(cx, |_, window, cx| {
-                        let _ = view.update(cx, |this, cx| {
-                            match command {
-                                p7z_platform::Command::Launch(args) => {
-                                    window.activate_window();
-                                    if !args.is_empty() {
-                                        this.launches.push_back(args);
-                                    }
-                                }
-                                p7z_platform::Command::Error(error) => {
-                                    tracing::error!(error=%error,"Platform command failed");
-                                    this.notify_message(error, cx);
-                                }
-                            }
-                            this.dispatch(window, cx);
-                            cx.notify();
-                        });
-                    })
-                    .is_err()
-                {
-                    break;
-                }
-            }
-        }));
+            }));
+        }
         self.dispatch(window, cx);
     }
 
     pub(crate) fn refresh_progress(&mut self, cx: &mut Context<Self>) {
-        self.progress_task = Some(cx.spawn(async move |view, cx| {
-            loop {
-                cx.background_executor()
-                    .timer(std::time::Duration::from_millis(80))
-                    .await;
-                let active = view
-                    .update(cx, |this, cx| {
-                        let active =
-                            this.tasks.extraction().is_some() || this.update_transfer.is_some();
-                        if active {
-                            cx.notify();
-                        }
-                        active
-                    })
-                    .unwrap_or(false);
-                if !active {
-                    break;
-                }
-            }
+        self.progress_task = Some(cardo_ui::task::refresh_while(cx, |this| {
+            this.tasks.extraction().is_some() || this.update_transfer.is_some()
         }));
     }
 

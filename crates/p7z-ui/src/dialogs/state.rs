@@ -1,5 +1,12 @@
 use crate::*;
 
+pub(crate) enum PendingModal {
+    Comment(String),
+    Password(Request),
+    Rename { source: String, name: String },
+    Extract { folder: String, selected: bool, destination: usize, open_after: bool },
+}
+
 pub(crate) enum Modal {
     Error(super::ErrorDialog),
     Progress,
@@ -46,8 +53,9 @@ pub(crate) enum Modal {
 }
 
 pub(crate) struct DialogState {
-    pub(super) host: cardo_ui::dialog::DialogHost,
+    pub(crate) host: cardo_ui::dialog::DialogHost,
     active: Option<Modal>,
+    pub(crate) pending: Option<PendingModal>,
     title: String,
     input_subscription: Option<Subscription>,
     input_events: Option<Subscription>,
@@ -63,6 +71,11 @@ impl DialogState {
     pub(crate) fn panel_size(&self) -> PanelSize {
         if self.pending_create.is_some() {
             return PanelSize::Form;
+        }
+        match self.pending.as_ref() {
+            Some(PendingModal::Extract { .. }) => return PanelSize::Extract,
+            Some(PendingModal::Password(_) | PendingModal::Rename { .. }) => return PanelSize::Compact,
+            _ => {}
         }
         match self.active.as_ref() {
             Some(Modal::Create(_)) => PanelSize::Form,
@@ -85,6 +98,7 @@ impl DialogState {
         Self {
             host: Default::default(),
             active: None,
+            pending: None,
             title: String::new(),
             input_subscription: None,
             input_events: None,
@@ -104,7 +118,7 @@ impl DialogState {
         self.active.as_mut()
     }
     pub(crate) fn is_open(&self) -> bool {
-        self.active.is_some()
+        self.active.is_some() || self.pending.is_some()
     }
     pub(crate) fn title(&self) -> &str {
         &self.title
@@ -120,8 +134,15 @@ impl DialogState {
     }
 
     pub(crate) fn show(&mut self, title: impl Into<String>, modal: Modal) {
+        self.pending = None;
         self.title = title.into();
         self.active = Some(modal);
+    }
+
+    pub(crate) fn prepare(&mut self, title: impl Into<String>, pending: PendingModal) {
+        self.title = title.into();
+        self.active = None;
+        self.pending = Some(pending);
     }
 
     pub(crate) fn watch_input(&mut self, input: &Entity<InputState>, cx: &mut Context<Workspace>) {
@@ -148,10 +169,18 @@ impl DialogState {
         }));
     }
 
-    pub(crate) fn has_prompt(&self) -> bool { self.host.handle().is_some() }
-    pub(crate) fn prompt_handle(&self) -> Option<AnyWindowHandle> { self.host.handle() }
-    pub(crate) fn bump_generation(&mut self) { self.host.invalidate(); }
-    pub(crate) fn close_prompt(&mut self, cx: &mut App) { self.host.close(cardo_ui::dialog::CloseReason::Cancel, cx); }
+    pub(crate) fn has_prompt(&self) -> bool {
+        self.host.handle().is_some()
+    }
+    pub(crate) fn prompt_handle(&self) -> Option<AnyWindowHandle> {
+        self.host.handle()
+    }
+    pub(crate) fn bump_generation(&mut self) {
+        self.host.invalidate();
+    }
+    pub(crate) fn close_prompt(&mut self, cx: &mut App) {
+        self.host.close(cardo_ui::dialog::CloseReason::Submit, cx);
+    }
 
     pub(crate) fn take(&mut self) -> Option<Modal> {
         self.input_subscription = None;
@@ -159,6 +188,9 @@ impl DialogState {
         self.pending_create = None;
         self.pending_name = None;
         self.pending_email = false;
+        self.pending = None;
+        self.pending_password = None;
+        self.pending_comment = None;
         self.active.take()
     }
 
@@ -172,14 +204,11 @@ impl DialogState {
 
     pub(crate) fn sync(&mut self, window: &mut Window, cx: &mut Context<Workspace>) {
         if let Some(text) = self.pending_comment.take() {
-            let input = cx.new(|cx| TextareaState::new(window, cx).default_value(text));
-            self.show(tr("archive-comment"), Modal::Comment(input));
+            self.prepare(tr("archive-comment"), PendingModal::Comment(text));
         }
         if let Some(request) = self.pending_password.take() {
-            let input = cx.new(|cx| InputState::new(window, cx).masked(true));
-            self.watch_input(&input, cx);
-            self.show(tr("password-input"), Modal::Password { input, request });
+            self.prepare(tr("password-input"), PendingModal::Password(request));
         }
-        self.host.sync_focus(self.active.is_some(), window, cx);
+        self.host.sync_focus(self.is_open() || self.pending_create.is_some(), window, cx);
     }
 }

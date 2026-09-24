@@ -144,25 +144,16 @@ impl Workspace {
         );
     }
 
-    pub(crate) fn rename_entry(&mut self, window: &mut Window, cx: &mut Context<Self>) {
+    pub(crate) fn rename_entry(&mut self, _window: &mut Window, cx: &mut Context<Self>) {
         let Some(source) = self.browser.view().selected.first().cloned() else {
             return;
         };
-        let input = cx.new(|cx| InputState::new(window, cx));
-        input.update(cx, |input, cx| {
-            input.set_value(
-                source.rsplit('/').next().unwrap_or(&source).to_owned(),
-                window,
-                cx,
-            )
-        });
-        self.dialogs.watch_input(&input, cx);
-        self.dialogs.show(
+        let name = source.rsplit('/').next().unwrap_or(&source).to_owned();
+        self.dialogs.prepare(
             tr("archive-rename"),
-            Modal::Rename {
+            crate::dialogs::PendingModal::Rename {
                 source,
-                input,
-                error: None,
+                name,
             },
         );
         cx.notify();

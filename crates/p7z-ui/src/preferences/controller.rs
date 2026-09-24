@@ -54,13 +54,20 @@ impl PreferencesForm {
             font_family,
             font_size: self.font_size,
         };
-        let Some(value) = self.value.begin_save() else {
+        self.value.theme = self.theme;
+        self.value.language = self.language;
+        self.value.appearance = appearance;
+        let Some(snapshot) = self.value.begin_save() else {
             return;
         };
         let owner = self.owner.clone();
         let handle = window.window_handle();
-        let theme = self.theme;
-        let language = self.language;
+        let DraftValues {
+            preferences: value,
+            appearance,
+            theme,
+            language,
+        } = snapshot;
         let registration_changed = owner
             .read_with(cx, |workspace, _| {
                 workspace.preferences.associations != value.associations

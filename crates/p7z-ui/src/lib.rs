@@ -90,8 +90,6 @@ pub struct Workspace {
     focus: FocusHandle,
     scroll: UniformListScrollHandle,
     clear_search: bool,
-    system_task: Option<Task<()>>,
-    instance: Option<p7z_platform::System>,
     progress_task: Option<Task<()>>,
     _dispatch_subscription: Option<Subscription>,
     shell_read_task: Option<Task<()>>,
@@ -157,7 +155,7 @@ impl Workspace {
                 })
                 .unwrap_or(true);
             if allow {
-                let _ = weak.update(cx, |this, cx| this.dialogs.close_prompt(cx));
+                let _ = weak.update(cx, |this, cx| { this.cleanup_modal(); this.dialogs.host.close(cardo_ui::dialog::CloseReason::OwnerReleased, cx); });
             }
             allow
         });
@@ -212,8 +210,6 @@ impl Workspace {
             focus,
             scroll: UniformListScrollHandle::default(),
             clear_search: false,
-            system_task: None,
-            instance: None,
             progress_task: None,
             _dispatch_subscription: None,
             shell_read_task: None,

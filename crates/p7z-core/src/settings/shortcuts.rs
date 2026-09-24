@@ -43,57 +43,7 @@ pub use cardo_runtime::shortcuts::Shortcut;
 
 pub type Shortcuts = BTreeMap<ShortcutAction, Option<Shortcut>>;
 
-/// Missing actions use defaults; "disabled" explicitly clears a binding.
-pub(super) mod config_map {
-    use super::*;
-    use serde::{Deserializer, Serializer};
-
-    #[derive(Serialize, Deserialize)]
-    #[serde(rename_all = "lowercase")]
-    enum Disabled {
-        Disabled,
-    }
-
-    #[derive(Serialize, Deserialize)]
-    #[serde(untagged)]
-    enum Binding {
-        Keys(Shortcut),
-        Disabled(Disabled),
-    }
-
-    pub fn serialize<S: Serializer>(values: &Shortcuts, serializer: S) -> Result<S::Ok, S::Error> {
-        values
-            .iter()
-            .map(|(key, value)| {
-                (
-                    *key,
-                    match value {
-                        Some(shortcut) => Binding::Keys(shortcut.clone()),
-                        None => Binding::Disabled(Disabled::Disabled),
-                    },
-                )
-            })
-            .collect::<BTreeMap<_, _>>()
-            .serialize(serializer)
-    }
-
-    pub fn deserialize<'de, D: Deserializer<'de>>(deserializer: D) -> Result<Shortcuts, D::Error> {
-        Ok(
-            BTreeMap::<ShortcutAction, Binding>::deserialize(deserializer)?
-                .into_iter()
-                .map(|(key, value)| {
-                    (
-                        key,
-                        match value {
-                            Binding::Keys(shortcut) => Some(shortcut),
-                            Binding::Disabled(_) => None,
-                        },
-                    )
-                })
-                .collect(),
-        )
-    }
-}
+pub(super) use cardo_runtime::shortcuts::config_map;
 
 impl ShortcutAction {
     pub const ALL: &[Self] = &[
@@ -252,11 +202,15 @@ impl ShortcutAction {
         })
     }
 
+    pub fn descriptor(self) -> cardo_runtime::shortcuts::CommandDescriptor<Self> {
+        cardo_runtime::shortcuts::CommandDescriptor {
+            id: self,
+            label: self.label(),
+            default: self.default_shortcut(),
+        }
+    }
     pub fn binding(self, values: &Shortcuts) -> Option<Shortcut> {
-        values
-            .get(&self)
-            .cloned()
-            .unwrap_or_else(|| self.default_shortcut())
+        self.descriptor().binding(values)
     }
 }
 
@@ -267,7 +221,7 @@ pub fn validate(values: &Shortcuts) -> anyhow::Result<()> {
             continue;
         };
         anyhow::ensure!(
-            binding.allowed(),
+            allowed(&binding),
             "{}",
             crate::i18n::tf(
                 "shortcuts-config-invalid",
@@ -289,4 +243,12 @@ pub fn validate(values: &Shortcuts) -> anyhow::Result<()> {
         used.push((action, binding));
     }
     Ok(())
+}
+
+pub fn allowed(binding: &Shortcut) -> bool {
+    binding.allowed()
+        && !(binding.control
+            && !binding.alt
+            && !binding.shift
+            && matches!(binding.key.as_str(), "s" | "w" | "pagedown"))
 }

@@ -89,6 +89,7 @@ impl Workspace {
             return;
         }
         self.close_modal(cx);
+        self.dialogs.bump_generation();
         self.dialogs.pending_create = Some(files);
         self.dialogs.set_title(tr("create-title"));
         self.schedule_prompt(cx);
@@ -124,24 +125,22 @@ impl Workspace {
         });
     }
 
-    pub(crate) fn extract_dialog(&mut self, window: &mut Window, cx: &mut Context<Self>) {
+    pub(crate) fn extract_dialog(&mut self, _window: &mut Window, cx: &mut Context<Self>) {
         let Some(c) = &self.browser.view().catalog else {
             return;
         };
         let name = p7z_commands::extract_folder(&c.path);
-        let folder = cx.new(|cx| InputState::new(window, cx));
-        folder.update(cx, |input, cx| input.set_value(name, window, cx));
-        self.dialogs.watch_input(&folder, cx);
-        self.show_dialog(
+        self.dialogs.prepare(
             tr("extract-options"),
-            Modal::Extract {
-                folder,
+            crate::dialogs::PendingModal::Extract {
+                folder: name,
                 selected: !self.browser.view().selected.is_empty(),
                 destination: self.destination,
                 open_after: self.preferences.open_after,
             },
-            cx,
         );
+        self.schedule_prompt(cx);
+        cx.notify();
     }
 
     pub(crate) fn choose_extract_directory(&mut self, window: &mut Window, cx: &mut Context<Self>) {

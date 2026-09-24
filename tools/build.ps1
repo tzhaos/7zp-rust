@@ -31,6 +31,7 @@ try {
     Copy-Item -LiteralPath 'LICENSE' -Destination 'bin/LICENSE.txt' -Force
     Copy-Item -LiteralPath 'cardo/LICENSE' -Destination 'bin/Cardo-LICENSE.txt' -Force
     Copy-Item -LiteralPath 'cardo/licenses/rusqlite.txt' -Destination 'bin/SQLite-binding-LICENSE.txt' -Force
+    Copy-Item -LiteralPath 'cardo/licenses/desktop-dependencies.txt' -Destination 'bin/Cardo-dependencies-LICENSE.txt' -Force
     $artifacts = @()
     if ($Package -ne 'Run') {
         New-Item -ItemType Directory -Force -Path 'dist' | Out-Null
@@ -41,7 +42,7 @@ try {
         $portableRoot = Join-Path $staging 'p7z'
         New-Item -ItemType Directory -Force -Path (Join-Path $portableRoot 'runtime/7zip') | Out-Null
         try {
-            foreach ($name in @('p7z.exe', 'p7z-explorer.dll', 'vcruntime140.dll', 'LICENSE.txt', 'Cardo-LICENSE.txt', 'Fluent-LICENSE.txt', 'SQLite-binding-LICENSE.txt')) {
+            foreach ($name in @('p7z.exe', 'p7z-explorer.dll', 'vcruntime140.dll', 'LICENSE.txt', 'Cardo-LICENSE.txt', 'Fluent-LICENSE.txt', 'SQLite-binding-LICENSE.txt', 'Cardo-dependencies-LICENSE.txt')) {
                 Copy-Item -LiteralPath (Join-Path 'bin' $name) -Destination (Join-Path $portableRoot $name)
             }
             $engine = Get-Content -LiteralPath (Join-Path $PSScriptRoot 'engine.lock.json') -Raw | ConvertFrom-Json

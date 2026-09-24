@@ -19,22 +19,16 @@ impl Render for Workspace {
     fn render(&mut self, window: &mut Window, cx: &mut Context<Self>) -> impl IntoElement {
         self.sync_view(window, cx);
         let p = crate::theme::palette(cx);
-        let appearance = crate::theme::appearance(cx);
         let modal = self.modal(cx);
         let searching = !self.search.read(cx).value().is_empty();
         let browser = self.browser.view();
         let home = browser.catalog.is_none() && browser.directory.is_none();
         let content_bounds = self.content_bounds.clone();
-        v_flex()
+        cardo_ui::shell::app_frame(cx)
             .id("workspace")
             .track_focus(&self.focus)
             .relative()
             .size_full()
-            .bg(rgb(p.panel))
-            .text_color(rgb(p.text))
-            .font(crate::theme::interface_font(cx))
-            .text_size(px(appearance.font_size))
-            .whitespace_normal()
             .on_key_down(cx.listener(Self::keyboard))
             // Autosave blocks new input without flashing every control's disabled colors.
             .capture_any_mouse_down(cx.listener(|this, _, window, cx| {
@@ -64,7 +58,8 @@ impl Render for Workspace {
                 }),
             )
             .on_mouse_move(cx.listener(|this, event: &MouseMoveEvent, window, cx| {
-                this.toast.update(cx, |toast, cx| toast.pointer_move(event, window, cx));
+                let bounds = this.content_bounds.get();
+                this.toast.update(cx, |toast, cx| { toast.set_container(bounds); toast.pointer_move(event, window, cx); });
                 if this.dragging && !cx.has_active_drag() { this.dragging = false; cx.notify(); }
                 let Some(anchor) = this.hint_anchor else {
                     return;
