@@ -45,7 +45,7 @@ impl Workspace {
                 if let Some(Modal::Completion { notice, .. }) = self.dialogs.current_mut() {
                     *notice = Some(error.to_string());
                 } else {
-                    self.notify_message(error.to_string());
+                    self.notify_message(error.to_string(), cx);
                 }
                 cx.notify();
             }
@@ -244,7 +244,7 @@ impl Workspace {
             return;
         };
         let Some((_, parent)) = self.destinations.get(destination) else {
-            self.notify_message(tr("destinations-unavailable").into());
+            self.notify_message(tr("destinations-unavailable").into(), cx);
             cx.notify();
             return;
         };
@@ -260,7 +260,7 @@ impl Workspace {
                     this.notify_message(tf(
                         "destination-save-error",
                         &[("error", error.to_string().into())],
-                    ));
+                    ), cx);
                     cx.notify();
                 });
             }

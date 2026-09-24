@@ -14,7 +14,7 @@ impl Workspace {
         self.settings_page = None;
         let cancel = self.tasks.begin(label);
         tracing::info!(operation = label, "Task started");
-        self.message = None;
+        self.toast.update(cx, |toast, cx| toast.clear(cx));
         self.completion = None;
         let job = cx.background_executor().spawn(async move { work(cancel) });
         self.tasks.attach(cx.spawn(async move |view, cx| {
@@ -103,13 +103,13 @@ impl Workspace {
                                     tr(if warning { "extract-warning" } else { "extract-finished" }).into(),
                                     path,
                                 ));
-                                if let Some(message) = open_error { this.notify_message(message); } else { this.message = None; }
+                                if let Some(message) = open_error { this.notify_message(message, cx); } else { this.toast.update(cx, |toast, cx| toast.clear(cx)); }
                             } else {
-                                this.notify_message(tr("extract-finished").into());
+                                this.notify_message(tr("extract-finished").into(), cx);
                             }
                         }
                     }
-                    Ok(Outcome::Message(message)) => this.notify_message(message),
+                    Ok(Outcome::Message(message)) => this.notify_message(message, cx),
                     Ok(Outcome::Report(title, text)) => {
                         this.show_dialog(title, Modal::Report(text), cx);
                     }
@@ -117,7 +117,7 @@ impl Workspace {
                     Ok(Outcome::Moved(catalog, password, path, open_error)) => {
                         this.activate(catalog, password, cx);
                         this.completion = Some((tr("archive-move-complete").into(), path));
-                        if let Some(message) = open_error { this.notify_message(message); } else { this.message = None; }
+                        if let Some(message) = open_error { this.notify_message(message, cx); } else { this.toast.update(cx, |toast, cx| toast.clear(cx)); }
                     }
                     Ok(Outcome::Password(request)) => this.dialogs.request_password(request),
                     Ok(Outcome::Dispatch(request)) => dispatch = Some(request),
@@ -188,7 +188,7 @@ impl Workspace {
                 .any(|e| e.directory && e.path == folder || e.path.starts_with(&prefix))
             {
                 self.browser.cancel_navigation();
-                self.notify_message(tr("browser-path-missing").into());
+                self.notify_message(tr("browser-path-missing").into(), cx);
                 return;
             }
         }
@@ -212,9 +212,9 @@ impl Workspace {
         }
         self.update_recent(recent::Change::Remember(catalog.path.clone()), cx);
         if catalog.warning {
-            self.notify_message(tr("open-warning").into());
+            self.notify_message(tr("open-warning").into(), cx);
         } else {
-            self.message = None;
+            self.toast.update(cx, |toast, cx| toast.clear(cx));
         }
         self.browser.show_archive(catalog, password, folder);
         self.clear_search = true;

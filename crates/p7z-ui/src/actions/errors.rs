@@ -41,7 +41,7 @@ impl Workspace {
         } else {
             self.reload_history(cx);
         }
-        self.message = None;
+        self.toast.update(cx, |toast, cx| toast.clear(cx));
         self.show_dialog(
             title,
             Modal::Error(ErrorDialog {

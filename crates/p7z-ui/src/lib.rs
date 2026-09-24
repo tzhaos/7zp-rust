@@ -87,7 +87,7 @@ pub struct Workspace {
     destinations: Vec<(DestinationKind, PathBuf)>,
     destination: usize,
     completion: Option<(String, PathBuf)>,
-    message: Option<String>,
+    toast: Entity<cardo_ui::toast::ToastHost>,
     focus: FocusHandle,
     scroll: UniformListScrollHandle,
     clear_search: bool,
@@ -102,10 +102,6 @@ pub struct Workspace {
     after_open: Option<p7z_platform::ExplorerAction>,
     dragging: bool,
     hint_anchor: Option<Point<Pixels>>,
-    message_since: Option<(String, std::time::Instant)>,
-    notification_offset: Point<Pixels>,
-    notification_drag: Option<(Point<Pixels>, Point<Pixels>)>,
-    notification_bounds: std::rc::Rc<std::cell::Cell<Bounds<Pixels>>>,
     _search_subscription: Subscription,
     _address_subscription: Subscription,
     _activation_subscription: Subscription,
@@ -173,7 +169,7 @@ impl Workspace {
             if theme::current(cx) == theme::ThemeId::System {
                 if let Err(error) = theme::apply(theme::ThemeId::System, &this.appearance, Some(window), cx) {
                     tracing::error!(error = %format!("{error:#}"), "Cannot apply system appearance");
-                    this.notify_message(error.to_string());
+                    this.notify_message(error.to_string(), cx);
                 }
                 cx.refresh_windows();
             }
@@ -204,7 +200,7 @@ impl Workspace {
             destinations,
             destination,
             completion: None,
-            message: None,
+            toast: cx.new(|_| cardo_ui::toast::ToastHost::new(icon("Info", 18.), icon("Dismiss", 16.), tr("message-close"))),
             focus,
             scroll: UniformListScrollHandle::default(),
             clear_search: false,
@@ -219,10 +215,6 @@ impl Workspace {
             after_open: None,
             dragging: false,
             hint_anchor: None,
-            message_since: None,
-            notification_offset: Point::default(),
-            notification_drag: None,
-            notification_bounds: std::rc::Rc::new(std::cell::Cell::new(Bounds::default())),
             _search_subscription: subscription,
             _address_subscription: address_subscription,
             _activation_subscription: activation_subscription,
@@ -277,7 +269,7 @@ impl Workspace {
             && !self.tasks.is_busy()
             && let Some((label, path)) = self.completion.take()
         {
-            let notice = self.message.take();
+            let notice = self.toast.update(cx, |toast, cx| toast.take(cx));
             self.show_dialog(
                 tr("operation-result-title"),
                 Modal::Completion {

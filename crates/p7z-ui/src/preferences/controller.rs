@@ -98,7 +98,7 @@ impl PreferencesForm {
                                             cx,
                                         ) {
                                             tracing::error!(error = %error, "Cannot apply appearance");
-                                            owner.notify_message(error.to_string());
+                                            owner.notify_message(error.to_string(), cx);
                                             cx.notify();
                                         }
                                     }

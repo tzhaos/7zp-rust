@@ -32,7 +32,7 @@ impl Workspace {
                     Err(error) => this.notify_message(tf(
                         "recent-storage-error",
                         &[("error", error.to_string().into())],
-                    )),
+                    ), cx),
                 }
                 cx.notify();
             });

@@ -46,17 +46,14 @@ pub(crate) enum Modal {
 }
 
 pub(crate) struct DialogState {
+    pub(super) host: cardo_ui::dialog::DialogHost,
     active: Option<Modal>,
     title: String,
     input_subscription: Option<Subscription>,
     input_events: Option<Subscription>,
     focus: FocusHandle,
-    was_active: bool,
-    previous_focus: Option<FocusHandle>,
     pending_password: Option<Request>,
     pending_comment: Option<String>,
-    prompt: Option<gpui_kit::AnyWindowHandle>,
-    prompt_generation: u64,
     pub(crate) pending_create: Option<Vec<PathBuf>>,
     pub(crate) pending_name: Option<String>,
     pub(crate) pending_email: bool,
@@ -86,17 +83,14 @@ impl DialogState {
 
     pub(crate) fn new(cx: &mut App) -> Self {
         Self {
+            host: Default::default(),
             active: None,
             title: String::new(),
             input_subscription: None,
             input_events: None,
             focus: cx.focus_handle(),
-            was_active: false,
-            previous_focus: None,
             pending_password: None,
             pending_comment: None,
-            prompt: None,
-            prompt_generation: 0,
             pending_create: None,
             pending_name: None,
             pending_email: false,
@@ -154,35 +148,10 @@ impl DialogState {
         }));
     }
 
-    pub(crate) fn has_prompt(&self) -> bool {
-        self.prompt.is_some()
-    }
-
-    pub(crate) fn prompt_handle(&self) -> Option<gpui_kit::AnyWindowHandle> {
-        self.prompt
-    }
-
-    pub(crate) fn generation(&self) -> u64 {
-        self.prompt_generation
-    }
-
-    pub(crate) fn bump_generation(&mut self) {
-        self.prompt_generation = self.prompt_generation.wrapping_add(1);
-    }
-
-    pub(crate) fn set_prompt(&mut self, window: gpui_kit::AnyWindowHandle) {
-        self.prompt = Some(window);
-    }
-
-    pub(crate) fn detach_prompt(&mut self) {
-        self.prompt = None;
-    }
-
-    pub(crate) fn close_prompt(&mut self, cx: &mut App) {
-        if let Some(window) = self.prompt.take() {
-            let _ = window.update(cx, |_, window, _| window.remove_window());
-        }
-    }
+    pub(crate) fn has_prompt(&self) -> bool { self.host.handle().is_some() }
+    pub(crate) fn prompt_handle(&self) -> Option<AnyWindowHandle> { self.host.handle() }
+    pub(crate) fn bump_generation(&mut self) { self.host.invalidate(); }
+    pub(crate) fn close_prompt(&mut self, cx: &mut App) { self.host.close(cardo_ui::dialog::CloseReason::Cancel, cx); }
 
     pub(crate) fn take(&mut self) -> Option<Modal> {
         self.input_subscription = None;
@@ -211,14 +180,6 @@ impl DialogState {
             self.watch_input(&input, cx);
             self.show(tr("password-input"), Modal::Password { input, request });
         }
-        if self.active.is_some() && !self.was_active {
-            self.previous_focus = window.focused(cx);
-        } else if self.active.is_none()
-            && self.was_active
-            && let Some(focus) = self.previous_focus.take()
-        {
-            focus.focus(window, cx);
-        }
-        self.was_active = self.active.is_some();
+        self.host.sync_focus(self.active.is_some(), window, cx);
     }
 }

@@ -35,7 +35,7 @@ impl Workspace {
                     Err(error) => {
                         this.update_status = Some(release);
                         if progress.cancel.load(Ordering::Relaxed) {
-                            this.notify_message(tr("update-cancelled").into());
+                            this.notify_message(tr("update-cancelled").into(), cx);
                         } else {
                             tracing::error!(error = %format!("{error:#}"), "Cannot prepare update");
                             this.show_dialog(

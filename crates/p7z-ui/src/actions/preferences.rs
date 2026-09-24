@@ -25,7 +25,7 @@ impl Workspace {
         self.address.update(cx, |input, cx| {
             input.set_placeholder(tr("browser-address"), window, cx)
         });
-        self.message = None;
+        self.toast.update(cx, |toast, cx| toast.clear(cx));
         self.completion = None;
         cx.refresh_windows();
         cx.notify();
@@ -61,7 +61,7 @@ impl Workspace {
     ) {
         if let Err(error) = crate::theme::apply(id, &self.appearance, Some(window), cx) {
             tracing::error!(error = %error, "Cannot apply theme");
-            self.notify_message(error.to_string());
+            self.notify_message(error.to_string(), cx);
             cx.notify();
             return;
         }
@@ -126,7 +126,7 @@ impl Workspace {
                     this.notify_message(tf(
                         "update-available",
                         &[("version", version.as_str().into())],
-                    ));
+                    ), cx);
                 }
                 this.update_status = Some(status);
                 this.update_task = None;

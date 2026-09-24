@@ -4,7 +4,6 @@ mod icons;
 mod list;
 mod menu;
 mod navigation;
-mod notification;
 pub(crate) mod panel;
 mod settings;
 mod tooltip;
@@ -23,7 +22,6 @@ pub(super) use icons::{ToolIcon, artwork, icon};
 pub(super) use list::{list_entry, list_row};
 pub(super) use menu::menu_command_item;
 pub(super) use navigation::{navigation_row, path_strip};
-pub(super) use notification::notification;
 pub(super) use panel::{
     PanelSize, body_container, panel_actions, panel_artwork_notice, panel_body, panel_button,
     panel_card, panel_danger, panel_document, panel_field, panel_frame, panel_header, panel_layout,

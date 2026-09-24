@@ -33,7 +33,7 @@ impl Workspace {
                                     }
                                     Command::Error(error) => {
                                         tracing::error!(error = %error, "Platform command failed");
-                                        this.notify_message(error);
+                                        this.notify_message(error, cx);
                                     }
                                 }
                                 cx.notify();
@@ -49,27 +49,7 @@ impl Workspace {
                                 this.dragging = false;
                                 cx.notify();
                             }
-                            if let Some(message) = &this.message {
-                                if this
-                                    .message_since
-                                    .as_ref()
-                                    .is_none_or(|(previous, _)| previous != message)
-                                {
-                                    this.message_since =
-                                        Some((message.clone(), std::time::Instant::now()));
-                                    this.notification_offset = Point::default();
-                                    this.notification_drag = None;
-                                } else if this.message_since.as_ref().is_some_and(|(_, since)| {
-                                    since.elapsed() >= std::time::Duration::from_secs(3)
-                                }) {
-                                    this.message = None;
-                                    this.message_since = None;
-                                    this.notification_drag = None;
-                                    cx.notify();
-                                }
-                            } else {
-                                this.message_since = None;
-                            }
+
                         });
                     })
                     .is_err()
@@ -134,7 +114,7 @@ impl Workspace {
         };
         if argument == "--shell-request" {
             let Some(path) = paths.first().map(PathBuf::from) else {
-                self.notify_message(tr("shell-path-required").into());
+                self.notify_message(tr("shell-path-required").into(), cx);
                 cx.notify();
                 return;
             };
@@ -146,7 +126,7 @@ impl Workspace {
                 let _ = view.update(cx, |this, cx| {
                     match result {
                         Ok(args) => this.launches.push_front(args),
-                        Err(error) => this.notify_message(format!("{error:#}")),
+                        Err(error) => this.notify_message(format!("{error:#}"), cx),
                     }
                     this.shell_read_task = None;
                     cx.notify();
@@ -157,13 +137,13 @@ impl Workspace {
         let action = match p7z_platform::parse_action(argument) {
             Ok(action) => action,
             Err(error) => {
-                self.notify_message(error.to_string());
+                self.notify_message(error.to_string(), cx);
                 cx.notify();
                 return;
             }
         };
         if paths.is_empty() {
-            self.notify_message(tr("shell-path-required").into());
+            self.notify_message(tr("shell-path-required").into(), cx);
             cx.notify();
             return;
         }

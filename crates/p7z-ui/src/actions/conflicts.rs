@@ -52,7 +52,7 @@ impl Workspace {
         } else {
             self.tasks.set_close_after(false);
             self.tasks.set_close_archive(false);
-            self.notify_message(tr("extract-conflict-skipped").into());
+            self.notify_message(tr("extract-conflict-skipped").into(), cx);
             cx.notify();
         }
     }
