@@ -55,3 +55,7 @@ the corresponding dependency manifests.
 `assets/toolbar/delete.svg` is original project artwork: a red dimensional wastebasket with separate front, side and lid faces, matching the established object-icon family. No third-party image source is used.
 
 `assets/toolbar/error.svg` is an original red color variant of the project's exclamation badge, sharing the same dimensional geometry. Error, conflict, deletion and extraction headers use the common panel_artwork_notice component.
+
+## Cardo desktop services
+
+Cardo is MIT licensed. Its platform and updater use async-channel, windows, reqwest, semver, sha2, zip and Tokio at versions recorded in Cargo.lock. Their retained license texts are combined in `cardo/licenses/desktop-dependencies.txt`, distributed as `Cardo-dependencies-LICENSE.txt` in both installer and portable packages. The independent Cardo template uses Lucide icons; those template assets are not included in Plus7z.

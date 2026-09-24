@@ -1,6 +1,6 @@
 use super::*;
 use cardo_ui::ConditionalBuilder;
-use gpui_kit::component::{Disableable, h_flex, progress::Progress};
+use gpui_kit::component::Disableable;
 
 use std::time::Instant;
 
@@ -53,34 +53,15 @@ impl Workspace {
         panel_layout(cx)
             .child(
                 panel_body("progress-body")
-                    .child(
-                        panel_card(cx)
-                            .child(
-                                h_flex()
-                                    .gap(px(16.))
-                                    .items_center()
-                                    .child(artwork(ToolIcon::Extract, window, cx))
-                                    .child(
-                                        div().flex_1().min_w_0().whitespace_normal().child(status),
-                                    )
-                                    .when_some(percent, |el, value| {
-                                        el.child(
-                                            div()
-                                                .flex_shrink_0()
-                                                .text_size(px(18.))
-                                                .font_weight(FontWeight::SEMIBOLD)
-                                                .child(format!("{value}%")),
-                                        )
-                                    }),
-                            )
-                            .child(
-                                Progress::new("extraction-progress")
-                                    .value(f32::from(percent.unwrap_or(0)))
-                                    .loading(percent.is_none() && !stopping)
-                                    .color(rgb(p.accent))
-                                    .accessibility_label(tr("extract-progress-title")),
-                            ),
-                    )
+                    .child(cardo_ui::task::progress_summary(
+                        "extraction-progress",
+                        artwork(ToolIcon::Extract, window, cx).into_any_element(),
+                        status,
+                        percent,
+                        stopping,
+                        tr("extract-progress-title"),
+                        cx,
+                    ))
                     .child(panel_field(
                         tr("extract-progress-source"),
                         path_strip("progress-source", task.source.display().to_string(), cx),

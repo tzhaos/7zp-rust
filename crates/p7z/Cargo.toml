@@ -12,7 +12,6 @@ path = "src/main.rs"
 
 [dependencies]
 cardo-app.workspace = true
-cardo-runtime.workspace = true
 tracing.workspace = true
 p7z-core.workspace = true
 p7z-platform.workspace = true

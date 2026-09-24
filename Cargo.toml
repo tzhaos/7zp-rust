@@ -13,7 +13,7 @@ exclude = ["cardo"]
 resolver = "3"
 
 [workspace.package]
-version = "0.2.4"
+version = "0.3.0"
 edition = "2024"
 publish = false
 license = "MIT"
@@ -33,7 +33,6 @@ p7z-ui = { path = "crates/p7z-ui" }
 p7z-commands = { path = "crates/p7z-commands" }
 anyhow = "1.0"
 gpui-kit = "=0.6.1"
-image = { version = "0.25", default-features = false }
 rfd = "0.15"
 tempfile = "3"
 rust-embed = "8"

@@ -46,7 +46,7 @@ cd 7zp-rust
 
 For an existing checkout, run `git submodule update --init --recursive`. `-Package Run` builds the runnable folder; `All` also produces the installer and portable ZIP in `dist/`.
 
-The application package is `p7z`; supporting crates use `p7z-*`. Shared `cardo-runtime` and `cardo-ui` infrastructure comes from the pinned [Cardo](https://github.com/tzhaos/cardo-rust) submodule. [Architecture, shortcuts and release workflow →](docs/reference.md)
+The application package is `p7z`; supporting crates use `p7z-*`. Shared `cardo-app`, `cardo-runtime`, `cardo-platform`, `cardo-ui` and `cardo-update` infrastructure comes from the pinned [Cardo](https://github.com/tzhaos/cardo-rust) submodule. [Architecture, shortcuts and release workflow →](docs/reference.md) · [v0.3.0 verification](docs/verification-v0.3.0.md)
 
 ## License
 

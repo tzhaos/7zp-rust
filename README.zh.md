@@ -46,7 +46,7 @@ cd 7zp-rust
 
 已有工作区执行 `git submodule update --init --recursive`。`-Package Run` 只构建可运行目录；`All` 还会在 `dist/` 生成安装包与绿色 ZIP。
 
-应用包名为 `p7z`，配套 crate 使用 `p7z-*`；共用的 `cardo-runtime` 和 `cardo-ui` 来自固定提交的 [Cardo](https://github.com/tzhaos/cardo-rust) 子模块。[架构、快捷键与发布流程 →](docs/reference.zh.md)
+应用包名为 `p7z`，配套 crate 使用 `p7z-*`；共用的 `cardo-app`、`cardo-runtime`、`cardo-platform`、`cardo-ui` 和 `cardo-update` 来自固定提交的 [Cardo](https://github.com/tzhaos/cardo-rust) 子模块。[架构、快捷键与发布流程 →](docs/reference.zh.md) · [v0.3.0 验证记录](docs/verification-v0.3.0.zh.md)
 
 ## 许可
 

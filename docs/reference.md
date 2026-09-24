@@ -44,7 +44,7 @@ Clone with `git clone --recurse-submodules`, or run `git submodule update --init
 
 ## Updates and Releases
 
-Version 0.2.4 renames 7zplus to **Plus7z**, with the application package and executable named `p7z`. Download this release manually: older updaters look for the previous package names. Close and uninstall the old installed copy before installing Plus7z, or extract the portable ZIP into a new directory. Plus7z has its own per-user installation, Explorer identity and shortcuts; the repository URL is unchanged.
+Version 0.3.0 integrates the five Cardo application-shell crates. Package names, application identity, data paths and storage formats remain unchanged. No compatibility imports or database migrations are added.
 
 About checks the latest stable GitHub release; startup checks are optional. **Download and install** detects whether the running copy is registered as an installation, then downloads the matching installer or portable ZIP. The download is cancellable. Plus7z verifies its SHA-256 against the release manifest, prepares the update, exits, applies it with a separate helper process, and restarts. The helper backs up the files it replaces and restores them if installation fails; an interrupted update is recovered on the next launch. A portable copy needs write access to its directory. Builds without a release repository can still run, but cannot check for updates.
 
@@ -64,15 +64,18 @@ Logs in the `logs/` subdirectory rotate daily in UTC and retain up to 14 files. 
 
 | Crate | Responsibility |
 | --- | --- |
-| `p7z` | Startup and packaging |
+| `p7z` | Application descriptor, Cardo service adapters and packaging |
 | `p7z-ui` | Workspace, settings, dialogs and command dispatch |
 | `p7z-core` | Preferences, localization, history and shortcut definitions |
 | `p7z-engine` | 7-Zip adapter, operations and progress |
-| `p7z-requests` | Background requests, release checks and update downloads |
-| `p7z-platform` | Windows integration, registry policy, update application and single instance |
+| `p7z-requests` | Business requests and product update entry points |
+| `p7z-platform` | Explorer integration, registry/installation policy and SQLite update journal adapter |
 | `p7z-explorer` | Explorer extension, independent of GPUI and the engine adapter |
 | `p7z-commands` | Shared command identities, routing and request data |
-| `cardo-ui` | Reusable settings, menus, tooltips, text, font and theme components |
+| `cardo-ui` | Panels, settings, titlebar, dialog/Toast lifecycle, tasks, menus, text and themes |
+| `cardo-platform` | Single instance, launch transport, native file pickers, icons and process helpers |
+| `cardo-update` | Download, verification, backup, apply and recovery |
+| `cardo-app` | Startup modes, main window and service lifetime |
 | `cardo-runtime` | TOML configuration, SQLite state, localization, diagnostics and registry ownership |
 
 The `cardo-*` crates live in the separate [Cardo repository](https://github.com/tzhaos/cardo-rust) at the commit pinned by the submodule. This repository owns the `p7z-*` crates and its own release version.
@@ -96,3 +99,11 @@ The target is the official 7-Zip 26.03 File Manager's user-facing functionality.
 Local builds and selected engine operations have been verified, including v0.2.1's input-list fix for 7z/ZIP creation, updates, deletion and checksum generation. This does not establish full GUI, installation/upgrade, cancellation, accessibility, DPI or multi-monitor coverage. Some native-window lifecycle/accessibility diagnostics remain unresolved.
 
 The v0.2.3 split has passed standalone Cardo and full Plus7z release builds. The logo was rendered at 48px on light and dark backgrounds. The updated extraction notifications have not been observed in a live GUI session.
+
+## v0.3.0 shell integration
+
+Native dialog inputs are created by Cardo in the destination window. The product retains semantic Modal variants, sizes, business cleanup and archive completion actions. Cardo owns Toast timers and generations. Launch reception is event-driven; progress refresh is active only during work. Settings capture preferences, appearance, theme and language in one submitted draft. File pickers distinguish cancellation from failure.
+
+The updater adapter supplies the exact package whitelist and per-user installation policy. Its SQLite journal finishes by writing the outcome and deleting pending work in one transaction. Release packages retain all required license files. The upstream template is independently buildable and has no product dependencies.
+
+[Build results, observed runtime coverage and remaining gaps](verification-v0.3.0.md). New tags are pushed only after local validation; remote workflow completion is not polled.
