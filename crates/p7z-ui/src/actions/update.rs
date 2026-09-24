@@ -11,6 +11,7 @@ impl Workspace {
         };
         let progress = Progress::default();
         self.update_transfer = Some(progress.clone());
+        self.refresh_progress(cx);
         self.update_status = Some(Status::Downloading);
         if let Some(form) = &self.settings_form {
             form.update(cx, |form, cx| form.set_update_busy(true, cx));
@@ -34,7 +35,7 @@ impl Workspace {
                     Ok(()) => cx.quit(),
                     Err(error) => {
                         this.update_status = Some(release);
-                        if progress.cancel.load(Ordering::Relaxed) {
+                        if progress.cancel.is_cancelled() {
                             this.notify_message(tr("update-cancelled").into(), cx);
                         } else {
                             tracing::error!(error = %format!("{error:#}"), "Cannot prepare update");
@@ -60,7 +61,7 @@ impl Workspace {
     pub(crate) fn cancel_update(&mut self, cx: &mut Context<Self>) {
         if let Some(progress) = &self.update_transfer {
             if progress.phase() != Phase::Install {
-                progress.cancel.store(true, Ordering::Relaxed);
+                progress.cancel.cancel();
                 cx.notify();
             }
         }

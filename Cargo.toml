@@ -19,8 +19,10 @@ publish = false
 license = "MIT"
 
 [workspace.dependencies]
+cardo-update = { path = "cardo/crates/cardo-update" }
+cardo-platform = { path = "cardo/crates/cardo-platform" }
 cardo-runtime = { path = "cardo/crates/cardo-runtime", features = ["config", "database", "localization", "diagnostics"] }
-cardo-ui = { path = "cardo/crates/cardo-ui" }
+cardo-ui = { path = "cardo/crates/cardo-ui", features = ["system-icons", "localization"] }
 tracing = "0.1"
 p7z-core = { path = "crates/p7z-core" }
 p7z-engine = { path = "crates/p7z-engine" }

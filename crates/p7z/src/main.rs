@@ -41,7 +41,10 @@ fn main() {
     } else {
         None
     };
-    if let Err(error) = i18n::init().and_then(|_| p7z_core::settings::initialize()).and_then(|_| i18n::apply_preference(language.as_deref())) {
+    if let Err(error) = i18n::init()
+        .and_then(|_| p7z_core::settings::initialize())
+        .and_then(|_| i18n::apply_preference(language.as_deref()))
+    {
         report(error);
         return;
     }
@@ -144,9 +147,7 @@ fn main() {
                 };
                 if let Err(error) = cx.open_window(options, |window, cx| {
                     let view = cx.new(|cx| ui::Workspace::new(startup, window, cx));
-                    view.update(cx, |view, cx| {
-                        view.attach_system(system.receiver, args, window, cx)
-                    });
+                    view.update(cx, |view, cx| view.attach_system(system, args, window, cx));
                     cx.new(|cx| Root::new(view, window, cx))
                 }) {
                     report(error);

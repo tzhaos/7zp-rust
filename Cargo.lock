@@ -825,6 +825,19 @@ dependencies = [
 ]
 
 [[package]]
+name = "cardo-platform"
+version = "0.2.0"
+dependencies = [
+ "anyhow",
+ "async-channel",
+ "cardo-runtime",
+ "serde",
+ "serde_json",
+ "windows 0.61.3",
+ "windows-sys 0.59.0",
+]
+
+[[package]]
 name = "cardo-runtime"
 version = "0.2.0"
 dependencies = [
@@ -850,10 +863,30 @@ name = "cardo-ui"
 version = "0.2.0"
 dependencies = [
  "anyhow",
+ "cardo-platform",
  "cardo-runtime",
  "gpui-kit",
  "image",
  "tracing",
+]
+
+[[package]]
+name = "cardo-update"
+version = "0.2.0"
+dependencies = [
+ "anyhow",
+ "cardo-platform",
+ "cardo-runtime",
+ "reqwest",
+ "semver",
+ "serde",
+ "serde_json",
+ "sha2 0.10.9",
+ "tempfile",
+ "tokio",
+ "tracing",
+ "windows-sys 0.59.0",
+ "zip",
 ]
 
 [[package]]
@@ -4955,17 +4988,16 @@ name = "p7z-platform"
 version = "0.2.4"
 dependencies = [
  "anyhow",
+ "cardo-platform",
  "cardo-runtime",
+ "cardo-update",
  "p7z-commands",
  "p7z-core",
  "serde",
  "serde_json",
- "sha2 0.10.9",
- "tempfile",
  "tracing",
  "windows-sys 0.59.0",
  "winreg",
- "zip",
 ]
 
 [[package]]
@@ -4973,16 +5005,13 @@ name = "p7z-requests"
 version = "0.2.4"
 dependencies = [
  "anyhow",
+ "cardo-update",
  "p7z-commands",
  "p7z-core",
  "p7z-engine",
  "p7z-platform",
- "reqwest",
- "semver",
  "serde",
- "sha2 0.10.9",
  "tempfile",
- "tokio",
  "windows-sys 0.59.0",
 ]
 
@@ -4991,6 +5020,7 @@ name = "p7z-ui"
 version = "0.2.4"
 dependencies = [
  "anyhow",
+ "cardo-platform",
  "cardo-runtime",
  "cardo-ui",
  "dirs 6.0.0",

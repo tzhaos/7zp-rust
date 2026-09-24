@@ -114,11 +114,11 @@ impl Workspace {
         };
         let password = self.browser.view().password.clone();
         self.start(tr("archive-editing"), cx, move |cancel| {
-            let picker = rfd::FileDialog::new().set_title(tr("archive-add"));
+            let picker = cardo_platform::picker::FileDialog::new().set_title(tr("archive-add"));
             let paths = if directory {
-                picker.pick_folder().map(|path| vec![path])
+                picker.pick_folder()?.map(|path| vec![path])
             } else {
-                picker.pick_files()
+                picker.pick_files()?
             };
             let Some(paths) = paths else {
                 return Ok(Outcome::Cancelled);
@@ -178,9 +178,9 @@ impl Workspace {
         let progress = p7z_engine::Progress::new();
         let reporting = progress.clone();
         self.start(tr("extracting"), cx, move |cancel| {
-            let Some(destination) = rfd::FileDialog::new()
+            let Some(destination) = cardo_platform::picker::FileDialog::new()
                 .set_title(tr("save-location"))
-                .pick_folder()
+                .pick_folder()?
             else {
                 return Ok(Outcome::Cancelled);
             };

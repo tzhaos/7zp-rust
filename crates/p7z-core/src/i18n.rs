@@ -34,11 +34,22 @@ impl Language {
 }
 
 pub fn current() -> Language {
-    LANGUAGES.iter().copied().find(|language| language.code() == LOCALIZERS.get().expect("localization initialized").locale()).expect("registered language")
+    LANGUAGES
+        .iter()
+        .copied()
+        .find(|language| {
+            language.code() == LOCALIZERS.get().expect("localization initialized").locale()
+        })
+        .expect("registered language")
 }
 
 pub fn select(language: Language) {
-    LOCALIZERS.get().expect("localization initialized").select(language.code()).expect("registered language");
+    cardo_runtime::messages::select(language.code());
+    LOCALIZERS
+        .get()
+        .expect("localization initialized")
+        .select(language.code())
+        .expect("registered language");
 }
 
 pub fn init() -> Result<()> {
@@ -65,9 +76,7 @@ pub fn apply_preference(language: Option<&str>) -> Result<()> {
     } else {
         None
     };
-    let requested = language
-        .or(saved.as_deref())
-        .unwrap_or(current().code());
+    let requested = language.or(saved.as_deref()).unwrap_or(current().code());
     let selected = LANGUAGES
         .iter()
         .find(|language| language.code() == requested)
@@ -93,8 +102,8 @@ pub fn tr(key: &str) -> &'static str {
     LOCALIZERS
         .get()
         .expect("localization initialized before UI")
-    .text(key)
-    .unwrap_or_else(|error| panic!("{error:#}"))
+        .text(key)
+        .unwrap_or_else(|error| panic!("{error:#}"))
 }
 
 pub fn tf(key: &str, values: &[(&str, MessageValue<'_>)]) -> String {

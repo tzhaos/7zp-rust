@@ -1,8 +1,6 @@
-use cardo_ui::ConditionalBuilder;
 use crate::*;
-use gpui_kit::{
-    component::{Disableable, h_flex},
-};
+use cardo_ui::ConditionalBuilder;
+use gpui_kit::component::{Disableable, h_flex};
 
 impl Workspace {
     pub(super) fn about_view(
@@ -27,7 +25,7 @@ impl Workspace {
                     .update_transfer
                     .as_ref()
                     .map(|progress| {
-                        if progress.cancel.load(Ordering::Relaxed) {
+                        if progress.cancel.is_cancelled() {
                             return tr("update-cancelling").into();
                         }
                         match progress.phase() {
@@ -90,7 +88,7 @@ impl Workspace {
                 settings_action("update-cancel", tr("cancel"), cx)
                     .disabled(self.update_transfer.as_ref().is_none_or(|progress| {
                         progress.phase() == p7z_requests::update::Phase::Install
-                            || progress.cancel.load(Ordering::Relaxed)
+                            || progress.cancel.is_cancelled()
                     }))
                     .on_click(cx.listener(|this, _, _, cx| this.cancel_update(cx))),
             );

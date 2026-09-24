@@ -107,11 +107,12 @@ impl Workspace {
             Location::Home => None,
         };
         self.start(tr("browser-loading"), cx, move |_| {
-            let mut picker = rfd::FileDialog::new().set_title(tr("browser-browse"));
+            let mut picker =
+                cardo_platform::picker::FileDialog::new().set_title(tr("browser-browse"));
             if let Some(path) = current {
                 picker = picker.set_directory(path);
             }
-            match picker.pick_folder() {
+            match picker.pick_folder()? {
                 Some(path) => Directory::read(path).map(Outcome::Directory),
                 None => Ok(Outcome::Cancelled),
             }

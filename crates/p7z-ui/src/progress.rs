@@ -1,5 +1,5 @@
-use cardo_ui::ConditionalBuilder;
 use super::*;
+use cardo_ui::ConditionalBuilder;
 use gpui_kit::component::{Disableable, h_flex, progress::Progress};
 
 use std::time::Instant;
@@ -25,6 +25,7 @@ impl Workspace {
             progress,
             started: Instant::now(),
         });
+        self.refresh_progress(cx);
         self.show_dialog(tr("extract-progress-title"), Modal::Progress, cx);
     }
 

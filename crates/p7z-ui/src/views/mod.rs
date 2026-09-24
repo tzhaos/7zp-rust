@@ -11,11 +11,9 @@ mod titlebar;
 mod toolbar;
 
 use crate::*;
-use p7z_core::i18n::{tf, tr};
 use gpui_kit::base::ElementExt;
-use gpui_kit::{
-    component::{Root, v_flex},
-};
+use gpui_kit::component::{Root, v_flex};
+use p7z_core::i18n::{tf, tr};
 
 impl Render for Workspace {
     fn render(&mut self, window: &mut Window, cx: &mut Context<Self>) -> impl IntoElement {
@@ -67,6 +65,7 @@ impl Render for Workspace {
             )
             .on_mouse_move(cx.listener(|this, event: &MouseMoveEvent, window, cx| {
                 this.toast.update(cx, |toast, cx| toast.pointer_move(event, window, cx));
+                if this.dragging && !cx.has_active_drag() { this.dragging = false; cx.notify(); }
                 let Some(anchor) = this.hint_anchor else {
                     return;
                 };

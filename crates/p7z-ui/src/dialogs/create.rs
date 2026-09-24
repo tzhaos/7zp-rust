@@ -1,8 +1,5 @@
-use cardo_ui::ConditionalBuilder;
 use crate::{ScrollableElement, Workspace, components::*, format::size_text};
-use p7z_core::i18n::{tf, tr};
-use p7z_engine::{CreateOptions, Format, Level, Method, Threads, Volume};
-use p7z_requests::filesystem::{self, SourceInfo};
+use cardo_ui::ConditionalBuilder;
 use cardo_ui::menu::{Menu, MenuItem, MenuTrigger};
 use gpui_kit::{
     component::{
@@ -12,6 +9,9 @@ use gpui_kit::{
     },
     *,
 };
+use p7z_core::i18n::{tf, tr};
+use p7z_engine::{CreateOptions, Format, Level, Method, Threads, Volume};
+use p7z_requests::filesystem::{self, SourceInfo};
 use std::{collections::HashMap, path::PathBuf};
 
 pub struct CreateForm {
@@ -181,12 +181,23 @@ impl CreateForm {
     fn choose_files(&mut self, window: &mut Window, cx: &mut Context<Self>) {
         let handle = window.window_handle();
         let picker = cx.background_executor().spawn(async {
-            rfd::FileDialog::new()
+            cardo_platform::picker::FileDialog::new()
                 .set_title(tr("add-files"))
                 .pick_files()
         });
         cx.spawn(async move |view, cx| {
-            if let Some(files) = picker.await {
+            let selected = match picker.await {
+                Ok(value) => value,
+                Err(error) => {
+                    let _ = view.update(cx, |this, cx| {
+                        let _ = this
+                            .owner
+                            .update(cx, |owner, cx| owner.prompt_failed(error, cx));
+                    });
+                    return;
+                }
+            };
+            if let Some(files) = selected {
                 let _ = handle.update(cx, |_, window, cx| {
                     let _ = view.update(cx, |this, cx| this.add(files, window, cx));
                 });

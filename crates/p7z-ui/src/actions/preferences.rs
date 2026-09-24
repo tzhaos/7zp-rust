@@ -1,6 +1,7 @@
 use crate::preferences::Tab;
 use crate::*;
 use p7z_core::settings::Preferences;
+use std::sync::atomic::Ordering;
 
 impl Workspace {
     pub(crate) fn open_default_apps(&self, cx: &mut App) {
@@ -123,10 +124,10 @@ impl Workspace {
                 .unwrap_or_else(|error| p7z_requests::update::Status::Failed(format!("{error:#}")));
             let _ = view.update(cx, |this, cx| {
                 if let p7z_requests::update::Status::Available { version, .. } = &status {
-                    this.notify_message(tf(
-                        "update-available",
-                        &[("version", version.as_str().into())],
-                    ), cx);
+                    this.notify_message(
+                        tf("update-available", &[("version", version.as_str().into())]),
+                        cx,
+                    );
                 }
                 this.update_status = Some(status);
                 this.update_task = None;

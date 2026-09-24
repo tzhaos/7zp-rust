@@ -1,25 +1,18 @@
-pub mod file_icons;
-mod instance;
 pub mod mail;
-mod maintenance;
 mod registry;
 pub mod updater;
 
-pub use instance::instance;
-pub use maintenance::close_application;
+pub fn instance(args: &[String]) -> anyhow::Result<Option<System>> {
+    cardo_platform::instance::instance("p7z", args)
+}
+pub fn close_application(directory: &std::path::Path) -> anyhow::Result<()> {
+    cardo_platform::process::close_application(&directory.join("p7z.exe"))
+}
 pub use registry::{DEFAULT_APPS_URI, configure, register, unregister};
 mod open;
 use anyhow::Context;
+pub use cardo_platform::instance::{Instance as System, LaunchEvent as Command};
 pub use open::{open_directory, open_file};
-use std::sync::mpsc::Receiver;
-
-pub enum Command {
-    Launch(Vec<String>),
-    Error(String),
-}
-pub struct System {
-    pub receiver: Receiver<Command>,
-}
 
 pub use p7z_commands::Action as ExplorerAction;
 

@@ -67,9 +67,9 @@ impl Workspace {
 
     pub(crate) fn open(&mut self, cx: &mut Context<Self>) {
         self.start(tr("opening"), cx, |_| {
-            let Some(path) = rfd::FileDialog::new()
+            let Some(path) = cardo_platform::picker::FileDialog::new()
                 .set_title(tr("archive-open"))
-                .pick_file()
+                .pick_file()?
             else {
                 return Ok(Outcome::Cancelled);
             };
@@ -108,10 +108,10 @@ impl Workspace {
                 bail!(tr("archive-name-invalid"));
             }
             let filename = options.archive_file_name(&name);
-            let Some(destination) = rfd::FileDialog::new()
+            let Some(destination) = cardo_platform::picker::FileDialog::new()
                 .set_title(tr("archive-save"))
                 .set_file_name(filename)
-                .save_file()
+                .save_file()?
             else {
                 return Ok(Outcome::Cancelled);
             };
@@ -147,12 +147,21 @@ impl Workspace {
     pub(crate) fn choose_extract_directory(&mut self, window: &mut Window, cx: &mut Context<Self>) {
         let handle = window.window_handle();
         let picker = cx.background_executor().spawn(async {
-            rfd::FileDialog::new()
+            cardo_platform::picker::FileDialog::new()
                 .set_title(tr("save-location"))
                 .pick_folder()
         });
         cx.spawn(async move |view, cx| {
-            if let Some(path) = picker.await {
+            let selected = match picker.await {
+                Ok(value) => value,
+                Err(error) => {
+                    let _ = view.update(cx, |this, cx| {
+                        this.prompt_failed(error, cx);
+                    });
+                    return;
+                }
+            };
+            if let Some(path) = selected {
                 let _ = handle.update(cx, |_, _, cx| {
                     view.update(cx, |this, cx| {
                         if let Some(Modal::Extract { destination, .. }) = this.dialogs.current_mut()
@@ -257,10 +266,13 @@ impl Workspace {
         cx.spawn(async move |view, cx| {
             if let Err(error) = save.await {
                 let _ = view.update(cx, |this, cx| {
-                    this.notify_message(tf(
-                        "destination-save-error",
-                        &[("error", error.to_string().into())],
-                    ), cx);
+                    this.notify_message(
+                        tf(
+                            "destination-save-error",
+                            &[("error", error.to_string().into())],
+                        ),
+                        cx,
+                    );
                     cx.notify();
                 });
             }
@@ -416,9 +428,9 @@ impl Workspace {
             return;
         };
         self.start(tr("saving"), cx, move |_| {
-            let Some(destination) = rfd::FileDialog::new()
+            let Some(destination) = cardo_platform::picker::FileDialog::new()
                 .set_file_name(c.path.file_name().unwrap_or_default().to_string_lossy())
-                .save_file()
+                .save_file()?
             else {
                 return Ok(Outcome::Cancelled);
             };

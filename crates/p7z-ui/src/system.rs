@@ -4,7 +4,7 @@ use p7z_platform::ExplorerAction;
 impl Workspace {
     pub fn attach_system(
         &mut self,
-        receiver: std::sync::mpsc::Receiver<p7z_platform::Command>,
+        system: p7z_platform::System,
         args: Vec<String>,
         window: &mut Window,
         cx: &mut Context<Self>,
@@ -12,48 +12,65 @@ impl Workspace {
         if !args.is_empty() {
             self.launches.push_back(args);
         }
+        let receiver = system.receiver.clone();
+        self.instance = Some(system);
         let handle = window.window_handle();
+        let entity = cx.entity();
+        self._dispatch_subscription = Some(cx.observe(&entity, move |_, _, cx| {
+            let weak = cx.entity().downgrade();
+            cx.defer(move |cx| {
+                let _ = handle.update(cx, |_, window, cx| {
+                    let _ = weak.update(cx, |this, cx| this.dispatch(window, cx));
+                });
+            });
+        }));
         self.system_task = Some(cx.spawn(async move |view, cx| {
-            loop {
-                cx.background_executor()
-                    .timer(std::time::Duration::from_millis(80))
-                    .await;
-                let events: Vec<_> = receiver.try_iter().collect();
+            while let Ok(command) = receiver.recv().await {
                 if handle
                     .update(cx, |_, window, cx| {
                         let _ = view.update(cx, |this, cx| {
-                            for command in events {
-                                use p7z_platform::Command;
-                                match command {
-                                    Command::Launch(args) => {
-                                        window.activate_window();
-                                        if !args.is_empty() {
-                                            this.launches.push_back(args);
-                                        }
-                                    }
-                                    Command::Error(error) => {
-                                        tracing::error!(error = %error, "Platform command failed");
-                                        this.notify_message(error, cx);
+                            match command {
+                                p7z_platform::Command::Launch(args) => {
+                                    window.activate_window();
+                                    if !args.is_empty() {
+                                        this.launches.push_back(args);
                                     }
                                 }
-                                cx.notify();
+                                p7z_platform::Command::Error(error) => {
+                                    tracing::error!(error=%error,"Platform command failed");
+                                    this.notify_message(error, cx);
+                                }
                             }
                             this.dispatch(window, cx);
-                            if this.tasks.extraction().is_some() {
-                                cx.notify();
-                            }
-                            if this.update_transfer.is_some() {
-                                cx.notify();
-                            }
-                            if this.dragging && !cx.has_active_drag() {
-                                this.dragging = false;
-                                cx.notify();
-                            }
-
+                            cx.notify();
                         });
                     })
                     .is_err()
                 {
+                    break;
+                }
+            }
+        }));
+        self.dispatch(window, cx);
+    }
+
+    pub(crate) fn refresh_progress(&mut self, cx: &mut Context<Self>) {
+        self.progress_task = Some(cx.spawn(async move |view, cx| {
+            loop {
+                cx.background_executor()
+                    .timer(std::time::Duration::from_millis(80))
+                    .await;
+                let active = view
+                    .update(cx, |this, cx| {
+                        let active =
+                            this.tasks.extraction().is_some() || this.update_transfer.is_some();
+                        if active {
+                            cx.notify();
+                        }
+                        active
+                    })
+                    .unwrap_or(false);
+                if !active {
                     break;
                 }
             }

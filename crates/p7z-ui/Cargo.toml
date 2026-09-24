@@ -7,6 +7,7 @@ license.workspace = true
 description = "GPUI workspace and shared visual components for Plus7z"
 
 [dependencies]
+cardo-platform.workspace = true
 cardo-runtime.workspace = true
 tracing.workspace = true
 cardo-ui.workspace = true

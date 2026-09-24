@@ -16,9 +16,6 @@ pub mod theme;
 mod views;
 
 use anyhow::{Result, bail};
-use p7z_core::i18n::{tf, tr};
-use p7z_engine::{Cancellation, Catalog, CreateOptions, Edit, Entry, Overwrite};
-use p7z_requests::{Outcome, Request, browser::Browser};
 use cardo_ui::menu::{Menu, MenuItem, MenuTrigger};
 use components::*;
 use dialogs::{CreateForm, Modal};
@@ -28,10 +25,12 @@ use gpui_kit::{
     component::input::{InputEvent, InputState, TextareaState},
     *,
 };
+use p7z_core::i18n::{tf, tr};
+use p7z_engine::{Cancellation, Catalog, CreateOptions, Edit, Entry, Overwrite};
+use p7z_requests::{Outcome, Request, browser::Browser};
 use std::{
     collections::BTreeSet,
     path::{Path, PathBuf},
-    sync::atomic::Ordering,
 };
 
 #[derive(Clone, Copy, PartialEq, Eq)]
@@ -92,6 +91,9 @@ pub struct Workspace {
     scroll: UniformListScrollHandle,
     clear_search: bool,
     system_task: Option<Task<()>>,
+    instance: Option<p7z_platform::System>,
+    progress_task: Option<Task<()>>,
+    _dispatch_subscription: Option<Subscription>,
     shell_read_task: Option<Task<()>>,
     pending_run: Option<(tempfile::TempDir, PathBuf)>,
     extract_follow: std::collections::VecDeque<(Request, String)>,
@@ -200,11 +202,20 @@ impl Workspace {
             destinations,
             destination,
             completion: None,
-            toast: cx.new(|_| cardo_ui::toast::ToastHost::new(icon("Info", 18.), icon("Dismiss", 16.), tr("message-close"))),
+            toast: cx.new(|_| {
+                cardo_ui::toast::ToastHost::new(
+                    icon("Info", 18.),
+                    icon("Dismiss", 16.),
+                    tr("message-close"),
+                )
+            }),
             focus,
             scroll: UniformListScrollHandle::default(),
             clear_search: false,
             system_task: None,
+            instance: None,
+            progress_task: None,
+            _dispatch_subscription: None,
             shell_read_task: None,
             pending_run: None,
             extract_follow: std::collections::VecDeque::new(),

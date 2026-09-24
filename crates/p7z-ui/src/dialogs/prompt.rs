@@ -27,22 +27,37 @@ impl Workspace {
         let title = self.dialogs.title().to_owned().into();
         let owner = cx.entity();
         let focus = self.dialogs.focus().clone();
-        let opened = self.dialogs.host.open(owner, self.main_window, self.content_bounds.get(), title,
-            cardo_ui::dialog::DialogSpec { preferred: panel.size(), minimum: panel.minimum() }, focus,
+        let opened = self.dialogs.host.open(
+            owner,
+            self.main_window,
+            self.content_bounds.get(),
+            title,
+            cardo_ui::dialog::DialogSpec {
+                preferred: panel.size(),
+                minimum: panel.minimum(),
+            },
+            focus,
             |workspace, window, cx| workspace.prompt_content(window, cx),
             |workspace, _, cx| {
-                if matches!(workspace.dialogs.current(), Some(Modal::Progress)) || workspace.settings_busy(cx) { return false; }
+                if matches!(workspace.dialogs.current(), Some(Modal::Progress))
+                    || workspace.settings_busy(cx)
+                {
+                    return false;
+                }
                 workspace.dialogs.host.detach();
                 workspace.close_modal(cx);
                 true
-            }, || tr("menu-more").into(), cx);
+            },
+            || tr("menu-more").into(),
+            cx,
+        );
         match opened {
             Ok(handle) => self.bind_dialog(handle, cx),
             Err(error) => self.prompt_failed(error.context("Cannot create native dialog"), cx),
         }
     }
 
-    fn prompt_failed(&mut self, error: anyhow::Error, cx: &mut Context<Self>) {
+    pub(crate) fn prompt_failed(&mut self, error: anyhow::Error, cx: &mut Context<Self>) {
         let mut details = tf(
             "dialog-open-failed-detail",
             &[

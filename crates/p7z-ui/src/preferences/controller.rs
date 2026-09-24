@@ -54,7 +54,9 @@ impl PreferencesForm {
             font_family,
             font_size: self.font_size,
         };
-        let Some(value) = self.value.begin_save() else { return; };
+        let Some(value) = self.value.begin_save() else {
+            return;
+        };
         let owner = self.owner.clone();
         let handle = window.window_handle();
         let theme = self.theme;
@@ -125,9 +127,19 @@ impl PreferencesForm {
         let handle = window.window_handle();
         let job = cx
             .background_executor()
-            .spawn(async { rfd::FileDialog::new().pick_folder() });
+            .spawn(async { cardo_platform::picker::FileDialog::new().pick_folder() });
         self.task = Some(cx.spawn(async move |view, cx| {
-            let path = job.await;
+            let path = match job.await {
+                Ok(path) => path,
+                Err(error) => {
+                    let _ = view.update(cx, |this, cx| {
+                        this.task = None;
+                        this.error = Some(format!("{error:#}"));
+                        cx.notify();
+                    });
+                    return;
+                }
+            };
             let _ = handle.update(cx, |_, window, cx| {
                 let _ = view.update(cx, |this, cx| {
                     this.task = None;
