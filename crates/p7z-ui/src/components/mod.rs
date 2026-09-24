@@ -27,7 +27,7 @@ pub(super) use notification::notification;
 pub(super) use panel::{
     PanelSize, body_container, panel_actions, panel_artwork_notice, panel_body, panel_button,
     panel_card, panel_danger, panel_document, panel_field, panel_frame, panel_header, panel_layout,
-    panel_notice, panel_primary, panel_property, panel_surface, popup_surface, window_grip,
+    panel_notice, panel_primary, panel_property, panel_surface, popup_surface,
 };
 pub(super) use settings::{
     settings_content, settings_detail, settings_frame, settings_group, settings_page, settings_row,

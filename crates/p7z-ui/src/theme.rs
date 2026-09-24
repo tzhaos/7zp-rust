@@ -118,6 +118,7 @@ pub fn apply(
     let font = resolve_font(&appearance.font_family, cx)?;
     let primary = font.family();
     let resolved = mode(id, cx);
+    cardo_ui::theme::set_presentation(palette_for(resolved), font.font(), px(appearance.font_size), cx);
     cx.set_global(ThemeState {
         id,
         resolved,
